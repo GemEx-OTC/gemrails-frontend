@@ -6,10 +6,12 @@ import { QRCodeSVG } from "qrcode.react"
 import { Download, Share2, Copy, Check, Smartphone, Printer, ExternalLink } from "lucide-react"
 import { copyToClipboard } from "@/lib/clipboard"
 
+const baseUrl = process.env.NEXT_PUBLIC_GEMRAILS_BASE_URL;
+
 const mockMerchant = {
   id: "DEMO123",
   businessName: "Demo Restaurant",
-  paymentUrl: "https://pay.gemrails.ng/DEMO123",
+  paymentUrl: `${baseUrl}/test-payment`,
 }
 
 export default function QRCodePage() {

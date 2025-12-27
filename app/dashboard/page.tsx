@@ -14,12 +14,19 @@ import {
   AlertCircle,
 } from "lucide-react"
 import { PAYMENT_STATUS, FEE_CONFIG } from "@/lib/constants"
+import { OnboardingBanner } from "@/components/onboarding-banner"
 
 const mockStats = {
   totalReceived: 2450000,
   totalIncentives: 12500,
   totalTransactions: 25,
   pendingPayments: 2,
+}
+
+// Mock profile status - in production, fetch from API/context
+const mockProfileStatus = {
+  isProfileComplete: false,
+  isBankAdded: false,
 }
 
 const mockRecentTransactions = [
@@ -51,6 +58,12 @@ export default function DashboardPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+      {/* Onboarding Banner */}
+      <OnboardingBanner
+        isProfileComplete={mockProfileStatus.isProfileComplete}
+        isBankAdded={mockProfileStatus.isBankAdded}
+      />
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-white">Dashboard</h1>
