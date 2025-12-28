@@ -94,6 +94,10 @@
     @apply inline-flex items-center justify-center px-6 py-3.5 rounded-xl font-semibold text-white border border-gray-700 hover:border-emerald-500 hover:bg-emerald-500/5 transition-all;
   }
 
+  .gemrails-button-secondary {
+    @apply inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all;
+  }
+
   .gemrails-badge {
     @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
   }

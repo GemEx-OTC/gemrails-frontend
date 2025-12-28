@@ -6,7 +6,11 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Menu, X, User, LogOut, Bell } from "lucide-react"
 
-export function MobileTopNav() {
+interface MobileTopNavProps {
+  unreadCount?: number
+}
+
+export function MobileTopNav({ unreadCount = 3 }: MobileTopNavProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
 
@@ -14,6 +18,10 @@ export function MobileTopNav() {
     sessionStorage.clear()
     localStorage.clear()
     router.push("/auth/login")
+  }
+
+  const handleNotificationsClick = () => {
+    router.push("/dashboard/notifications")
   }
 
   return (
@@ -37,10 +45,16 @@ export function MobileTopNav() {
             {/* Notifications */}
             <motion.button
               whileTap={{ scale: 0.9 }}
+              onClick={handleNotificationsClick}
               className="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
             >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-emerald-500 rounded-full px-1">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </motion.button>
 
             {/* Menu toggle */}

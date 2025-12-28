@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { LayoutDashboard, QrCode, History, Settings } from "lucide-react"
+import { LayoutDashboard, QrCode, History, Settings, Bell } from "lucide-react"
 
 interface BottomNavProps {
   currentPath: string
@@ -11,6 +11,7 @@ interface BottomNavProps {
 const navItems = [
   { name: "Home", href: "/dashboard", icon: LayoutDashboard },
   { name: "QR Code", href: "/dashboard/qr-code", icon: QrCode },
+  { name: "Alerts", href: "/dashboard/notifications", icon: Bell },
   { name: "History", href: "/dashboard/transactions", icon: History },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ]

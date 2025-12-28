@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { LogOut, User, LayoutDashboard, QrCode, History, Settings, HelpCircle } from "lucide-react"
+import { LogOut, User, LayoutDashboard, QrCode, History, Settings, HelpCircle, Bell } from "lucide-react"
 
 interface SidebarProps {
   currentPath: string
@@ -13,6 +13,7 @@ const menuItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "QR Code", href: "/dashboard/qr-code", icon: QrCode },
   { name: "Transactions", href: "/dashboard/transactions", icon: History },
+  { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
   { name: "Help", href: "/dashboard/help", icon: HelpCircle },
 ]
