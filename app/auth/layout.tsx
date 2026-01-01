@@ -49,7 +49,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 <span className="text-2xl">⚡</span>
               </div>
               <div>
-                <span className="text-2xl font-bold text-white">GemRails</span>
+                <span className="text-2xl font-bold text-white">GemExRails</span>
                 <p className="text-xs text-emerald-400">by GemEx</p>
               </div>
             </Link>
@@ -77,7 +77,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             {[
               { icon: "🏪", text: "Perfect for restaurants, retail & services" },
               { icon: "💨", text: "Instant Naira settlement to your bank" },
-              { icon: "🎁", text: "Earn ₦500 bonus on every transaction" },
+              { icon: "🎁", text: "Earn ₦100 bonus on every transaction" },
             ].map((feature, idx) => (
               <div key={idx} className="flex items-center gap-3">
                 <span className="text-2xl">{feature.icon}</span>
@@ -102,7 +102,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                   <span className="text-xl">⚡</span>
                 </div>
                 <div>
-                  <span className="text-xl font-bold text-white">GemRails</span>
+                  <span className="text-xl font-bold text-white">GemExRails</span>
                   <p className="text-xs text-emerald-400">by GemEx</p>
                 </div>
               </Link>
