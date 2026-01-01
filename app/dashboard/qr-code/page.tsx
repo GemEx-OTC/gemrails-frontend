@@ -11,7 +11,7 @@ const baseUrl = process.env.NEXT_PUBLIC_GEMRAILS_BASE_URL;
 const mockMerchant = {
   id: "DEMO123",
   businessName: "Demo Restaurant",
-  paymentUrl: `${baseUrl}/test-payment`,
+  paymentUrl: `${baseUrl}/pay/test-payment`,
 }
 
 export default function QRCodePage() {
@@ -129,7 +129,7 @@ export default function QRCodePage() {
               {[
                 { step: 1, title: "Customer Scans", desc: "Customer scans your QR code with their phone" },
                 { step: 2, title: "Enter Amount", desc: "They enter the Naira amount to pay (min ₦5,000)" },
-                { step: 3, title: "Pay with Crypto", desc: "They send USDT or USDC to complete payment" },
+                { step: 3, title: "Pay with Crypto", desc: "They send Stable Coin to complete payment" },
                 { step: 4, title: "Instant Settlement", desc: "You receive Naira + ₦100 bonus instantly" },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-4">
