@@ -25,7 +25,7 @@ export default function HomePage() {
                 <span className="text-xl">⚡</span>
               </div>
               <div>
-                <span className="text-xl font-bold text-white">GemRails</span>
+                <span className="text-xl font-bold text-white">GemExRails</span>
                 <p className="text-xs text-emerald-400">by GemEx</p>
               </div>
             </div>
@@ -62,12 +62,12 @@ export default function HomePage() {
               </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
                 Accept Crypto,{" "}
-                <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
                   Get Naira Instantly
                 </span>
               </h1>
               <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-                Enable your business to accept USDT & USDC payments with instant Naira
+                Enable your business to accept <span className="bg-linear-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Stable Coin</span> payments with instant Naira
                 settlement. No crypto knowledge required.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -120,13 +120,13 @@ export default function HomePage() {
                 step: 3,
                 icon: Smartphone,
                 title: "Customer Pays",
-                desc: "Customer scans and pays with USDT/USDC",
+                desc: "Customer scans and pays with Stable Coins",
               },
               {
                 step: 4,
                 icon: Zap,
                 title: "Instant Settlement",
-                desc: "Receive Naira + ₦500 bonus instantly",
+                desc: "Receive Naira + ₦100 bonus instantly",
               },
             ].map((item, idx) => (
               <motion.div
@@ -155,7 +155,7 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-                Why Choose GemRails?
+                Why Choose GemExRails?
               </h2>
               <div className="space-y-6">
                 {[
@@ -166,7 +166,7 @@ export default function HomePage() {
                   },
                   {
                     icon: TrendingUp,
-                    title: "Earn ₦500 Per Transaction",
+                    title: "Earn ₦100 Bonus Per Transaction",
                     desc: "Get a bonus on every successful payment - it adds up fast!",
                   },
                   {
@@ -188,7 +188,7 @@ export default function HomePage() {
                     viewport={{ once: true }}
                     className="flex gap-4"
                   >
-                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                       <feature.icon className="w-6 h-6 text-emerald-400" />
                     </div>
                     <div>
@@ -218,7 +218,7 @@ export default function HomePage() {
                   Your Business QR Code
                 </h3>
                 <p className="text-gray-400 mb-4">
-                  Customers scan to pay with USDT or USDC
+                  Customers scan to pay with Stable Coins
                 </p>
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 text-emerald-400 text-sm">
                   <CheckCircle className="w-4 h-4" />
@@ -237,7 +237,7 @@ export default function HomePage() {
             Ready to Accept Crypto Payments?
           </h2>
           <p className="text-xl text-gray-400 mb-8">
-            Join hundreds of businesses already using GemRails
+            Join hundreds of businesses already using GemExRails
           </p>
           <Link
             href="/auth/signup"
@@ -257,11 +257,11 @@ export default function HomePage() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
                 <span className="text-sm">⚡</span>
               </div>
-              <span className="text-white font-semibold">GemRails</span>
+              <span className="text-white font-semibold">GemExRails</span>
               <span className="text-gray-500">by GemEx</span>
             </div>
             <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} GemRails. All rights reserved.
+              © {new Date().getFullYear()} GemExRails. All rights reserved.
             </p>
           </div>
         </div>
