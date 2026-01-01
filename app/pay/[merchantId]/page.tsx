@@ -87,7 +87,7 @@ export default function PaymentPage({
   const [step, setStep] = useState<PaymentStep>("amount")
   const [nairaAmount, setNairaAmount] = useState("")
   const [selectedAsset, setSelectedAsset] = useState<"USDT" | "USDC">("USDT")
-  const [selectedNetwork, setSelectedNetwork] = useState<"TRC20" | "BSC" | "ERC20">("TRC20")
+  const [selectedNetwork, setSelectedNetwork] = useState<"TRC20" | "BSC">("TRC20")
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState("")
   const [timeLeft, setTimeLeft] = useState(900)
@@ -95,9 +95,7 @@ export default function PaymentPage({
   const walletAddress =
     selectedNetwork === "TRC20"
       ? "TXYZa1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5"
-      : selectedNetwork === "BSC"
-        ? "0x742d35Cc6634C0532925a3b844Bc9e7595f64c31"
-        : "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063"
+      : "0x742d35Cc6634C0532925a3b844Bc9e7595f64c31"
 
   const amount = parseFloat(nairaAmount) || 0
   const totalNaira = amount + FEE_CONFIG.bufferAmount
@@ -180,7 +178,7 @@ export default function PaymentPage({
             </div>
             <div className="flex items-center gap-1.5 px-3 py-2 bg-white/15 backdrop-blur-sm rounded-full border border-white/20">
               <Zap className="w-4 h-4 text-white" />
-              <span className="text-xs text-white font-semibold">GemRails</span>
+              <span className="text-xs text-white font-semibold">GemExRails</span>
             </div>
           </div>
         </div>
@@ -257,7 +255,7 @@ export default function PaymentPage({
                 )}
               </AnimatePresence>
 
-              {/* Fee Breakdown Card */}
+              {/* Crypto Estimate Card */}
               <AnimatePresence>
                 {amount >= FEE_CONFIG.minimumPayment && (
                   <motion.div
@@ -266,32 +264,11 @@ export default function PaymentPage({
                     exit={{ opacity: 0, y: 10 }}
                     className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-2xl p-5 shadow-xl shadow-black/20"
                   >
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">Payment Amount</span>
-                        <span className="text-white font-medium">
-                          {formatCurrency(amount)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">Processing Fee</span>
-                        <span className="text-white font-medium">
-                          {formatCurrency(FEE_CONFIG.bufferAmount)}
-                        </span>
-                      </div>
-                      <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent" />
-                      <div className="flex justify-between items-center">
-                        <span className="text-white font-semibold">Total</span>
-                        <span className="text-emerald-400 font-bold text-xl">
-                          {formatCurrency(totalNaira)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-center gap-2 pt-2 bg-emerald-500/10 rounded-xl py-2">
-                        <Sparkles className="w-4 h-4 text-emerald-400" />
-                        <span className="text-sm text-emerald-400 font-medium">
-                          ≈ {cryptoAmount.toFixed(2)} USDT/USDC
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-center gap-2 bg-emerald-500/10 rounded-xl py-3">
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      <span className="text-sm text-emerald-400 font-medium">
+                        ≈ {cryptoAmount.toFixed(2)} USDT/USDC
+                      </span>
                     </div>
                   </motion.div>
                 )}
@@ -312,7 +289,7 @@ export default function PaymentPage({
               {/* Footer */}
               <p className="text-center text-xs text-gray-500">
                 Secured by{" "}
-                <span className="text-emerald-400 font-semibold">GemRails</span>
+                <span className="text-emerald-400 font-semibold">GemExRails</span>
               </p>
             </motion.div>
           )}
@@ -355,110 +332,75 @@ export default function PaymentPage({
               </div>
 
               {/* Cryptocurrency Selection Card */}
-              <div className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-6 shadow-2xl shadow-black/30">
-                <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+              <div className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-5 shadow-2xl shadow-black/30">
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                  <div className="w-5 h-5 rounded-md bg-emerald-500/20 flex items-center justify-center">
                     <span className="text-emerald-400 text-xs font-bold">1</span>
                   </div>
                   Select Cryptocurrency
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex gap-2">
                   {SUPPORTED_ASSETS.map((asset) => (
                     <motion.button
                       key={asset}
                       onClick={() => setSelectedAsset(asset)}
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`p-5 rounded-2xl border-2 transition-all relative overflow-hidden ${
+                      whileTap={{ scale: 0.97 }}
+                      className={`flex-1 p-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${
                         selectedAsset === asset
-                          ? "border-emerald-500 bg-emerald-500/10 shadow-xl shadow-emerald-500/20"
-                          : "border-gray-700/80 bg-gray-800/40 hover:border-gray-600 hover:bg-gray-800/60"
+                          ? "border-emerald-500 bg-emerald-500/10"
+                          : "border-gray-700/80 bg-gray-800/40"
                       }`}
                     >
+                      <img 
+                        src={`/icons/${asset.toLowerCase()}.svg`} 
+                        alt={asset}
+                        className="w-6 h-6"
+                      />
+                      <span className="text-white font-medium text-sm">{asset}</span>
                       {selectedAsset === asset && (
-                        <div className="absolute top-2 right-2">
-                          <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                        </div>
+                        <Check className="w-4 h-4 text-emerald-400" />
                       )}
-                      <div
-                        className={`w-14 h-14 mx-auto mb-3 rounded-2xl flex items-center justify-center transition-all ${
-                          selectedAsset === asset
-                            ? "bg-gradient-to-br from-emerald-500/30 to-teal-500/30 shadow-lg shadow-emerald-500/20"
-                            : "bg-gray-700/80"
-                        }`}
-                      >
-                        <span className={`text-2xl ${selectedAsset === asset ? "text-emerald-400" : "text-gray-400"}`}>
-                          {asset === "USDT" ? "₮" : "$"}
-                        </span>
-                      </div>
-                      <p className="text-white font-semibold">{asset}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {asset === "USDT" ? "Tether" : "USD Coin"}
-                      </p>
                     </motion.button>
                   ))}
                 </div>
               </div>
 
               {/* Network Selection Card */}
-              <div className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-6 shadow-2xl shadow-black/30">
-                <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+              <div className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-5 shadow-2xl shadow-black/30">
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                  <div className="w-5 h-5 rounded-md bg-emerald-500/20 flex items-center justify-center">
                     <span className="text-emerald-400 text-xs font-bold">2</span>
                   </div>
                   Select Network
                 </h3>
-                <div className="space-y-3">
-                  {(["TRC20", "BSC", "ERC20"] as const).map((network) => (
+                <div className="flex gap-2">
+                  {(["TRC20", "BSC"] as const).map((network) => (
                     <motion.button
                       key={network}
                       onClick={() => setSelectedNetwork(network)}
-                      whileHover={{ scale: 1.01, x: 4 }}
-                      whileTap={{ scale: 0.99 }}
-                      className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${
+                      whileTap={{ scale: 0.97 }}
+                      className={`flex-1 p-3 rounded-xl border transition-all ${
                         selectedNetwork === network
-                          ? "border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/20"
-                          : "border-gray-700/80 bg-gray-800/40 hover:border-gray-600 hover:bg-gray-800/60"
+                          ? "border-emerald-500 bg-emerald-500/10"
+                          : "border-gray-700/80 bg-gray-800/40"
                       }`}
                     >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-lg transition-all ${
-                            selectedNetwork === network
-                              ? "bg-gradient-to-br from-emerald-500/30 to-teal-500/30 text-emerald-400 shadow-lg shadow-emerald-500/20"
-                              : "bg-gray-700/80 text-gray-400"
-                          }`}
-                        >
-                          {network === "TRC20" ? "T" : network === "BSC" ? "B" : "E"}
-                        </div>
-                        <div className="text-left">
-                          <p className="text-white font-medium">
-                            {CRYPTO_NETWORKS[network].name}
-                          </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              network === "TRC20" 
-                                ? "bg-emerald-500/20 text-emerald-400" 
-                                : network === "BSC"
-                                  ? "bg-blue-500/20 text-blue-400"
-                                  : "bg-purple-500/20 text-purple-400"
-                            }`}>
-                              {network === "TRC20" ? "Recommended" : network === "BSC" ? "Low fees" : "Higher fees"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                        selectedNetwork === network
-                          ? "border-emerald-500 bg-emerald-500"
-                          : "border-gray-600"
-                      }`}>
+                      <div className="flex items-center justify-center gap-2">
+                        <img 
+                          src={`/icons/chains/${network === "TRC20" ? "tron" : "bnb"}.svg`} 
+                          alt={network}
+                          className="w-5 h-5"
+                        />
+                        <span className="text-white font-medium text-sm">{network}</span>
                         {selectedNetwork === network && (
-                          <Check className="w-4 h-4 text-white" />
+                          <Check className="w-4 h-4 text-emerald-400" />
                         )}
                       </div>
+                      <p className={`text-xs mt-1 ${
+                        network === "TRC20" ? "text-emerald-400" : "text-blue-400"
+                      }`}>
+                        {network === "TRC20" ? "Recommended" : "Low fees"}
+                      </p>
                     </motion.button>
                   ))}
                 </div>
@@ -720,15 +662,15 @@ export default function PaymentPage({
                   transition={{ delay: 0.2 }}
                   className="text-3xl font-bold text-white mb-2"
                 >
-                  Payment Successful!
+                  Payment Confirmed! 🎉
                 </motion.h2>
                 <motion.p 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-gray-400"
+                  className="text-gray-300 text-lg"
                 >
-                  Your payment of {formatCurrency(amount)} has been confirmed.
+                  Look at you! You just paid with crypto like a king 👑
                 </motion.p>
               </div>
 
@@ -785,11 +727,11 @@ export default function PaymentPage({
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <Sparkles className="w-5 h-5 text-emerald-400" />
                   <span className="text-emerald-400 font-semibold">
-                    Payment Confirmed
+                    Welcome to the future of payments
                   </span>
                 </div>
                 <p className="text-gray-300 text-sm">
-                  A confirmation has been sent to the merchant. You can safely close this window.
+                  The merchant has been notified. You can safely close this page.
                 </p>
               </motion.div>
 
