@@ -1,4 +1,4 @@
-// Notification types and utilities for GemRails Merchant Portal
+// Notification types and utilities for GemExRails Merchant Portal
 
 export type NotificationType =
   | 'PaymentReceived'
