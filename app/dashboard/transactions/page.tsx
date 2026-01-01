@@ -6,11 +6,11 @@ import { Search, Download, CheckCircle, Clock, AlertCircle, XCircle, X } from "l
 import { PAYMENT_STATUS, FEE_CONFIG } from "@/lib/constants"
 
 const mockTransactions = [
-  { id: "TXN001", amount: 150000, cryptoAmount: 96.15, cryptoAsset: "USDT", incentive: 500, status: "Settled", customerRef: "Table 5", timestamp: new Date(Date.now() - 1000 * 60 * 30), settledAt: new Date(Date.now() - 1000 * 60 * 28) },
-  { id: "TXN002", amount: 85000, cryptoAmount: 54.49, cryptoAsset: "USDC", incentive: 500, status: "Processing", customerRef: "Walk-in", timestamp: new Date(Date.now() - 1000 * 60 * 60) },
-  { id: "TXN003", amount: 220000, cryptoAmount: 141.03, cryptoAsset: "USDT", incentive: 500, status: "Settled", customerRef: "Table 12", timestamp: new Date(Date.now() - 1000 * 60 * 120), settledAt: new Date(Date.now() - 1000 * 60 * 118) },
-  { id: "TXN004", amount: 45000, cryptoAmount: 28.85, cryptoAsset: "USDT", incentive: 500, status: "AwaitingCrypto", customerRef: "Delivery", timestamp: new Date(Date.now() - 1000 * 60 * 180) },
-  { id: "TXN005", amount: 320000, cryptoAmount: 205.13, cryptoAsset: "USDC", incentive: 500, status: "Settled", customerRef: "Event Booking", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), settledAt: new Date(Date.now() - 1000 * 60 * 60 * 24 + 1000 * 60 * 2) },
+  { id: "TXN001", amount: 150000, cryptoAmount: 96.15, cryptoAsset: "USDT", incentive: 100, status: "Settled", customerRef: "Table 5", timestamp: new Date(Date.now() - 1000 * 60 * 30), settledAt: new Date(Date.now() - 1000 * 60 * 28) },
+  { id: "TXN002", amount: 85000, cryptoAmount: 54.49, cryptoAsset: "USDC", incentive: 100, status: "Processing", customerRef: "Walk-in", timestamp: new Date(Date.now() - 1000 * 60 * 60) },
+  { id: "TXN003", amount: 220000, cryptoAmount: 141.03, cryptoAsset: "USDT", incentive: 100, status: "Settled", customerRef: "Table 12", timestamp: new Date(Date.now() - 1000 * 60 * 120), settledAt: new Date(Date.now() - 1000 * 60 * 118) },
+  { id: "TXN004", amount: 45000, cryptoAmount: 28.85, cryptoAsset: "USDT", incentive: 100, status: "AwaitingCrypto", customerRef: "Delivery", timestamp: new Date(Date.now() - 1000 * 60 * 180) },
+  { id: "TXN005", amount: 320000, cryptoAmount: 205.13, cryptoAsset: "USDC", incentive: 100, status: "Settled", customerRef: "Event Booking", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), settledAt: new Date(Date.now() - 1000 * 60 * 60 * 24 + 1000 * 60 * 2) },
   { id: "TXN006", amount: 15000, cryptoAmount: 9.62, cryptoAsset: "USDT", incentive: 0, status: "Failed", customerRef: "Table 3", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48), failReason: "Payment timeout" },
 ]
 

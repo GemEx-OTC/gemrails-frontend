@@ -130,7 +130,7 @@ export default function QRCodePage() {
                 { step: 1, title: "Customer Scans", desc: "Customer scans your QR code with their phone" },
                 { step: 2, title: "Enter Amount", desc: "They enter the Naira amount to pay (min ₦5,000)" },
                 { step: 3, title: "Pay with Crypto", desc: "They send USDT or USDC to complete payment" },
-                { step: 4, title: "Instant Settlement", desc: "You receive Naira + ₦500 bonus instantly" },
+                { step: 4, title: "Instant Settlement", desc: "You receive Naira + ₦100 bonus instantly" },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm flex-shrink-0">{item.step}</div>

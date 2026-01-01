@@ -40,7 +40,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
               <span className="text-lg">⚡</span>
             </div>
             <div>
-              <span className="text-xl font-bold text-white">GemRails</span>
+              <span className="text-xl font-bold text-white">GemExRails</span>
               <p className="text-xs text-emerald-400">Merchant Portal</p>
             </div>
           </Link>
@@ -99,7 +99,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
           </motion.button>
 
           <div className="text-xs text-gray-600 text-center">
-            <p>GemRails v1.0.0</p>
+            <p>GemExRails v1.0.0</p>
           </div>
         </div>
       </div>

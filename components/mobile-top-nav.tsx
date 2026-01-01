@@ -37,7 +37,7 @@ export function MobileTopNav({ unreadCount = 3 }: MobileTopNavProps) {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
               <span className="text-sm">⚡</span>
             </div>
-            <span className="text-lg font-bold text-white">GemRails</span>
+            <span className="text-lg font-bold text-white">GemExRails</span>
           </Link>
 
           {/* Right side actions */}
