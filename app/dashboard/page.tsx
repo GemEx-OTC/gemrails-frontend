@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { PAYMENT_STATUS, FEE_CONFIG } from "@/lib/constants"
 import { OnboardingBanner } from "@/components/onboarding-banner"
+import { useAuth } from "@/context/auth-context"
 
 const mockStats = {
   totalReceived: 2450000,
@@ -23,11 +24,6 @@ const mockStats = {
   pendingPayments: 2,
 }
 
-// Mock profile status - in production, fetch from API/context
-const mockProfileStatus = {
-  isProfileComplete: false,
-  isBankAdded: false,
-}
 
 const mockRecentTransactions = [
   { id: "TXN001", amount: 150000, incentive: 500, status: "Settled", customerRef: "Table 5", timestamp: new Date(Date.now() - 1000 * 60 * 30) },
@@ -47,6 +43,7 @@ const formatTime = (date: Date) => {
 }
 
 export default function DashboardPage() {
+  const { user } = useAuth()
   const [timeRange, setTimeRange] = useState<"today" | "week" | "month">("today")
 
   const statCards = [
@@ -60,8 +57,8 @@ export default function DashboardPage() {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       {/* Onboarding Banner */}
       <OnboardingBanner
-        isProfileComplete={mockProfileStatus.isProfileComplete}
-        isBankAdded={mockProfileStatus.isBankAdded}
+        isProfileComplete={!!user?.businessCategory}
+        isBankAdded={!!user?.bankAccount?.accountNumber}
       />
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
