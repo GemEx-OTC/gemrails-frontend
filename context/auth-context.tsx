@@ -7,9 +7,30 @@ import { useRouter } from "next/navigation"
 export interface User {
     id: string
     email: string
-    businessName?: string
+    emailVerified?: boolean
     role?: string
-    // Add other user fields as needed
+    businessName?: string
+    businessCategory?: string
+    businessAddress?: string
+    businessLogo?: string
+    contactName?: string
+    phone?: string
+    rcNumber?: string
+    merchantStatus?: "pending" | "active" | "suspended" | string
+    merchantId?: string
+    bankAccount?: {
+        bankCode: string
+        bankName: string
+        accountNumber: string
+        accountName: string
+        isVerified: boolean
+    }
+    settings?: {
+        emailNotifications: boolean
+        smsNotifications: boolean
+    }
+    createdAt?: string
+    updatedAt?: string
 }
 
 interface AuthContextType {
@@ -32,7 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const token = localStorage.getItem("token")
             if (token) {
                 try {
-                    const profile = await apiClient.getProfile()
+                    const response: any = await apiClient.getProfile()
+                    const profile = response.data || response
                     setUser(profile as User)
                 } catch (error) {
                     console.error("Failed to fetch profile", error)
@@ -73,7 +95,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const refreshUser = async () => {
         try {
-            const profile = await apiClient.getProfile()
+            const response: any = await apiClient.getProfile()
+            const profile = response.data || response
             setUser(profile as User)
         } catch (error) {
             console.error("Failed to refresh user", error)
