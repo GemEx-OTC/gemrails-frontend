@@ -4,9 +4,23 @@ import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { Mail, Lock, AlertCircle, Eye, EyeOff } from "lucide-react"
+import { Mail, Lock, AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react"
+import { apiClient } from "@/lib/api-client"
+import { useAuth, type User } from "@/context/auth-context"
+
+interface LoginResponse {
+  data: {
+    user: User
+    tokens: {
+      accessToken: string
+      refreshToken: string
+      expiresIn: number
+    }
+  }
+}
 
 export default function LoginPage() {
+  const { login } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -18,28 +32,37 @@ export default function LoginPage() {
     setError("")
     setLoading(true)
 
-    setTimeout(() => {
-      if (!email || !password) {
-        setError("Please fill in all fields")
-        setLoading(false)
-        return
-      }
-
-      if (!email.includes("@")) {
-        setError("Please enter a valid email address")
-        setLoading(false)
-        return
-      }
-
-      // Demo login - accept any valid-looking credentials
-      if (email.includes("@") && password.length >= 6) {
-        window.location.href = "/dashboard"
-        return
-      }
-
-      setError("Invalid credentials. Please try again.")
+    if (!email || !password) {
+      setError("Please fill in all fields")
       setLoading(false)
-    }, 1000)
+      return
+    }
+
+    try {
+      const response = (await apiClient.login({
+        email,
+        password,
+      })) as LoginResponse
+
+      const { user, tokens } = response.data
+
+      if (tokens?.accessToken && user) {
+        login(tokens.accessToken, tokens.refreshToken, user)
+      } else {
+        throw new Error("Invalid response from server")
+      }
+    } catch (err: any) {
+      if (err.code === "EMAIL_NOT_VERIFIED") {
+        // Redirect to verify email with resend flag
+        window.location.href = `/auth/verify-email?email=${encodeURIComponent(
+          email,
+        )}&resend=true`
+        return
+      }
+      setError(err.message || "Invalid credentials. Please try again.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -117,9 +140,16 @@ export default function LoginPage() {
           disabled={loading}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
-          className="gemrails-button w-full"
+          className="gemrails-button w-full flex items-center justify-center gap-2"
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Signing in...</span>
+            </>
+          ) : (
+            "Sign in"
+          )}
         </motion.button>
       </form>
 

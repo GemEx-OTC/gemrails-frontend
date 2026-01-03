@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "@/context/auth-context"
 import {
   LayoutDashboard,
   Store,
@@ -30,6 +31,26 @@ const navItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        router.push("/auth/admin/login")
+      } else if (user.role !== "admin") {
+        router.push("/auth/admin/login") // Or a forbidden page
+      }
+    }
+  }, [user, isLoading, router])
+
+  if (isLoading || !user || user.role !== "admin") {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0a0d10]">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0d10]">
@@ -66,9 +87,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 bg-gray-900 border-r border-gray-800 transform transition-transform duration-300 lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 left-0 z-40 h-full w-64 bg-gray-900 border-r border-gray-800 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -93,11 +113,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={item.href}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    isActive
-                      ? "bg-emerald-500/20 text-emerald-400"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800"
-                  }`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
+                    ? "bg-emerald-500/20 text-emerald-400"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800"
+                    }`}
                 >
                   <item.icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
