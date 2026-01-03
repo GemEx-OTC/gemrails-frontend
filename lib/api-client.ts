@@ -9,10 +9,13 @@ interface ApiError {
 async function fetchHelper<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
 
-    const headers: HeadersInit = {
-        "Content-Type": "application/json",
+    const headers: Record<string, string> = {
         ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
+        ...options.headers as Record<string, string>,
+    }
+
+    if (!(options.body instanceof FormData)) {
+        headers["Content-Type"] = "application/json"
     }
 
     const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -119,6 +122,13 @@ export const apiClient = {
     adminLogin: (data: any) => fetchHelper("/auth/admin/login", { method: "POST", body: JSON.stringify(data) }),
     logout: () => fetchHelper("/auth/logout", { method: "POST" }),
     getProfile: () => fetchHelper("/auth/profile"),
+
+    // Profile & Settings
+    updateProfile: (data: any) => fetchHelper("/auth/profile", { method: "PUT", body: JSON.stringify(data) }),
+    updateBankAccount: (data: any) => fetchHelper("/auth/bank-account", { method: "PUT", body: JSON.stringify(data) }),
+    updateSettings: (data: any) => fetchHelper("/auth/settings", { method: "PUT", body: JSON.stringify(data) }),
+    uploadLogo: (data: FormData) => fetchHelper("/auth/upload-logo", { method: "POST", body: data }),
+    deleteLogo: () => fetchHelper("/auth/logo", { method: "DELETE" }),
 
     // Forgot Password
     forgotPassword: (email: string) => fetchHelper("/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),

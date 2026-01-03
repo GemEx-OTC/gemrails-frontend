@@ -16,11 +16,14 @@ import {
   Shield,
 } from "lucide-react"
 import { BUSINESS_CATEGORIES, NIGERIAN_BANKS } from "@/lib/constants"
+import { apiClient } from "@/lib/api-client"
+import { useAuth } from "@/context/auth-context"
 
 type OnboardingStep = "business" | "bank" | "complete"
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const { user, refreshUser } = useAuth()
   const [step, setStep] = useState<OnboardingStep>("business")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -38,8 +41,31 @@ export default function OnboardingPage() {
   const [accountName, setAccountName] = useState("")
   const [verifyingAccount, setVerifyingAccount] = useState(false)
 
+  // Initialize form with user data
+  useEffect(() => {
+    if (user) {
+      setBusinessCategory(user.businessCategory || "")
+      setBusinessAddress(user.businessAddress || "")
+      setRcNumber(user.rcNumber || "")
+      setContactName(user.contactName || "")
+      setPhone(user.phone || "")
+
+      if (user.bankAccount) {
+        setBankCode(user.bankAccount.bankCode || "")
+        setAccountNumber(user.bankAccount.accountNumber || "")
+        setAccountName(user.bankAccount.accountName || "")
+      }
+    }
+  }, [user])
+
   // Simulate account name lookup
   useEffect(() => {
+    // Only simulate if user hasn't already provided a name (or if they are typing new numbers)
+    // For simplicity, we just check if it matches existing user data to avoid wiping it
+    if (user?.bankAccount?.accountNumber === accountNumber && user?.bankAccount?.bankCode === bankCode && accountName) {
+      return
+    }
+
     if (accountNumber.length === 10 && bankCode) {
       setVerifyingAccount(true)
       setTimeout(() => {
@@ -49,7 +75,7 @@ export default function OnboardingPage() {
     } else {
       setAccountName("")
     }
-  }, [accountNumber, bankCode])
+  }, [accountNumber, bankCode, user])
 
   const steps = [
     { id: "business", label: "Business Info", icon: Building2 },
@@ -70,11 +96,11 @@ export default function OnboardingPage() {
   const validateBankStep = () => {
     if (!bankCode) return "Please select a bank"
     if (accountNumber.length !== 10) return "Account number must be 10 digits"
-    if (!accountName) return "Please wait for account verification"
+    if (!accountName.trim()) return "Account name is required"
     return null
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setError("")
 
     if (step === "business") {
@@ -83,18 +109,46 @@ export default function OnboardingPage() {
         setError(err)
         return
       }
-      setStep("bank")
+
+      setLoading(true)
+      try {
+        await apiClient.updateProfile({
+          businessName: user?.businessName,
+          businessCategory,
+          businessAddress,
+          contactName,
+          phone,
+          rcNumber,
+        })
+        await refreshUser()
+        setStep("bank")
+      } catch (err: any) {
+        setError(err.message || "Failed to update profile")
+      } finally {
+        setLoading(false)
+      }
     } else if (step === "bank") {
       const err = validateBankStep()
       if (err) {
         setError(err)
         return
       }
+
       setLoading(true)
-      setTimeout(() => {
-        setLoading(false)
+      try {
+        const bank = NIGERIAN_BANKS.find(b => b.code === bankCode)
+        await apiClient.updateBankAccount({
+          bankCode,
+          bankName: bank?.name || "",
+          accountNumber,
+          accountName,
+        })
         setStep("complete")
-      }, 1000)
+      } catch (err: any) {
+        setError(err.message || "Failed to add bank account")
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -129,13 +183,12 @@ export default function OnboardingPage() {
                 <div key={s.id} className="flex items-center">
                   <div className="flex flex-col items-center">
                     <motion.div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                        isCompleted
-                          ? "bg-emerald-500 text-white"
-                          : isActive
-                            ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400"
-                            : "bg-gray-800 text-gray-500 border border-gray-700"
-                      }`}
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isCompleted
+                        ? "bg-emerald-500 text-white"
+                        : isActive
+                          ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400"
+                          : "bg-gray-800 text-gray-500 border border-gray-700"
+                        }`}
                       animate={{ scale: isActive ? 1.1 : 1 }}
                     >
                       {isCompleted ? (
@@ -287,11 +340,13 @@ export default function OnboardingPage() {
                   </motion.button>
                   <motion.button
                     onClick={handleNext}
+                    disabled={loading}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     className="gemrails-button flex-1 flex items-center justify-center gap-2"
                   >
-                    Continue <ChevronRight className="w-5 h-5" />
+
+                    {loading ? "Saving..." : "Continue"} <ChevronRight className="w-5 h-5" />
                   </motion.button>
                 </div>
               </motion.div>
@@ -356,11 +411,20 @@ export default function OnboardingPage() {
                     />
                   </div>
 
-                  {(verifyingAccount || accountName) && (
-                    <div className="p-4 bg-gray-800/60 border border-gray-700 rounded-xl">
-                      <p className="text-sm text-gray-400 mb-1">Account Name</p>
-                      {verifyingAccount ? (
-                        <div className="flex items-center gap-2 text-emerald-400">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Account Name
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={accountName}
+                        onChange={(e) => setAccountName(e.target.value)}
+                        placeholder="Account Name"
+                        className="gemrails-input"
+                      />
+                      {verifyingAccount && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{
@@ -368,15 +432,12 @@ export default function OnboardingPage() {
                               repeat: Infinity,
                               ease: "linear",
                             }}
-                            className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full"
+                            className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full"
                           />
-                          Verifying...
                         </div>
-                      ) : (
-                        <p className="text-white font-medium">{accountName}</p>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {error && (
