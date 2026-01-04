@@ -43,6 +43,8 @@ export default function SettingsPage() {
   const [notifyEmail, setNotifyEmail] = useState(false)
   const [notifySms, setNotifySms] = useState(false)
 
+
+
   useEffect(() => {
     if (user) {
       setBusinessName(user.businessName || "")
@@ -519,38 +521,39 @@ export default function SettingsPage() {
             </motion.div>
           )
         }
-
-        {/* Save Button */}
-        <div className="mt-6 pt-6 border-t border-gray-800 flex justify-end">
-          <motion.button
-            onClick={handleSave}
-            disabled={saving}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="gemrails-button flex items-center gap-2"
-          >
-            {saved ? (
-              <>
-                <Check className="w-5 h-5" />
-                Saved!
-              </>
-            ) : saving ? (
-              <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-5 h-5" />
-                Save Changes
-              </>
-            )}
-          </motion.button>
-        </div>
+        {/* Save Button - Hide on Bank tab as it has its own specific actions */}
+        {activeTab !== "bank" && (
+          <div className="mt-6 pt-6 border-t border-gray-800 flex justify-end">
+            <motion.button
+              onClick={handleSave}
+              disabled={saving}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="gemrails-button flex items-center gap-2"
+            >
+              {saved ? (
+                <>
+                  <Check className="w-5 h-5" />
+                  Saved!
+                </>
+              ) : saving ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                  />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  Save Changes
+                </>
+              )}
+            </motion.button>
+          </div>
+        )}
       </div >
 
       {/* Bank Change OTP Modal */}

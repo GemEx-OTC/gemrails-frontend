@@ -102,11 +102,10 @@ async function fetchHelper<T>(endpoint: string, options: RequestInit = {}): Prom
             errorCode = data.error.code
         }
 
-        throw {
-            message: errorMessage,
-            status: response.status,
-            code: errorCode,
-        } as ApiError
+        const error = new Error(errorMessage) as any
+        error.status = response.status
+        error.code = errorCode
+        throw error
     }
 
     return data
@@ -129,6 +128,7 @@ export const apiClient = {
     updateSettings: (data: any) => fetchHelper("/auth/settings", { method: "PUT", body: JSON.stringify(data) }),
     uploadLogo: (data: FormData) => fetchHelper("/auth/upload-logo", { method: "POST", body: data }),
     deleteLogo: () => fetchHelper("/auth/logo", { method: "DELETE" }),
+    changePassword: (data: any) => fetchHelper("/auth/change-password", { method: "POST", body: JSON.stringify(data) }),
 
     // Forgot Password
     forgotPassword: (email: string) => fetchHelper("/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
