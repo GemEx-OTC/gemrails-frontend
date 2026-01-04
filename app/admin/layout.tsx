@@ -39,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       if (!user) {
         router.push("/auth/admin/login")
       } else if (user.role !== "admin") {
-        router.push("/auth/admin/login") // Or a forbidden page
+        router.push("/auth/admin/login")
       }
     }
   }, [user, isLoading, router])

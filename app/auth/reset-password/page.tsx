@@ -50,7 +50,7 @@ function ResetPasswordContent() {
                 newPassword: password,
             })
             setSuccess(true)
-            // Redirect to login after 3 seconds
+
             setTimeout(() => {
                 router.push("/auth/login")
             }, 3000)
