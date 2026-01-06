@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import {
@@ -16,49 +16,127 @@ import {
 import { PAYMENT_STATUS, FEE_CONFIG } from "@/lib/constants"
 import { OnboardingBanner } from "@/components/onboarding-banner"
 import { useAuth } from "@/context/auth-context"
+import { apiClient } from "@/lib/api-client"
 
-const mockStats = {
-  totalReceived: 2450000,
-  totalIncentives: 12500,
-  totalTransactions: 25,
-  pendingPayments: 2,
+interface DashboardData {
+  user: {
+    id: string;
+    businessName: string;
+    merchantId: string;
+    merchantStatus: string;
+    isProfileComplete: boolean;
+    isBankAdded: boolean;
+  };
+  stats: {
+    totalReceived: number;
+    totalIncentives: number;
+    totalTransactions: number;
+    pendingPayments: number;
+  };
+  recentTransactions: Array<{
+    id: string;
+    transactionId: string;
+    merchantName: string;
+    amount: number;
+    cryptoAmount: number;
+    cryptoAsset: string;
+    network: string;
+    incentive: number;
+    status: string;
+    customerRef: string;
+    timestamp: string;
+    settledAt: string;
+    failReason: string;
+  }>;
+  unreadNotifications: number;
 }
 
-
-const mockRecentTransactions = [
-  { id: "TXN001", amount: 150000, incentive: 500, status: "Settled", customerRef: "Table 5", timestamp: new Date(Date.now() - 1000 * 60 * 30) },
-  { id: "TXN002", amount: 85000, incentive: 500, status: "Processing", customerRef: "Walk-in", timestamp: new Date(Date.now() - 1000 * 60 * 60) },
-  { id: "TXN003", amount: 220000, incentive: 500, status: "Settled", customerRef: "Table 12", timestamp: new Date(Date.now() - 1000 * 60 * 120) },
-  { id: "TXN004", amount: 45000, incentive: 500, status: "AwaitingCrypto", customerRef: "Delivery", timestamp: new Date(Date.now() - 1000 * 60 * 180) },
-]
-
 const formatCurrency = (amount: number) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(amount)
-const formatTime = (date: Date) => {
-  const diff = Date.now() - date.getTime()
+const formatTime = (date: Date | string) => {
+  const d = new Date(date)
+  const diff = Date.now() - d.getTime()
   const minutes = Math.floor(diff / 60000)
   if (minutes < 60) return `${minutes}m ago`
   const hours = Math.floor(minutes / 60)
   if (hours < 24) return `${hours}h ago`
-  return date.toLocaleDateString()
+  return d.toLocaleDateString()
 }
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const [data, setData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [timeRange, setTimeRange] = useState<"today" | "week" | "month">("today")
 
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const response = await apiClient.getDashboard() as { success: boolean; data: DashboardData; message?: string }
+        if (response.success) {
+          setData(response.data)
+        } else {
+          setError(response.message || "Failed to fetch dashboard data")
+        }
+      } catch (err: any) {
+        setError(err.message || "An error occurred")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboard()
+  }, [])
+
   const statCards = [
-    { title: "Total Received", value: formatCurrency(mockStats.totalReceived), change: "+12.5%", icon: DollarSign },
-    { title: "Incentives Earned", value: formatCurrency(mockStats.totalIncentives), subtitle: `₦${FEE_CONFIG.merchantIncentive} per transaction`, icon: TrendingUp },
-    { title: "Total Transactions", value: mockStats.totalTransactions.toString(), change: "+8", icon: Users },
-    { title: "Pending Payments", value: mockStats.pendingPayments.toString(), subtitle: "Awaiting confirmation", icon: Clock },
+    {
+      title: "Total Received",
+      value: data ? formatCurrency(data.stats.totalReceived) : "-",
+      change: "+0%", // API doesn't provide change % yet
+      icon: DollarSign
+    },
+    {
+      title: "Incentives Earned",
+      value: data ? formatCurrency(data.stats.totalIncentives) : "-",
+      subtitle: `₦${FEE_CONFIG.merchantIncentive} per transaction`,
+      icon: TrendingUp
+    },
+    {
+      title: "Total Transactions",
+      value: data ? data.stats.totalTransactions.toString() : "-",
+      change: "+0",
+      icon: Users
+    },
+    {
+      title: "Pending Payments",
+      value: data ? data.stats.pendingPayments.toString() : "-",
+      subtitle: "Awaiting confirmation",
+      icon: Clock
+    },
   ]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500">
+        {error}
+      </div>
+    )
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       {/* Onboarding Banner */}
       <OnboardingBanner
-        isProfileComplete={!!user?.businessCategory}
-        isBankAdded={!!user?.bankAccount?.accountNumber}
+        isProfileComplete={data?.user?.isProfileComplete ?? !!user?.businessCategory}
+        isBankAdded={data?.user?.isBankAdded ?? !!user?.bankAccount?.accountNumber}
       />
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -102,7 +180,7 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
           <div className="space-y-3">
             <Link href="/dashboard/qr-code">
-              <motion.div whileHover={{ scale: 1.02, x: 4 }} className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl cursor-pointer group">
+              <motion.div whileHover={{ scale: 1.02, x: 4 }} className="flex items-center mb-2 justify-between p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl cursor-pointer group">
                 <div className="flex items-center gap-3"><QrCode className="w-5 h-5 text-emerald-400" /><span className="text-white font-medium">Download QR Code</span></div>
                 <ArrowUpRight className="w-4 h-4 text-emerald-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </motion.div>
@@ -126,26 +204,33 @@ export default function DashboardPage() {
             <Link href="/dashboard/transactions" className="text-sm text-emerald-400 hover:text-emerald-300">View all →</Link>
           </div>
           <div className="space-y-3">
-            {mockRecentTransactions.map((tx) => {
-              const statusConfig = PAYMENT_STATUS[tx.status as keyof typeof PAYMENT_STATUS]
-              return (
-                <motion.div key={tx.id} whileHover={{ scale: 1.01 }} className="flex items-center justify-between p-4 bg-gray-800/30 border border-gray-800 rounded-xl">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.status === "Settled" ? "bg-emerald-500/20" : tx.status === "Processing" ? "bg-purple-500/20" : "bg-amber-500/20"}`}>
-                      {tx.status === "Settled" ? <CheckCircle className="w-5 h-5 text-emerald-400" /> : tx.status === "Processing" ? <Clock className="w-5 h-5 text-purple-400" /> : <AlertCircle className="w-5 h-5 text-amber-400" />}
+            {data?.recentTransactions && data.recentTransactions.length > 0 ? (
+              data.recentTransactions.map((tx) => {
+                const statusConfig = PAYMENT_STATUS[tx.status as keyof typeof PAYMENT_STATUS] || PAYMENT_STATUS.Initiated
+                return (
+                  <motion.div key={tx.id} whileHover={{ scale: 1.01 }} className="flex items-center justify-between p-4 bg-gray-800/30 border border-gray-800 rounded-xl">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.status === "Settled" ? "bg-emerald-500/20" : tx.status === "Processing" ? "bg-purple-500/20" : "bg-amber-500/20"}`}>
+                        {tx.status === "Settled" ? <CheckCircle className="w-5 h-5 text-emerald-400" /> : tx.status === "Processing" ? <Clock className="w-5 h-5 text-purple-400" /> : <AlertCircle className="w-5 h-5 text-amber-400" />}
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{formatCurrency(tx.amount)}</p>
+                        <p className="text-sm text-gray-500">{tx.customerRef} • {formatTime(tx.timestamp)}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-white font-medium">{formatCurrency(tx.amount)}</p>
-                      <p className="text-sm text-gray-500">{tx.customerRef} • {formatTime(tx.timestamp)}</p>
+                    <div className="text-right">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}>{statusConfig.label}</span>
+                      {tx.status === "Settled" && <p className="text-xs text-emerald-400 mt-1">+₦{tx.incentive} bonus</p>}
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}>{statusConfig.label}</span>
-                    {tx.status === "Settled" && <p className="text-xs text-emerald-400 mt-1">+₦{tx.incentive} bonus</p>}
-                  </div>
-                </motion.div>
-              )
-            })}
+                  </motion.div>
+                )
+              })
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Clock className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p>No recent transactions</p>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

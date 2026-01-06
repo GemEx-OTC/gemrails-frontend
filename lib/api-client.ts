@@ -133,4 +133,18 @@ export const apiClient = {
     // Forgot Password
     forgotPassword: (email: string) => fetchHelper("/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
     resetPassword: (data: any) => fetchHelper("/auth/reset-password", { method: "POST", body: JSON.stringify(data) }),
+
+    // Dashboard
+    getDashboard: () => fetchHelper("/dashboard"),
+    getTransactions: (params?: any) => {
+        const searchParams = new URLSearchParams()
+        if (params?.page) searchParams.append("page", params.page.toString())
+        if (params?.limit) searchParams.append("limit", params.limit.toString())
+        if (params?.status && params.status !== "all") searchParams.append("status", params.status)
+        if (params?.search) searchParams.append("search", params.search)
+
+        const queryString = searchParams.toString()
+        return fetchHelper(`/dashboard/transactions${queryString ? `?${queryString}` : ""}`)
+    },
+    getTransaction: (id: string) => fetchHelper(`/dashboard/transactions/${id}`),
 }
