@@ -6,6 +6,34 @@ interface ApiError {
     status: number
 }
 
+export interface Notification {
+    id: string
+    type: string
+    title: string
+    message: string
+    priority: string
+    channels: {
+        inApp?: {
+            sent: boolean
+            readAt?: string
+        }
+    }
+    referenceType?: string
+    referenceId?: string
+    createdAt: string
+}
+
+export interface NotificationsResponse {
+    notifications: Notification[]
+    unreadCount: number
+    pagination: {
+        page: number
+        limit: number
+        total: number
+        totalPages: number
+    }
+}
+
 async function fetchHelper<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
 
@@ -147,4 +175,17 @@ export const apiClient = {
         return fetchHelper(`/dashboard/transactions${queryString ? `?${queryString}` : ""}`)
     },
     getTransaction: (id: string) => fetchHelper(`/dashboard/transactions/${id}`),
+
+    // Notifications
+    getNotifications: (params?: { page?: number; limit?: number; filter?: string }) => {
+        const searchParams = new URLSearchParams()
+        if (params?.page) searchParams.append("page", params.page.toString())
+        if (params?.limit) searchParams.append("limit", params.limit.toString())
+        if (params?.filter) searchParams.append("filter", params.filter)
+        const queryString = searchParams.toString()
+        return fetchHelper<{ success: boolean; data: NotificationsResponse }>(`/notifications${queryString ? `?${queryString}` : ""}`)
+    },
+    getUnreadNotificationCount: () => fetchHelper<{ success: boolean; data: { unreadCount: number } }>("/notifications/unread-count"),
+    markNotificationAsRead: (id: string) => fetchHelper(`/notifications/${id}/read`, { method: "POST" }),
+    markAllNotificationsAsRead: () => fetchHelper("/notifications/read-all", { method: "POST" }),
 }

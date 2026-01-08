@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation"
 import { LogOut, User, LayoutDashboard, QrCode, History, Settings, HelpCircle, Bell } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 
+import { useNotification } from "@/context/notification-context"
+
 interface SidebarProps {
   currentPath: string
 }
@@ -22,6 +24,7 @@ const menuItems = [
 export function Sidebar({ currentPath }: SidebarProps) {
   const router = useRouter()
   const { user } = useAuth()
+  const { unreadCount } = useNotification()
 
   const handleLogout = () => {
     sessionStorage.clear()
@@ -66,7 +69,12 @@ export function Sidebar({ currentPath }: SidebarProps) {
                     }`}
                 >
                   <Icon className="w-5 h-5" />
-                  <span>{item.name}</span>
+                  <span className="flex-1">{item.name}</span>
+                  {item.name === "Notifications" && unreadCount > 0 && (
+                    <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-emerald-500 rounded-full">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
                   {isActive && (
                     <motion.div
                       layoutId="activeIndicator"
