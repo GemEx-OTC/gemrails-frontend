@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   AlertCircle,
@@ -17,19 +17,36 @@ import {
   CheckCircle2,
   Loader2,
 } from "lucide-react"
-import { FEE_CONFIG, SUPPORTED_ASSETS, CRYPTO_NETWORKS } from "@/lib/constants"
+import { SUPPORTED_ASSETS } from "@/lib/constants"
 import { copyToClipboard } from "@/lib/clipboard"
-
-const mockMerchant = {
-  id: "DEMO123",
-  businessName: "Demo Restaurant",
-  verified: true,
-  logo: "🏪",
-}
-
-const MOCK_RATE = 1560
+import { apiClient } from "@/lib/api-client"
 
 type PaymentStep = "amount" | "crypto" | "payment" | "processing" | "success"
+
+interface Merchant {
+  id: string
+  businessName: string
+  merchantId: string
+  verified: boolean
+}
+
+interface Rates {
+  USDT: number
+  USDC: number
+  bufferAmount: number
+  minimumPayment: number
+  merchantIncentive: number
+}
+
+interface Transaction {
+  transactionId: string
+  walletAddress: string
+  amount: number
+  cryptoAmount: number
+  cryptoAsset: string
+  network: string
+  expiresAt: string
+}
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-NG", {
@@ -53,10 +70,10 @@ const StepIndicator = ({ currentStep }: { currentStep: PaymentStep }) => {
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${index < currentIndex
-                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
-                : index === currentIndex
-                  ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400"
-                  : "bg-gray-800 border border-gray-700 text-gray-500"
+              ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+              : index === currentIndex
+                ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400"
+                : "bg-gray-800 border border-gray-700 text-gray-500"
               }`}
           >
             {index < currentIndex ? (
@@ -80,8 +97,15 @@ const StepIndicator = ({ currentStep }: { currentStep: PaymentStep }) => {
 export default function PaymentPage({
   params,
 }: {
-  params: { merchantId: string }
+  params: Promise<{ merchantId: string }>
 }) {
+  const { merchantId } = use(params)
+
+  const [merchant, setMerchant] = useState<Merchant | null>(null)
+  const [rates, setRates] = useState<Rates | null>(null)
+  const [transaction, setTransaction] = useState<Transaction | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
   const [step, setStep] = useState<PaymentStep>("amount")
   const [nairaAmount, setNairaAmount] = useState("")
   const [selectedAsset, setSelectedAsset] = useState<"USDT" | "USDC">("USDT")
@@ -89,15 +113,57 @@ export default function PaymentPage({
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState("")
   const [timeLeft, setTimeLeft] = useState(900)
+  const [isConfirming, setIsConfirming] = useState(false)
 
-  const walletAddress =
-    selectedNetwork === "TRC20"
-      ? "TXYZa1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5"
-      : "0x742d35Cc6634C0532925a3b844Bc9e7595f64c31"
+  // Fetch Merchant & Rates
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const [merchantRes, ratesRes] = await Promise.all([
+          apiClient.getMerchantInfo(merchantId) as Promise<{ success: boolean; data: Merchant }>,
+          apiClient.getExchangeRate() as Promise<{ success: boolean; data: Rates }>
+        ])
+
+        if (merchantRes.success) setMerchant(merchantRes.data)
+        if (ratesRes.success) setRates(ratesRes.data)
+      } catch (err) {
+        console.error("Failed to load payment data", err)
+        setError("Invalid merchant or service unavailable")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    init()
+  }, [merchantId])
+
+  // Poll for Payment Status
+  useEffect(() => {
+    if (!transaction?.transactionId || step === "success") return
+
+    const checkStatus = async () => {
+      try {
+        const res: any = await apiClient.getPaymentStatus(transaction.transactionId)
+        if (res.success && (res.data.status === "Settled" || res.data.status === "CryptoReceived" || res.data.status === "Processing")) {
+          setStep("success")
+        }
+      } catch (e) {
+        // ignore errors during polling
+      }
+    }
+
+    const interval = setInterval(checkStatus, 5000)
+    return () => clearInterval(interval)
+  }, [transaction?.transactionId, step])
+
+
+  const walletAddress = transaction?.walletAddress || ""
 
   const amount = parseFloat(nairaAmount) || 0
-  const totalNaira = amount + FEE_CONFIG.bufferAmount
-  const cryptoAmount = totalNaira / MOCK_RATE
+  const bufferAmount = rates?.bufferAmount || 0
+  const totalNaira = amount + bufferAmount
+  const exchangeRate = rates ? (rates as any)[selectedAsset] : 0
+  const cryptoAmount = exchangeRate > 0 ? totalNaira / exchangeRate : 0
+  const minPayment = rates?.minimumPayment || 0
 
   useEffect(() => {
     if (step === "payment" && timeLeft > 0) {
@@ -111,16 +177,44 @@ export default function PaymentPage({
 
   const handleAmountSubmit = () => {
     setError("")
-    if (amount < FEE_CONFIG.minimumPayment) {
-      setError(`Minimum payment is ${formatCurrency(FEE_CONFIG.minimumPayment)}`)
+    if (amount < minPayment) {
+      setError(`Minimum payment is ${formatCurrency(minPayment)}`)
       return
     }
     setStep("crypto")
   }
 
-  const handleCryptoSelect = () => {
-    setStep("payment")
-    setTimeLeft(900)
+  const handleInitiatePayment = async () => {
+    setIsLoading(true)
+    setError("")
+    try {
+      const res: any = await apiClient.initiatePayment({
+        merchantId: merchantId,
+        amount,
+        cryptoAsset: selectedAsset,
+        network: selectedNetwork,
+        customerRef: `CUST-${Date.now()}` // You might want to get this from user input if needed
+      })
+
+      if (res.success) {
+        setTransaction(res.data)
+        setStep("payment")
+        if (res.data.expiresAt) {
+          const expiryTime = new Date(res.data.expiresAt).getTime()
+          const now = Date.now()
+          const diff = Math.floor((expiryTime - now) / 1000)
+          setTimeLeft(diff > 0 ? diff : 900)
+        } else {
+          setTimeLeft(900)
+        }
+      } else {
+        setError(res.message || "Failed to initiate payment")
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to initiate payment")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleCopyAddress = async () => {
@@ -131,9 +225,22 @@ export default function PaymentPage({
     }
   }
 
-  const handleConfirmPayment = () => {
-    setStep("processing")
-    setTimeout(() => setStep("success"), 3000)
+  const handleConfirmPayment = async () => {
+    if (!transaction) return
+    setIsConfirming(true)
+    try {
+      // Demo confirmation
+      await apiClient.confirmPayment({ transactionId: transaction.transactionId })
+      setStep("processing")
+      setTimeout(() => setStep("success"), 2000)
+    } catch (err) {
+      console.error("Failed to confirm", err)
+      // If it fails, we just let the polling continue or show error
+      // But for demo flow, we might want to force success or just wait
+      setStep("processing") // Optimistic update
+    } finally {
+      setIsConfirming(false)
+    }
   }
 
   const handleBack = () => {
@@ -142,6 +249,26 @@ export default function PaymentPage({
   }
 
   const quickAmounts = [5000, 10000, 20000, 50000]
+
+  if (isLoading && !merchant) {
+    return (
+      <div className="min-h-screen bg-[#0a0d10] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!merchant) {
+    return (
+      <div className="min-h-screen bg-[#0a0d10] flex items-center justify-center text-white">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-xl font-bold">Merchant Not Found</h1>
+          <p className="text-gray-400 mt-2">The link you followed is invalid or expired.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0d10] relative overflow-hidden">
@@ -161,14 +288,14 @@ export default function PaymentPage({
               animate={{ scale: 1, opacity: 1 }}
               className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg ring-2 ring-white/20"
             >
-              <span className="text-3xl">{mockMerchant.logo}</span>
+              <span className="text-3xl">🏪</span>
             </motion.div>
             <div className="flex-1">
               <h1 className="text-white font-bold text-xl tracking-tight">
-                {mockMerchant.businessName}
+                {merchant.businessName}
               </h1>
               <div className="flex items-center gap-1.5 text-emerald-100 text-sm mt-0.5">
-                {mockMerchant.verified && (
+                {merchant.verified && (
                   <Shield className="w-4 h-4 text-white" />
                 )}
                 <span className="font-medium">Verified Merchant</span>
@@ -214,7 +341,7 @@ export default function PaymentPage({
                     />
                   </div>
                   <p className="text-gray-500 text-sm mt-4">
-                    Minimum: {formatCurrency(FEE_CONFIG.minimumPayment)}
+                    Minimum: {formatCurrency(minPayment)}
                   </p>
                 </div>
 
@@ -227,8 +354,8 @@ export default function PaymentPage({
                       whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.95 }}
                       className={`py-3 px-3 rounded-xl text-sm font-semibold transition-all ${amount === amt
-                          ? "bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/40"
-                          : "bg-gray-800/60 border border-gray-700/80 text-gray-300 hover:border-emerald-500/50 hover:text-white hover:bg-gray-800"
+                        ? "bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/40"
+                        : "bg-gray-800/60 border border-gray-700/80 text-gray-300 hover:border-emerald-500/50 hover:text-white hover:bg-gray-800"
                         }`}
                     >
                       ₦{amt / 1000}k
@@ -254,7 +381,7 @@ export default function PaymentPage({
 
               {/* Crypto Estimate Card */}
               <AnimatePresence>
-                {amount >= FEE_CONFIG.minimumPayment && (
+                {amount >= minPayment && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -274,7 +401,7 @@ export default function PaymentPage({
               {/* Continue Button */}
               <motion.button
                 onClick={handleAmountSubmit}
-                disabled={amount < FEE_CONFIG.minimumPayment}
+                disabled={amount < minPayment}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 flex items-center justify-center gap-2"
@@ -343,8 +470,8 @@ export default function PaymentPage({
                       onClick={() => setSelectedAsset(asset)}
                       whileTap={{ scale: 0.97 }}
                       className={`flex-1 p-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${selectedAsset === asset
-                          ? "border-emerald-500 bg-emerald-500/10"
-                          : "border-gray-700/80 bg-gray-800/40"
+                        ? "border-emerald-500 bg-emerald-500/10"
+                        : "border-gray-700/80 bg-gray-800/40"
                         }`}
                     >
                       <img
@@ -376,8 +503,8 @@ export default function PaymentPage({
                       onClick={() => setSelectedNetwork(network)}
                       whileTap={{ scale: 0.97 }}
                       className={`flex-1 p-3 rounded-xl border transition-all ${selectedNetwork === network
-                          ? "border-emerald-500 bg-emerald-500/10"
-                          : "border-gray-700/80 bg-gray-800/40"
+                        ? "border-emerald-500 bg-emerald-500/10"
+                        : "border-gray-700/80 bg-gray-800/40"
                         }`}
                     >
                       <div className="flex items-center justify-center gap-2">
@@ -402,7 +529,8 @@ export default function PaymentPage({
 
               {/* Continue Button */}
               <motion.button
-                onClick={handleCryptoSelect}
+                onClick={handleInitiatePayment}
+                disabled={isLoading}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
@@ -438,8 +566,8 @@ export default function PaymentPage({
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 className={`backdrop-blur-xl border rounded-2xl p-4 shadow-xl transition-all ${timeLeft < 120
-                    ? "bg-red-500/10 border-red-500/30 shadow-red-500/10"
-                    : "bg-amber-500/10 border-amber-500/30 shadow-amber-500/10"
+                  ? "bg-red-500/10 border-red-500/30 shadow-red-500/10"
+                  : "bg-amber-500/10 border-amber-500/30 shadow-amber-500/10"
                   }`}
               >
                 <div className="flex items-center justify-center gap-3">
@@ -451,7 +579,9 @@ export default function PaymentPage({
                     remaining
                   </span>
                 </div>
-                {timeLeft < 120 && (
+                {timeLeft === 0 ? (
+                  <p className="text-center text-red-500 text-sm mt-2 font-bold">Rate Expired. Please restart.</p>
+                ) : timeLeft < 120 && (
                   <p className="text-center text-red-400 text-xs mt-2">Rate expires soon!</p>
                 )}
               </motion.div>
@@ -497,8 +627,8 @@ export default function PaymentPage({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={`px-5 rounded-xl flex items-center justify-center transition-all ${copied
-                        ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
-                        : "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30"
+                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                      : "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30"
                       }`}
                   >
                     {copied ? (
@@ -552,6 +682,7 @@ export default function PaymentPage({
               {/* Confirm Button */}
               <motion.button
                 onClick={handleConfirmPayment}
+                disabled={isConfirming || timeLeft === 0}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
@@ -697,13 +828,13 @@ export default function PaymentPage({
                   <div className="flex justify-between text-sm py-2 border-b border-gray-800">
                     <span className="text-gray-400">Merchant</span>
                     <span className="text-white font-semibold">
-                      {mockMerchant.businessName}
+                      {merchant.businessName}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-2">
                     <span className="text-gray-400">Reference</span>
                     <span className="text-emerald-400 font-mono font-bold bg-emerald-500/10 px-3 py-1 rounded-lg">
-                      TXN{Date.now().toString().slice(-8)}
+                      {transaction?.transactionId || "TXN..."}
                     </span>
                   </div>
                 </div>
