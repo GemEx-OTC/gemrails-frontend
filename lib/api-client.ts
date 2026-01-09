@@ -60,7 +60,7 @@ async function fetchHelper<T>(endpoint: string, options: RequestInit = {}): Prom
 
     if (!response.ok) {
         // Handle 401 Unauthorized - Attempt Refresh Token
-        if (response.status === 401 && !endpoint.includes("/auth/login") && !endpoint.includes("/auth/refresh-token")) {
+        if (response.status === 401 && !endpoint.includes("/auth/login") && !endpoint.includes("/auth/admin/login") && !endpoint.includes("/auth/refresh-token")) {
             try {
                 const refreshToken = localStorage.getItem("refreshToken")
 
