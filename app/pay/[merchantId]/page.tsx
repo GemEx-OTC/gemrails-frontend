@@ -42,9 +42,9 @@ const formatCurrency = (amount: number) =>
 const StepIndicator = ({ currentStep }: { currentStep: PaymentStep }) => {
   const steps = ["amount", "crypto", "payment"]
   const currentIndex = steps.indexOf(currentStep)
-  
+
   if (currentStep === "processing" || currentStep === "success") return null
-  
+
   return (
     <div className="flex items-center justify-center gap-2 mb-6">
       {steps.map((step, index) => (
@@ -52,13 +52,12 @@ const StepIndicator = ({ currentStep }: { currentStep: PaymentStep }) => {
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-              index < currentIndex
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${index < currentIndex
                 ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
                 : index === currentIndex
                   ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400"
                   : "bg-gray-800 border border-gray-700 text-gray-500"
-            }`}
+              }`}
           >
             {index < currentIndex ? (
               <Check className="w-4 h-4" />
@@ -68,9 +67,8 @@ const StepIndicator = ({ currentStep }: { currentStep: PaymentStep }) => {
           </motion.div>
           {index < steps.length - 1 && (
             <div
-              className={`w-8 h-0.5 transition-all ${
-                index < currentIndex ? "bg-emerald-500" : "bg-gray-700"
-              }`}
+              className={`w-8 h-0.5 transition-all ${index < currentIndex ? "bg-emerald-500" : "bg-gray-700"
+                }`}
             />
           )}
         </div>
@@ -158,7 +156,7 @@ export default function PaymentPage({
       <header className="relative z-10 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-2xl shadow-emerald-500/20">
         <div className="max-w-lg mx-auto px-4 py-5">
           <div className="flex items-center gap-4">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg ring-2 ring-white/20"
@@ -228,11 +226,10 @@ export default function PaymentPage({
                       onClick={() => setNairaAmount(amt.toString())}
                       whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`py-3 px-3 rounded-xl text-sm font-semibold transition-all ${
-                        amount === amt
+                      className={`py-3 px-3 rounded-xl text-sm font-semibold transition-all ${amount === amt
                           ? "bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/40"
                           : "bg-gray-800/60 border border-gray-700/80 text-gray-300 hover:border-emerald-500/50 hover:text-white hover:bg-gray-800"
-                      }`}
+                        }`}
                     >
                       ₦{amt / 1000}k
                     </motion.button>
@@ -345,14 +342,13 @@ export default function PaymentPage({
                       key={asset}
                       onClick={() => setSelectedAsset(asset)}
                       whileTap={{ scale: 0.97 }}
-                      className={`flex-1 p-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${
-                        selectedAsset === asset
+                      className={`flex-1 p-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${selectedAsset === asset
                           ? "border-emerald-500 bg-emerald-500/10"
                           : "border-gray-700/80 bg-gray-800/40"
-                      }`}
+                        }`}
                     >
-                      <img 
-                        src={`/icons/${asset.toLowerCase()}.svg`} 
+                      <img
+                        src={`/icons/${asset.toLowerCase()}.svg`}
                         alt={asset}
                         className="w-6 h-6"
                       />
@@ -379,15 +375,14 @@ export default function PaymentPage({
                       key={network}
                       onClick={() => setSelectedNetwork(network)}
                       whileTap={{ scale: 0.97 }}
-                      className={`flex-1 p-3 rounded-xl border transition-all ${
-                        selectedNetwork === network
+                      className={`flex-1 p-3 rounded-xl border transition-all ${selectedNetwork === network
                           ? "border-emerald-500 bg-emerald-500/10"
                           : "border-gray-700/80 bg-gray-800/40"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-center gap-2">
-                        <img 
-                          src={`/icons/chains/${network === "TRC20" ? "tron" : "bnb"}.svg`} 
+                        <img
+                          src={`/icons/chains/${network === "TRC20" ? "tron" : "bnb"}.svg`}
                           alt={network}
                           className="w-5 h-5"
                         />
@@ -396,9 +391,8 @@ export default function PaymentPage({
                           <Check className="w-4 h-4 text-emerald-400" />
                         )}
                       </div>
-                      <p className={`text-xs mt-1 ${
-                        network === "TRC20" ? "text-emerald-400" : "text-blue-400"
-                      }`}>
+                      <p className={`text-xs mt-1 ${network === "TRC20" ? "text-emerald-400" : "text-blue-400"
+                        }`}>
                         {network === "TRC20" ? "Recommended" : "Low fees"}
                       </p>
                     </motion.button>
@@ -440,14 +434,13 @@ export default function PaymentPage({
               </motion.button>
 
               {/* Timer Card */}
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
-                className={`backdrop-blur-xl border rounded-2xl p-4 shadow-xl transition-all ${
-                  timeLeft < 120 
-                    ? "bg-red-500/10 border-red-500/30 shadow-red-500/10" 
+                className={`backdrop-blur-xl border rounded-2xl p-4 shadow-xl transition-all ${timeLeft < 120
+                    ? "bg-red-500/10 border-red-500/30 shadow-red-500/10"
                     : "bg-amber-500/10 border-amber-500/30 shadow-amber-500/10"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-center gap-3">
                   <Clock className={`w-5 h-5 ${timeLeft < 120 ? "text-red-400" : "text-amber-400"}`} />
@@ -503,11 +496,10 @@ export default function PaymentPage({
                     onClick={handleCopyAddress}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`px-5 rounded-xl flex items-center justify-center transition-all ${
-                      copied
+                    className={`px-5 rounded-xl flex items-center justify-center transition-all ${copied
                         ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
                         : "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30"
-                    }`}
+                      }`}
                   >
                     {copied ? (
                       <Check className="w-5 h-5" />
@@ -583,7 +575,7 @@ export default function PaymentPage({
               <div className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-10 shadow-2xl shadow-black/30 text-center relative overflow-hidden">
                 {/* Animated background */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_70%)]" />
-                
+
                 <div className="relative">
                   {/* Animated spinner */}
                   <div className="relative w-24 h-24 mx-auto mb-8">
@@ -601,17 +593,17 @@ export default function PaymentPage({
                       <Loader2 className="w-8 h-8 text-emerald-400 animate-pulse" />
                     </div>
                   </div>
-                  
+
                   <h2 className="text-2xl font-bold text-white mb-3">
                     Confirming Payment
                   </h2>
                   <p className="text-gray-400 leading-relaxed max-w-xs mx-auto">
                     Please wait while we verify your transaction on the blockchain.
                   </p>
-                  
+
                   {/* Status indicators */}
                   <div className="mt-8 space-y-3">
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.5 }}
@@ -620,7 +612,7 @@ export default function PaymentPage({
                       <Check className="w-4 h-4" />
                       <span className="text-sm">Transaction detected</span>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 1.5 }}
@@ -656,7 +648,7 @@ export default function PaymentPage({
                   <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping" />
                   <Check className="w-14 h-14 text-white relative z-10" />
                 </motion.div>
-                <motion.h2 
+                <motion.h2
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
@@ -664,7 +656,7 @@ export default function PaymentPage({
                 >
                   Payment Confirmed! 🎉
                 </motion.h2>
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
@@ -675,7 +667,7 @@ export default function PaymentPage({
               </div>
 
               {/* Transaction Details Card */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
@@ -718,7 +710,7 @@ export default function PaymentPage({
               </motion.div>
 
               {/* Success Message Card */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
@@ -736,7 +728,7 @@ export default function PaymentPage({
               </motion.div>
 
               {/* Action Buttons */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}

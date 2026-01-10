@@ -5,14 +5,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Menu, X, User, LogOut, Bell } from "lucide-react"
+import { useAuth } from "@/context/auth-context"
 
-interface MobileTopNavProps {
-  unreadCount?: number
-}
+interface MobileTopNavProps { }
 
-export function MobileTopNav({ unreadCount = 3 }: MobileTopNavProps) {
+export function MobileTopNav({ }: MobileTopNavProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
+  const { user } = useAuth()
 
   const handleLogout = () => {
     sessionStorage.clear()
@@ -42,21 +42,6 @@ export function MobileTopNav({ unreadCount = 3 }: MobileTopNavProps) {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2">
-            {/* Notifications */}
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={handleNotificationsClick}
-              className="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-              aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-emerald-500 rounded-full px-1">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </motion.button>
-
             {/* Menu toggle */}
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -87,7 +72,7 @@ export function MobileTopNav({ unreadCount = 3 }: MobileTopNavProps) {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="md:hidden fixed top-[60px] left-4 right-4 z-50 bg-[#12161c] border border-gray-800 rounded-xl shadow-xl overflow-hidden"
+              className="md:hidden fixed top-[80px] left-4 right-4 z-50 bg-[#12161c] border border-gray-800 rounded-xl shadow-xl overflow-hidden"
             >
               {/* User Info */}
               <div className="p-4 border-b border-gray-800 bg-gray-800/30">
@@ -96,8 +81,8 @@ export function MobileTopNav({ unreadCount = 3 }: MobileTopNavProps) {
                     <User className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white">Demo Restaurant</p>
-                    <p className="text-sm text-gray-400">Verified Merchant</p>
+                    <p className="font-medium text-white">{user?.businessName}</p>
+                    <p className="text-sm text-gray-400">{`#${user?.merchantId}`}</p>
                   </div>
                 </div>
               </div>

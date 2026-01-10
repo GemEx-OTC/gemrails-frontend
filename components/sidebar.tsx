@@ -4,6 +4,9 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { LogOut, User, LayoutDashboard, QrCode, History, Settings, HelpCircle, Bell } from "lucide-react"
+import { useAuth } from "@/context/auth-context"
+
+import { useNotification } from "@/context/notification-context"
 
 interface SidebarProps {
   currentPath: string
@@ -20,6 +23,8 @@ const menuItems = [
 
 export function Sidebar({ currentPath }: SidebarProps) {
   const router = useRouter()
+  const { user } = useAuth()
+  const { unreadCount } = useNotification()
 
   const handleLogout = () => {
     sessionStorage.clear()
@@ -49,21 +54,27 @@ export function Sidebar({ currentPath }: SidebarProps) {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
-            const isActive = currentPath === item.href || currentPath.startsWith(item.href + "/")
+            const isActive = item.href === "/dashboard"
+              ? currentPath === "/dashboard"
+              : currentPath === item.href || currentPath.startsWith(item.href + "/")
             const Icon = item.icon
             return (
               <Link key={item.href} href={item.href}>
                 <motion.div
                   whileHover={{ scale: 1.02, x: 4 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`relative px-4 py-3 rounded-xl font-medium transition-all cursor-pointer flex items-center gap-3 ${
-                    isActive
-                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-                  }`}
+                  className={`relative px-4 py-3 font-medium transition-all cursor-pointer flex items-center gap-3 ${isActive
+                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-r-xl border-l-0"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl"
+                    }`}
                 >
                   <Icon className="w-5 h-5" />
-                  <span>{item.name}</span>
+                  <span className="flex-1">{item.name}</span>
+                  {item.name === "Notifications" && unreadCount > 0 && (
+                    <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-emerald-500 rounded-full">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
                   {isActive && (
                     <motion.div
                       layoutId="activeIndicator"
@@ -83,8 +94,8 @@ export function Sidebar({ currentPath }: SidebarProps) {
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">Demo Restaurant</p>
-              <p className="text-xs text-gray-500 truncate">Verified Merchant</p>
+              <p className="text-sm font-medium text-white truncate">{user?.businessName}</p>
+              <p className="text-xs text-gray-500 truncate">{`#${user?.merchantId}`}</p>
             </div>
           </div>
 
