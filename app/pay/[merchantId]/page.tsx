@@ -791,9 +791,9 @@ export default function PaymentPage({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-gray-300 text-lg"
+                  className="text-gray-300 text-lg font-semibold"
                 >
-                  Look at you! You just paid with crypto like a king 👑
+                  Look at you shopping with crypto like a King that you are.
                 </motion.p>
               </div>
 
