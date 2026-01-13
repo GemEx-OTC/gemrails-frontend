@@ -1,26 +1,31 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
 import { QRCodeSVG } from "qrcode.react"
-import { Download, Share2, Copy, Check, Smartphone, Printer, ExternalLink } from "lucide-react"
+import { Download, Share2, Copy, Check, Smartphone, Printer, ExternalLink, Loader2 } from "lucide-react"
 import { copyToClipboard } from "@/lib/clipboard"
-
-const baseUrl = process.env.NEXT_PUBLIC_GEMRAILS_BASE_URL;
-
-const mockMerchant = {
-  id: "DEMO123",
-  businessName: "Demo Restaurant",
-  paymentUrl: `${baseUrl}/pay/test-payment`,
-}
+import { useAuth } from "@/context/auth-context"
 
 export default function QRCodePage() {
+  const { user, isLoading } = useAuth()
   const [copied, setCopied] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const qrRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const baseUrl = process.env.NEXT_PUBLIC_GEMRAILS_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "")
+
+  const paymentUrl = user?.merchantId ? `${baseUrl}/pay/${user.merchantId}` : ""
+  const businessName = user?.businessName || "My Business"
+
   const handleCopyLink = async () => {
-    const success = await copyToClipboard(mockMerchant.paymentUrl)
+    if (!paymentUrl) return
+    const success = await copyToClipboard(paymentUrl)
     if (success) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -47,7 +52,7 @@ export default function QRCodePage() {
         ctx?.drawImage(img, 0, 0, 512, 512)
 
         const link = document.createElement("a")
-        link.download = `gemrails-qr-${mockMerchant.id}.png`
+        link.download = `gemrails-qr-${user?.merchantId || "code"}.png`
         link.href = canvas.toDataURL("image/png")
         link.click()
         setDownloading(false)
@@ -61,12 +66,12 @@ export default function QRCodePage() {
   }
 
   const handleShare = async () => {
-    if (navigator.share) {
+    if (navigator.share && paymentUrl) {
       try {
         await navigator.share({
-          title: `Pay ${mockMerchant.businessName}`,
-          text: `Scan to pay ${mockMerchant.businessName} with crypto`,
-          url: mockMerchant.paymentUrl,
+          title: `Pay ${businessName}`,
+          text: `Scan to pay ${businessName} with crypto`,
+          url: paymentUrl,
         })
       } catch (err) {
         console.log("Share cancelled")
@@ -74,6 +79,25 @@ export default function QRCodePage() {
     } else {
       handleCopyLink()
     }
+  }
+
+  if (isLoading || !mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!user?.merchantId) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-white">Your Payment QR Code</h1>
+        <div className="p-6 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500">
+          You need a Merchant ID to generate a QR code. Please contact support.
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -88,7 +112,7 @@ export default function QRCodePage() {
           <div className="text-center">
             <div ref={qrRef} className="inline-block p-6 bg-white rounded-2xl shadow-xl mb-6">
               <QRCodeSVG
-                value={mockMerchant.paymentUrl}
+                value={paymentUrl}
                 size={256}
                 level="H"
                 includeMargin={false}
@@ -101,11 +125,11 @@ export default function QRCodePage() {
               />
             </div>
 
-            <h2 className="text-xl font-bold text-white mb-2">{mockMerchant.businessName}</h2>
+            <h2 className="text-xl font-bold text-white mb-2">{businessName}</h2>
             <p className="text-gray-400 text-sm mb-4">Scan to pay with USDT or USDC</p>
 
             <div className="flex items-center gap-2 p-3 bg-gray-800/50 border border-gray-700 rounded-xl mb-4">
-              <input type="text" value={mockMerchant.paymentUrl} readOnly className="flex-1 bg-transparent text-gray-300 text-sm outline-none" />
+              <input type="text" value={paymentUrl} readOnly className="flex-1 bg-transparent text-gray-300 text-sm outline-none" />
               <motion.button onClick={handleCopyLink} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors">
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </motion.button>
@@ -150,7 +174,7 @@ export default function QRCodePage() {
                 <div className="flex items-center gap-3"><Printer className="w-5 h-5 text-gray-400" /><span className="text-white">Print QR Code</span></div>
                 <ExternalLink className="w-4 h-4 text-gray-500" />
               </motion.button>
-              <motion.button onClick={() => window.open(mockMerchant.paymentUrl, "_blank")} whileHover={{ scale: 1.02, x: 4 }} className="w-full flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-emerald-500/50 transition-all">
+              <motion.button onClick={() => window.open(paymentUrl, "_blank")} whileHover={{ scale: 1.02, x: 4 }} className="w-full flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-emerald-500/50 transition-all">
                 <div className="flex items-center gap-3"><Smartphone className="w-5 h-5 text-gray-400" /><span className="text-white">Preview Payment Page</span></div>
                 <ExternalLink className="w-4 h-4 text-gray-500" />
               </motion.button>
