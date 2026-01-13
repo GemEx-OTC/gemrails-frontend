@@ -1,5 +1,4 @@
-
-const BASE_URL = "https://api.gemexrails.com/api/v1"
+const BASE_URL = process.env.NEXT_PUBLIC_GEMRAILS_API_BASE_URL
 
 interface ApiError {
     message: string

@@ -1,25 +1,155 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { LogOut, User, LayoutDashboard, QrCode, History, Settings, HelpCircle, Bell } from "lucide-react"
+import { 
+  LogOut, 
+  User, 
+  LayoutDashboard, 
+  QrCode, 
+  History, 
+  Settings, 
+  HelpCircle, 
+  Bell,
+  ChevronDown,
+  Store,
+  Zap
+} from "lucide-react"
 import { useAuth } from "@/context/auth-context"
-
 import { useNotification } from "@/context/notification-context"
 
 interface SidebarProps {
   currentPath: string
 }
 
-const menuItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "QR Code", href: "/dashboard/qr-code", icon: QrCode },
-  { name: "Transactions", href: "/dashboard/transactions", icon: History },
+interface MenuItem {
+  name: string
+  href: string
+  icon: React.ElementType
+  badge?: number
+}
+
+interface MenuGroup {
+  label: string
+  icon: React.ElementType
+  items: MenuItem[]
+}
+
+// Grouped menu structure for merchants
+const menuGroups: MenuGroup[] = [
+  {
+    label: "Business",
+    icon: Store,
+    items: [
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { name: "QR Code", href: "/dashboard/qr-code", icon: QrCode },
+      { name: "Transactions", href: "/dashboard/transactions", icon: History },
+    ]
+  },
+]
+
+const generalItems: MenuItem[] = [
   { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
   { name: "Help", href: "/dashboard/help", icon: HelpCircle },
 ]
+
+function SidebarItem({ item, isActive, badge }: { item: MenuItem; isActive: boolean; badge?: number }) {
+  const Icon = item.icon
+  return (
+    <Link href={item.href}>
+      <motion.div
+        whileHover={{ scale: 1.02, x: 4 }}
+        whileTap={{ scale: 0.98 }}
+        className={`relative px-4 py-3 rounded-xl font-medium transition-all cursor-pointer flex items-center gap-3 ${
+          isActive
+            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+        }`}
+      >
+        <Icon className="w-5 h-5" />
+        <span className="flex-1 text-sm">{item.name}</span>
+        {badge !== undefined && badge > 0 && (
+          <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-emerald-500 rounded-full">
+            {badge > 99 ? "99+" : badge}
+          </span>
+        )}
+        {isActive && (
+          <motion.div
+            layoutId="merchantActiveIndicator"
+            className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r"
+          />
+        )}
+      </motion.div>
+    </Link>
+  )
+}
+
+function CollapsibleGroup({ 
+  group, 
+  currentPath, 
+  defaultOpen = true 
+}: { 
+  group: MenuGroup
+  currentPath: string
+  defaultOpen?: boolean 
+}) {
+  const hasActiveItem = group.items.some(item => 
+    item.href === "/dashboard" 
+      ? currentPath === "/dashboard"
+      : currentPath === item.href || currentPath.startsWith(item.href + "/")
+  )
+  const [isOpen, setIsOpen] = useState(defaultOpen || hasActiveItem)
+  const GroupIcon = group.icon
+
+  return (
+    <div className="space-y-1">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <GroupIcon className="w-4 h-4" />
+          <span>{group.label}</span>
+        </div>
+        <motion.div
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown className="w-4 h-4" />
+        </motion.div>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const isActive = item.href === "/dashboard"
+                  ? currentPath === "/dashboard"
+                  : currentPath === item.href || currentPath.startsWith(item.href + "/")
+                return (
+                  <SidebarItem 
+                    key={item.href} 
+                    item={item} 
+                    isActive={isActive}
+                  />
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 export function Sidebar({ currentPath }: SidebarProps) {
   const router = useRouter()
@@ -35,62 +165,58 @@ export function Sidebar({ currentPath }: SidebarProps) {
   return (
     <motion.aside
       initial={{ x: 0 }}
-      className="hidden md:block w-64 bg-[#0a0d10] border-r border-gray-800 h-screen"
+      className="hidden md:flex md:flex-col w-64 lg:w-72 bg-[#0a0d10] border-r border-gray-800 h-screen"
     >
       <div className="flex flex-col h-full">
         {/* Logo */}
-        <div className="p-6 border-b border-gray-800">
+        <div className="p-4 lg:p-6 border-b border-gray-800">
           <Link href="/dashboard" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <span className="text-lg">⚡</span>
+              <Zap className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="text-xl font-bold text-white">GemExRails</span>
+              <span className="text-lg lg:text-xl font-bold text-white">GemExRails</span>
               <p className="text-xs text-emerald-400">Merchant Portal</p>
             </div>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {menuItems.map((item) => {
-            const isActive = item.href === "/dashboard"
-              ? currentPath === "/dashboard"
-              : currentPath === item.href || currentPath.startsWith(item.href + "/")
-            const Icon = item.icon
-            return (
-              <Link key={item.href} href={item.href}>
-                <motion.div
-                  whileHover={{ scale: 1.02, x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`relative px-4 py-3 font-medium transition-all cursor-pointer flex items-center gap-3 ${isActive
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-r-xl border-l-0"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl"
-                    }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="flex-1">{item.name}</span>
-                  {item.name === "Notifications" && unreadCount > 0 && (
-                    <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-emerald-500 rounded-full">
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </span>
-                  )}
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeIndicator"
-                      className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r"
-                    />
-                  )}
-                </motion.div>
-              </Link>
-            )
-          })}
+        <nav className="flex-1 p-3 lg:p-4 space-y-4 overflow-y-auto">
+          {/* Grouped Menu */}
+          {menuGroups.map((group) => (
+            <CollapsibleGroup 
+              key={group.label} 
+              group={group} 
+              currentPath={currentPath}
+              defaultOpen={true}
+            />
+          ))}
+
+          {/* Separator */}
+          <div className="border-t border-gray-800 my-4" />
+
+          {/* General Items */}
+          <div className="space-y-1">
+            {generalItems.map((item) => {
+              const isActive = currentPath === item.href || currentPath.startsWith(item.href + "/")
+              return (
+                <SidebarItem 
+                  key={item.href} 
+                  item={item} 
+                  isActive={isActive}
+                  badge={item.name === "Notifications" ? unreadCount : undefined}
+                />
+              )
+            })}
+          </div>
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-800 space-y-3">
+        <div className="p-3 lg:p-4 border-t border-gray-800 space-y-3">
+          {/* User Info */}
           <div className="flex items-center gap-3 px-3 py-2 bg-gray-800/50 rounded-xl">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
@@ -99,6 +225,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
             </div>
           </div>
 
+          {/* Logout Button */}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -109,6 +236,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
             <span>Logout</span>
           </motion.button>
 
+          {/* Version */}
           <div className="text-xs text-gray-600 text-center">
             <p>GemExRails v1.0.0</p>
           </div>

@@ -16,17 +16,140 @@ import {
   Menu,
   X,
   Shield,
-  ChevronRight,
+  ChevronDown,
+  Activity,
+  Droplets,
+  Users,
+  Zap
 } from "lucide-react"
 
-const navItems = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/merchants", label: "Merchants", icon: Store },
-  { href: "/admin/transactions", label: "Transactions", icon: Receipt },
+interface MenuItem {
+  href: string
+  label: string
+  icon: React.ElementType
+}
+
+interface MenuGroup {
+  label: string
+  icon: React.ElementType
+  items: MenuItem[]
+}
+
+// Grouped admin navigation
+const adminMenuGroups: MenuGroup[] = [
+  {
+    label: "Overview",
+    icon: Activity,
+    items: [
+      { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/admin/liquidity", label: "Liquidity", icon: Droplets },
+      { href: "/admin/transactions", label: "Transactions", icon: Receipt },
+    ]
+  },
+  {
+    label: "Management",
+    icon: Users,
+    items: [
+      { href: "/admin/merchants", label: "Merchants", icon: Store },
+    ]
+  },
+  {
+    label: "Compliance",
+    icon: Shield,
+    items: [
+      { href: "/admin/audit", label: "Audit Logs", icon: FileText },
+    ]
+  },
+]
+
+const adminGeneralItems: MenuItem[] = [
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
-  { href: "/admin/audit", label: "Audit Logs", icon: FileText },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ]
+
+function SidebarItem({ item, isActive, onClick }: { item: MenuItem; isActive: boolean; onClick?: () => void }) {
+  const Icon = item.icon
+  return (
+    <Link href={item.href} onClick={onClick}>
+      <motion.div
+        whileHover={{ scale: 1.02, x: 4 }}
+        whileTap={{ scale: 0.98 }}
+        className={`relative px-4 py-3 rounded-xl font-medium transition-all cursor-pointer flex items-center gap-3 ${
+          isActive
+            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+        }`}
+      >
+        <Icon className="w-5 h-5" />
+        <span className="text-sm">{item.label}</span>
+        {isActive && (
+          <motion.div
+            layoutId="adminActiveIndicator"
+            className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r"
+          />
+        )}
+      </motion.div>
+    </Link>
+  )
+}
+
+function CollapsibleGroup({ 
+  group, 
+  currentPath, 
+  defaultOpen = true,
+  onItemClick
+}: { 
+  group: MenuGroup
+  currentPath: string
+  defaultOpen?: boolean
+  onItemClick?: () => void
+}) {
+  const hasActiveItem = group.items.some(item => currentPath === item.href || currentPath.startsWith(item.href + "/"))
+  const [isOpen, setIsOpen] = useState(defaultOpen || hasActiveItem)
+  const GroupIcon = group.icon
+
+  return (
+    <div className="space-y-1">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-300 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <GroupIcon className="w-4 h-4" />
+          <span>{group.label}</span>
+        </div>
+        <motion.div
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown className="w-4 h-4" />
+        </motion.div>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-1">
+              {group.items.map((item) => (
+                <SidebarItem 
+                  key={item.href} 
+                  item={item} 
+                  isActive={currentPath === item.href || currentPath.startsWith(item.href + "/")}
+                  onClick={onItemClick}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -44,6 +167,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [user, isLoading, router])
 
+  const handleLogout = () => {
+    sessionStorage.clear()
+    localStorage.clear()
+    router.push("/auth/admin/login")
+  }
+
   if (isLoading || !user || user.role !== "admin") {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0a0d10]">
@@ -58,8 +187,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-800">
         <div className="flex items-center justify-between px-4 py-3">
           <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-emerald-400" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-white">GemExRails Admin</span>
           </Link>
@@ -87,15 +216,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 bg-gray-900 border-r border-gray-800 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+        className={`fixed top-0 left-0 z-40 h-full w-64 bg-[#0a0d10] border-r border-gray-800 transform transition-transform duration-300 lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-gray-800">
             <Link href="/admin/dashboard" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <Shield className="w-6 h-6 text-emerald-400" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
                 <span className="font-bold text-white text-lg">GemExRails</span>
@@ -105,34 +235,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
+          <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
+            {/* Grouped Menu */}
+            {adminMenuGroups.map((group) => (
+              <CollapsibleGroup 
+                key={group.label} 
+                group={group} 
+                currentPath={pathname}
+                defaultOpen={true}
+                onItemClick={() => setSidebarOpen(false)}
+              />
+            ))}
+
+            {/* Separator */}
+            <div className="border-t border-gray-800 my-4" />
+
+            {/* General Items */}
+            <div className="space-y-1">
+              {adminGeneralItems.map((item) => (
+                <SidebarItem 
+                  key={item.href} 
+                  item={item} 
+                  isActive={pathname === item.href || pathname.startsWith(item.href + "/")}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
-                    ? "bg-emerald-500/20 text-emerald-400"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800"
-                    }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                  {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
-                </Link>
-              )
-            })}
+                />
+              ))}
+            </div>
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-800">
-            <button className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all">
-              <LogOut className="w-5 h-5" />
-              <span className="font-medium">Logout</span>
-            </button>
-            <p className="text-xs text-gray-600 text-center mt-4">GemExRails Admin v1.0</p>
+          <div className="p-4 border-t border-gray-800 space-y-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-red-400 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-all"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </motion.button>
+            <p className="text-xs text-gray-600 text-center">GemExRails Admin v1.0</p>
           </div>
         </div>
       </aside>

@@ -97,6 +97,8 @@ export default function PaymentPage({
 
   const amount = parseFloat(nairaAmount) || 0
   const totalNaira = amount + FEE_CONFIG.bufferAmount
+  // User sees their amount without buffer - buffer is handled internally
+  const userCryptoAmount = amount / MOCK_RATE
   const cryptoAmount = totalNaira / MOCK_RATE
 
   useEffect(() => {
@@ -264,7 +266,7 @@ export default function PaymentPage({
                     <div className="flex items-center justify-center gap-2 bg-emerald-500/10 rounded-xl py-3">
                       <Sparkles className="w-4 h-4 text-emerald-400" />
                       <span className="text-sm text-emerald-400 font-medium">
-                        ≈ {cryptoAmount.toFixed(2)} USDT/USDC
+                        ≈ {userCryptoAmount.toFixed(2)} USDT/USDC
                       </span>
                     </div>
                   </motion.div>
@@ -317,12 +319,12 @@ export default function PaymentPage({
                 <div className="relative">
                   <p className="text-gray-300 text-sm mb-2 font-medium">You're paying</p>
                   <p className="text-4xl font-bold text-white mb-2">
-                    {formatCurrency(totalNaira)}
+                    {formatCurrency(amount)}
                   </p>
                   <div className="inline-flex items-center gap-2 bg-emerald-500/20 px-4 py-1.5 rounded-full">
                     <Sparkles className="w-4 h-4 text-emerald-400" />
                     <span className="text-emerald-400 font-semibold">
-                      ≈ {cryptoAmount.toFixed(2)} USDT/USDC
+                      ≈ {userCryptoAmount.toFixed(2)} USDT/USDC
                     </span>
                   </div>
                 </div>
@@ -463,7 +465,7 @@ export default function PaymentPage({
                   <p className="text-gray-300 text-sm mb-2 font-medium">Send exactly</p>
                   <div className="flex items-center justify-center gap-2">
                     <p className="text-5xl font-bold text-white">
-                      {cryptoAmount.toFixed(2)}
+                      {userCryptoAmount.toFixed(2)}
                     </p>
                   </div>
                   <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-emerald-500/20 rounded-full mt-4 border border-emerald-500/30">
@@ -687,7 +689,7 @@ export default function PaymentPage({
                   <div className="flex justify-between text-sm py-2 border-b border-gray-800">
                     <span className="text-gray-400">Crypto Sent</span>
                     <span className="text-white font-semibold">
-                      {cryptoAmount.toFixed(2)} {selectedAsset}
+                      {userCryptoAmount.toFixed(2)} {selectedAsset}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm py-2 border-b border-gray-800">
