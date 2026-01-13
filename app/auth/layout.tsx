@@ -75,7 +75,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             className="space-y-4"
           >
             {[
-              { icon: "🏪", text: "Perfect for restaurants, retail & services" },
+              { icon: "🏪", text: "Perfect for every type of business" },
               { icon: "💨", text: "Instant Naira settlement to your bank" },
               { icon: "🎁", text: "Earn ₦100 bonus on every transaction" },
             ].map((feature, idx) => (

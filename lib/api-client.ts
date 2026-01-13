@@ -60,7 +60,7 @@ async function fetchHelper<T>(endpoint: string, options: RequestInit = {}): Prom
 
     if (!response.ok) {
         // Handle 401 Unauthorized - Attempt Refresh Token
-        if (response.status === 401 && !endpoint.includes("/auth/login") && !endpoint.includes("/auth/refresh-token")) {
+        if (response.status === 401 && !endpoint.includes("/auth/login") && !endpoint.includes("/auth/admin/login") && !endpoint.includes("/auth/refresh-token")) {
             try {
                 const refreshToken = localStorage.getItem("refreshToken")
 
@@ -188,4 +188,11 @@ export const apiClient = {
     getUnreadNotificationCount: () => fetchHelper<{ success: boolean; data: { unreadCount: number } }>("/notifications/unread-count"),
     markNotificationAsRead: (id: string) => fetchHelper(`/notifications/${id}/read`, { method: "POST" }),
     markAllNotificationsAsRead: () => fetchHelper("/notifications/read-all", { method: "POST" }),
+
+    // Payments
+    getExchangeRate: () => fetchHelper("/payments/rate"),
+    getMerchantInfo: (merchantId: string) => fetchHelper(`/payments/merchant/${merchantId}`),
+    initiatePayment: (data: any) => fetchHelper("/payments/initiate", { method: "POST", body: JSON.stringify(data) }),
+    getPaymentStatus: (transactionId: string) => fetchHelper(`/payments/status/${transactionId}`),
+    confirmPayment: (data: { transactionId: string }) => fetchHelper("/payments/confirm", { method: "POST", body: JSON.stringify(data) }),
 }
