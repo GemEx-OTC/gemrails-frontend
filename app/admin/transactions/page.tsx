@@ -4,33 +4,12 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Receipt, Search, Filter, Eye, X, ChevronDown,
-  CheckCircle, Clock, AlertCircle, XCircle, ArrowUpRight,
+  CheckCircle, Clock, AlertCircle, XCircle, Loader2,
 } from "lucide-react"
+import { useAdminTransactions } from "@/lib/hooks/use-admin"
+import type { AdminTransaction } from "@/lib/api/types"
 
 type TxStatus = "all" | "Settled" | "Processing" | "AwaitingCrypto" | "Failed"
-
-interface Transaction {
-  id: string
-  merchantName: string
-  amount: number
-  cryptoAmount: number
-  cryptoAsset: string
-  network: string
-  incentive: number
-  status: string
-  customerRef: string
-  timestamp: string
-}
-
-// Mock data
-const mockTransactions: Transaction[] = [
-  { id: "TXN001", merchantName: "Demo Restaurant", amount: 150000, cryptoAmount: 96.15, cryptoAsset: "USDT", network: "TRC20", incentive: 50, status: "Settled", customerRef: "Table 5", timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
-  { id: "TXN002", merchantName: "Lagos Cafe", amount: 85000, cryptoAmount: 54.49, cryptoAsset: "USDC", network: "BSC", incentive: 50, status: "Processing", customerRef: "Walk-in", timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString() },
-  { id: "TXN003", merchantName: "Tech Store NG", amount: 220000, cryptoAmount: 141.03, cryptoAsset: "USDT", network: "TRC20", incentive: 50, status: "Settled", customerRef: "Online Order", timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString() },
-  { id: "TXN004", merchantName: "Demo Restaurant", amount: 45000, cryptoAmount: 28.85, cryptoAsset: "USDT", network: "BSC", incentive: 50, status: "AwaitingCrypto", customerRef: "Delivery", timestamp: new Date(Date.now() - 1000 * 60 * 180).toISOString() },
-  { id: "TXN005", merchantName: "Fashion Hub", amount: 320000, cryptoAmount: 205.13, cryptoAsset: "USDC", network: "TRC20", incentive: 50, status: "Settled", customerRef: "Event Booking", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
-  { id: "TXN006", merchantName: "Quick Mart", amount: 15000, cryptoAmount: 9.62, cryptoAsset: "USDT", network: "TRC20", incentive: 0, status: "Failed", customerRef: "Table 3", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString() },
-]
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(amount)
@@ -44,14 +23,14 @@ export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<TxStatus>("all")
   const [filterOpen, setFilterOpen] = useState(false)
-  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
+  const [page, setPage] = useState(1)
+  const [selectedTx, setSelectedTx] = useState<AdminTransaction | null>(null)
 
-  const filteredTransactions = mockTransactions.filter((tx) => {
-    const matchesSearch = tx.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tx.merchantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tx.customerRef.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "all" || tx.status === statusFilter
-    return matchesSearch && matchesStatus
+  const { data, isLoading } = useAdminTransactions({
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    search: searchQuery || undefined,
+    page,
+    limit: 20,
   })
 
   const getStatusBadge = (status: string) => {
@@ -74,10 +53,9 @@ export default function TransactionsPage() {
     }
   }
 
-  // Stats
-  const totalVolume = mockTransactions.reduce((sum, tx) => sum + tx.amount, 0)
-  const settledCount = mockTransactions.filter(tx => tx.status === "Settled").length
-  const pendingCount = mockTransactions.filter(tx => ["Processing", "AwaitingCrypto"].includes(tx.status)).length
+  const transactions = data?.transactions || []
+  const stats = data?.stats
+  const pagination = data?.pagination
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -89,17 +67,17 @@ export default function TransactionsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border border-purple-500/30">
+        <div className="p-4 rounded-xl bg-linear-to-br from-purple-500/20 to-violet-500/10 border border-purple-500/30">
           <p className="text-sm text-purple-400 mb-1">Total Volume</p>
-          <p className="text-2xl font-bold text-white">{formatCurrency(totalVolume)}</p>
+          <p className="text-2xl font-bold text-white">{stats ? formatCurrency(stats.totalVolume) : "—"}</p>
         </div>
-        <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30">
+        <div className="p-4 rounded-xl bg-linear-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30">
           <p className="text-sm text-emerald-400 mb-1">Settled</p>
-          <p className="text-2xl font-bold text-white">{settledCount} transactions</p>
+          <p className="text-2xl font-bold text-white">{stats?.settledCount || 0} transactions</p>
         </div>
-        <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/10 border border-amber-500/30">
+        <div className="p-4 rounded-xl bg-linear-to-br from-amber-500/20 to-yellow-500/10 border border-amber-500/30">
           <p className="text-sm text-amber-400 mb-1">Pending</p>
-          <p className="text-2xl font-bold text-white">{pendingCount} transactions</p>
+          <p className="text-2xl font-bold text-white">{stats?.pendingCount || 0} transactions</p>
         </div>
       </div>
 
@@ -111,7 +89,7 @@ export default function TransactionsPage() {
             type="text"
             placeholder="Search by ID, merchant, or reference..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1) }}
             className="w-full bg-gray-900 border border-gray-800 focus:border-emerald-500 text-white placeholder-gray-500 pl-12 pr-4 py-3 rounded-xl transition-all focus:outline-none"
           />
         </div>
@@ -137,7 +115,7 @@ export default function TransactionsPage() {
               {(["all", "Settled", "Processing", "AwaitingCrypto", "Failed"] as TxStatus[]).map((status) => (
                 <button
                   key={status}
-                  onClick={() => { setStatusFilter(status); setFilterOpen(false) }}
+                  onClick={() => { setStatusFilter(status); setFilterOpen(false); setPage(1) }}
                   className={`w-full px-4 py-3 text-left text-sm transition-all ${
                     statusFilter === status ? "bg-emerald-500/20 text-emerald-400" : "text-gray-400 hover:bg-gray-800 hover:text-white"
                   }`}
@@ -151,69 +129,103 @@ export default function TransactionsPage() {
       </div>
       {filterOpen && <div className="fixed inset-0 z-10" onClick={() => setFilterOpen(false)} />}
 
-      {/* Transactions Table */}
-      <div className="overflow-x-auto">
-        <div className="min-w-full bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-800 bg-gray-800/50">
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Transaction</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Merchant</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Amount</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Crypto</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Status</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Time</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTransactions.map((tx) => (
-                <motion.tr
-                  key={tx.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="text-white font-mono font-medium">{tx.id}</div>
-                    <div className="text-gray-500 text-sm">{tx.customerRef}</div>
-                  </td>
-                  <td className="px-6 py-4 text-white">{tx.merchantName}</td>
-                  <td className="px-6 py-4">
-                    <div className="text-emerald-400 font-medium">{formatCurrency(tx.amount)}</div>
-                    {tx.incentive > 0 && <div className="text-emerald-500 text-xs">+{formatCurrency(tx.incentive)} bonus</div>}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-white">{tx.cryptoAmount} {tx.cryptoAsset}</div>
-                    <div className="text-gray-500 text-sm">{tx.network}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadge(tx.status)}`}>
-                      {getStatusIcon(tx.status)}
-                      {tx.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-gray-400 text-sm">{formatDate(tx.timestamp)}</td>
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => setSelectedTx(tx)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium flex items-center gap-1"
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
+        </div>
+      ) : (
+        <>
+          {/* Transactions Table */}
+          <div className="overflow-x-auto">
+            <div className="min-w-full bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-800 bg-gray-800/50">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Transaction</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Merchant</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Amount</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Crypto</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Status</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Time</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((tx) => (
+                    <motion.tr
+                      key={tx.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors"
                     >
-                      <Eye className="w-3 h-3" /> Details
-                    </button>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                      <td className="px-6 py-4">
+                        <div className="text-white font-mono font-medium">{tx.transactionId}</div>
+                        <div className="text-gray-500 text-sm">{tx.customerRef || "—"}</div>
+                      </td>
+                      <td className="px-6 py-4 text-white">{tx.merchantName}</td>
+                      <td className="px-6 py-4">
+                        <div className="text-emerald-400 font-medium">{formatCurrency(tx.amount)}</div>
+                        {tx.incentive > 0 && <div className="text-emerald-500 text-xs">+{formatCurrency(tx.incentive)} bonus</div>}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-white">{tx.cryptoAmount} {tx.cryptoAsset}</div>
+                        <div className="text-gray-500 text-sm">{tx.network}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadge(tx.status)}`}>
+                          {getStatusIcon(tx.status)}
+                          {tx.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-400 text-sm">{formatDate(tx.timestamp)}</td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => setSelectedTx(tx)}
+                          className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium flex items-center gap-1"
+                        >
+                          <Eye className="w-3 h-3" /> Details
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-      {filteredTransactions.length === 0 && (
-        <div className="text-center py-12">
-          <Receipt className="w-12 h-12 text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-500">No transactions found</p>
-        </div>
+          {transactions.length === 0 && (
+            <div className="text-center py-12">
+              <Receipt className="w-12 h-12 text-gray-700 mx-auto mb-3" />
+              <p className="text-gray-500">No transactions found</p>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4">
+              <p className="text-sm text-gray-500">
+                Page {pagination.page} of {pagination.totalPages} ({pagination.total} transactions)
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-lg bg-gray-800 text-white disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page >= pagination.totalPages}
+                  className="px-4 py-2 rounded-lg bg-gray-800 text-white disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Transaction Details Modal */}
@@ -243,7 +255,7 @@ export default function TransactionsPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
                   <span className="text-gray-400">Transaction ID</span>
-                  <span className="text-white font-mono font-bold">{selectedTx.id}</span>
+                  <span className="text-white font-mono font-bold">{selectedTx.transactionId}</span>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
                   <span className="text-gray-400">Status</span>
@@ -266,7 +278,7 @@ export default function TransactionsPage() {
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
                   <span className="text-gray-400">Reference</span>
-                  <span className="text-white">{selectedTx.customerRef}</span>
+                  <span className="text-white">{selectedTx.customerRef || "—"}</span>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
                   <span className="text-gray-400">Time</span>

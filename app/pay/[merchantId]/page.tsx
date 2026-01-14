@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, use, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   AlertCircle,
@@ -13,19 +13,23 @@ import {
   ChevronLeft,
   Sparkles,
   Zap,
-  ExternalLink,
+  Download,
   CheckCircle2,
   Loader2,
 } from "lucide-react"
+import { toast } from "sonner"
+import domtoimage from "dom-to-image-more"
 import { SUPPORTED_ASSETS } from "@/lib/constants"
 import { copyToClipboard } from "@/lib/clipboard"
-import { apiClient } from "@/lib/api-client"
+import { useMerchantInfo, useExchangeRate, useInitiatePayment, usePaymentStatus, useConfirmPayment } from "@/lib/hooks/use-payments"
+import { getImageUrl } from "@/lib/utils/image"
 
 type PaymentStep = "amount" | "crypto" | "payment" | "processing" | "success"
 
 interface Merchant {
   id: string
   businessName: string
+  businessLogo?: string
   merchantId: string
   verified: boolean
 }
@@ -33,9 +37,7 @@ interface Merchant {
 interface Rates {
   USDT: number
   USDC: number
-  bufferAmount: number
-  minimumPayment: number
-  merchantIncentive: number
+  lastUpdated: string
 }
 
 interface Transaction {
@@ -101,10 +103,16 @@ export default function PaymentPage({
 }) {
   const { merchantId } = use(params)
 
-  const [merchant, setMerchant] = useState<Merchant | null>(null)
-  const [rates, setRates] = useState<Rates | null>(null)
+  const { data: merchantData, isLoading: merchantLoading, error: merchantError } = useMerchantInfo(merchantId)
+  const { data: ratesData, isLoading: ratesLoading } = useExchangeRate()
+  const initiatePaymentMutation = useInitiatePayment()
+  const confirmPaymentMutation = useConfirmPayment()
+
   const [transaction, setTransaction] = useState<Transaction | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const isLoading = merchantLoading || ratesLoading
+
+  const merchant = merchantData as unknown as Merchant | null
+  const rates = ratesData as unknown as Rates | null
 
   const [step, setStep] = useState<PaymentStep>("amount")
   const [nairaAmount, setNairaAmount] = useState("")
@@ -114,56 +122,51 @@ export default function PaymentPage({
   const [error, setError] = useState("")
   const [timeLeft, setTimeLeft] = useState(900)
   const [isConfirming, setIsConfirming] = useState(false)
-
-  // Fetch Merchant & Rates
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const [merchantRes, ratesRes] = await Promise.all([
-          apiClient.getMerchantInfo(merchantId) as Promise<{ success: boolean; data: Merchant }>,
-          apiClient.getExchangeRate() as Promise<{ success: boolean; data: Rates }>
-        ])
-
-        if (merchantRes.success) setMerchant(merchantRes.data)
-        if (ratesRes.success) setRates(ratesRes.data)
-      } catch (err) {
-        console.error("Failed to load payment data", err)
-        setError("Invalid merchant or service unavailable")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    init()
-  }, [merchantId])
+  const [isCapturing, setIsCapturing] = useState(false)
+  const pageRef = useRef<HTMLDivElement>(null)
 
   // Poll for Payment Status
-  useEffect(() => {
-    if (!transaction?.transactionId || step === "success") return
+  const { data: paymentStatusData } = usePaymentStatus(transaction?.transactionId || "", {
+    enabled: !!transaction?.transactionId && step !== "success",
+    refetchInterval: 5000,
+  })
 
-    const checkStatus = async () => {
-      try {
-        const res: any = await apiClient.getPaymentStatus(transaction.transactionId)
-        if (res.success && (res.data.status === "Settled" || res.data.status === "CryptoReceived" || res.data.status === "Processing")) {
-          setStep("success")
-        }
-      } catch (e) {
-        // ignore errors during polling
+  useEffect(() => {
+    if (merchantError) {
+      setError("Invalid merchant or service unavailable")
+    }
+  }, [merchantError])
+
+  useEffect(() => {
+    if (paymentStatusData) {
+      const status = (paymentStatusData as any).status
+      if (status === "Settled" || status === "CryptoReceived" || status === "Processing") {
+        setStep("success")
       }
     }
-
-    const interval = setInterval(checkStatus, 5000)
-    return () => clearInterval(interval)
-  }, [transaction?.transactionId, step])
+  }, [paymentStatusData])
 
 
   const walletAddress = transaction?.walletAddress || ""
 
-  const amount = parseFloat(nairaAmount) || 0
-  const bufferAmount = rates?.bufferAmount || 0
-  const totalNaira = amount + bufferAmount
+  // Parse amount from formatted string (remove commas)
+  const amount = parseFloat(nairaAmount.replace(/,/g, '')) || 0
   const exchangeRate = rates ? (rates as any)[selectedAsset] : 0
-  const cryptoAmount = exchangeRate > 0 ? totalNaira / exchangeRate : 0
-  const minPayment = rates?.minimumPayment || 0
+  const cryptoAmount = exchangeRate > 0 ? amount / exchangeRate : 0
+  const minPayment = 1000 // Minimum payment of ₦1,000
+
+  // Format number with commas as user types
+  const formatInputAmount = (value: string) => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '')
+    // Format with commas
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  }
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatInputAmount(e.target.value)
+    setNairaAmount(formatted)
+  }
 
   useEffect(() => {
     if (step === "payment" && timeLeft > 0) {
@@ -178,49 +181,46 @@ export default function PaymentPage({
   const handleAmountSubmit = () => {
     setError("")
     if (amount < minPayment) {
-      setError(`Minimum payment is ${formatCurrency(minPayment)}`)
+      toast.error(`Minimum payment is ${formatCurrency(minPayment)}`)
       return
     }
     setStep("crypto")
   }
 
   const handleInitiatePayment = async () => {
-    setIsLoading(true)
     setError("")
-    try {
-      const res: any = await apiClient.initiatePayment({
+    initiatePaymentMutation.mutate(
+      {
         merchantId: merchantId,
         amount,
         cryptoAsset: selectedAsset,
         network: selectedNetwork,
-        customerRef: `CUST-${Date.now()}` // You might want to get this from user input if needed
-      })
-
-      if (res.success) {
-        setTransaction(res.data)
-        setStep("payment")
-        if (res.data.expiresAt) {
-          const expiryTime = new Date(res.data.expiresAt).getTime()
-          const now = Date.now()
-          const diff = Math.floor((expiryTime - now) / 1000)
-          setTimeLeft(diff > 0 ? diff : 900)
-        } else {
-          setTimeLeft(900)
-        }
-      } else {
-        setError(res.message || "Failed to initiate payment")
+      },
+      {
+        onSuccess: (data: any) => {
+          setTransaction(data)
+          setStep("payment")
+          if (data.expiresAt) {
+            const expiryTime = new Date(data.expiresAt).getTime()
+            const now = Date.now()
+            const diff = Math.floor((expiryTime - now) / 1000)
+            setTimeLeft(diff > 0 ? diff : 900)
+          } else {
+            setTimeLeft(900)
+          }
+        },
+        onError: (err: any) => {
+          toast.error(err.message || "Failed to initiate payment")
+        },
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to initiate payment")
-    } finally {
-      setIsLoading(false)
-    }
+    )
   }
 
   const handleCopyAddress = async () => {
     const success = await copyToClipboard(walletAddress)
     if (success) {
       setCopied(true)
+      toast.success("Address copied!")
       setTimeout(() => setCopied(false), 2000)
     }
   }
@@ -228,24 +228,57 @@ export default function PaymentPage({
   const handleConfirmPayment = async () => {
     if (!transaction) return
     setIsConfirming(true)
-    try {
-      // Demo confirmation
-      await apiClient.confirmPayment({ transactionId: transaction.transactionId })
-      setStep("processing")
-      setTimeout(() => setStep("success"), 2000)
-    } catch (err) {
-      console.error("Failed to confirm", err)
-      // If it fails, we just let the polling continue or show error
-      // But for demo flow, we might want to force success or just wait
-      setStep("processing") // Optimistic update
-    } finally {
-      setIsConfirming(false)
-    }
+    confirmPaymentMutation.mutate(
+      { transactionId: transaction.transactionId },
+      {
+        onSuccess: () => {
+          setStep("processing")
+          setTimeout(() => setStep("success"), 2000)
+        },
+        onError: () => {
+          setStep("processing")
+        },
+      }
+    )
+    setIsConfirming(false)
   }
 
   const handleBack = () => {
     if (step === "crypto") setStep("amount")
     else if (step === "payment") setStep("crypto")
+  }
+
+  const handleShareTx = async () => {
+    if (!pageRef.current) return
+    
+    setIsCapturing(true)
+    try {
+      // Use dom-to-image-more with adjusted settings to reduce border artifacts
+      const dataUrl = await domtoimage.toPng(pageRef.current, {
+        quality: 1,
+        bgcolor: '#0a0d10',
+        width: pageRef.current.scrollWidth,
+        height: pageRef.current.scrollHeight,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left',
+          overflow: 'hidden',
+        },
+      })
+
+      // Download the image
+      const link = document.createElement('a')
+      link.download = `gemexrails-receipt-${transaction?.transactionId || 'payment'}.png`
+      link.href = dataUrl
+      link.click()
+
+      toast.success('Receipt saved!')
+    } catch (err) {
+      console.error('Failed to capture screenshot:', err)
+      toast.error('Failed to save receipt')
+    } finally {
+      setIsCapturing(false)
+    }
   }
 
   const quickAmounts = [5000, 10000, 20000, 50000]
@@ -271,7 +304,7 @@ export default function PaymentPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0d10] relative overflow-hidden">
+    <div ref={pageRef} className="min-h-screen bg-[#0a0d10] relative overflow-hidden">
       {/* Background Glow Effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-500/15 rounded-full blur-[150px]" />
@@ -286,9 +319,17 @@ export default function PaymentPage({
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg ring-2 ring-white/20"
+              className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg ring-2 ring-white/20 overflow-hidden"
             >
-              <span className="text-3xl">🏪</span>
+              {merchant.businessLogo ? (
+                <img 
+                  src={getImageUrl(merchant.businessLogo) || undefined} 
+                  alt={merchant.businessName} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-3xl">🏪</span>
+              )}
             </motion.div>
             <div className="flex-1">
               <h1 className="text-white font-bold text-xl tracking-tight">
@@ -332,11 +373,12 @@ export default function PaymentPage({
                   <div className="relative inline-flex items-center justify-center bg-gray-800/50 rounded-2xl px-6 py-4 border border-gray-700/50">
                     <span className="text-4xl text-emerald-400 mr-2 font-light">₦</span>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={nairaAmount}
-                      onChange={(e) => setNairaAmount(e.target.value)}
+                      onChange={handleAmountChange}
                       placeholder="0"
-                      className="w-44 bg-transparent text-5xl font-bold text-white text-center focus:outline-none placeholder:text-gray-600"
+                      className="w-48 bg-transparent text-5xl font-bold text-white text-center focus:outline-none placeholder:text-gray-600"
                       autoFocus
                     />
                   </div>
@@ -350,7 +392,7 @@ export default function PaymentPage({
                   {quickAmounts.map((amt) => (
                     <motion.button
                       key={amt}
-                      onClick={() => setNairaAmount(amt.toString())}
+                      onClick={() => setNairaAmount(formatInputAmount(amt.toString()))}
                       whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.95 }}
                       className={`py-3 px-3 rounded-xl text-sm font-semibold transition-all ${amount === amt
@@ -391,7 +433,7 @@ export default function PaymentPage({
                     <div className="flex items-center justify-center gap-2 bg-emerald-500/10 rounded-xl py-3">
                       <Sparkles className="w-4 h-4 text-emerald-400" />
                       <span className="text-sm text-emerald-400 font-medium">
-                        ≈ {userCryptoAmount.toFixed(2)} USDT/USDC
+                        ≈ {cryptoAmount.toFixed(2)} USDT/USDC
                       </span>
                     </div>
                   </motion.div>
@@ -449,7 +491,7 @@ export default function PaymentPage({
                   <div className="inline-flex items-center gap-2 bg-emerald-500/20 px-4 py-1.5 rounded-full">
                     <Sparkles className="w-4 h-4 text-emerald-400" />
                     <span className="text-emerald-400 font-semibold">
-                      ≈ {userCryptoAmount.toFixed(2)} USDT/USDC
+                      ≈ {cryptoAmount.toFixed(2)} USDT/USDC
                     </span>
                   </div>
                 </div>
@@ -593,7 +635,7 @@ export default function PaymentPage({
                   <p className="text-gray-300 text-sm mb-2 font-medium">Send exactly</p>
                   <div className="flex items-center justify-center gap-2">
                     <p className="text-5xl font-bold text-white">
-                      {userCryptoAmount.toFixed(2)}
+                      {cryptoAmount.toFixed(2)}
                     </p>
                   </div>
                   <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-emerald-500/20 rounded-full mt-4 border border-emerald-500/30">
@@ -768,95 +810,97 @@ export default function PaymentPage({
               transition={{ duration: 0.3 }}
               className="py-6 space-y-5"
             >
-              {/* Success Icon */}
-              <div className="text-center">
+              {/* Success content */}
+              <div className="space-y-5">
+                {/* Success Icon */}
+                <div className="text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", damping: 12, stiffness: 200 }}
+                    className="w-28 h-28 mx-auto bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-2xl shadow-emerald-500/40 mb-6 relative"
+                  >
+                    <Check className="w-14 h-14 text-white relative z-10" />
+                  </motion.div>
+                  <motion.h2
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-3xl font-bold text-white mb-2"
+                  >
+                    Payment Confirmed! 🎉
+                  </motion.h2>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-gray-300 text-lg font-semibold"
+                  >
+                    Look at you shopping with crypto like a King that you are.
+                  </motion.p>
+                </div>
+
+                {/* Transaction Details Card */}
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", damping: 12, stiffness: 200 }}
-                  className="w-28 h-28 mx-auto bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-2xl shadow-emerald-500/40 mb-6 relative"
-                >
-                  <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping" />
-                  <Check className="w-14 h-14 text-white relative z-10" />
-                </motion.div>
-                <motion.h2
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-3xl font-bold text-white mb-2"
+                  transition={{ delay: 0.4 }}
+                  className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-6 shadow-2xl shadow-black/30"
                 >
-                  Payment Confirmed! 🎉
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-gray-300 text-lg font-semibold"
+                  <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    Transaction Details
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm py-2 border-b border-gray-800">
+                      <span className="text-gray-400">Amount Paid</span>
+                      <span className="text-white font-semibold">
+                        {formatCurrency(amount)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm py-2 border-b border-gray-800">
+                      <span className="text-gray-400">Crypto Sent</span>
+                      <span className="text-white font-semibold">
+                        {cryptoAmount.toFixed(2)} {selectedAsset}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm py-2 border-b border-gray-800">
+                      <span className="text-gray-400">Network</span>
+                      <span className="text-white font-semibold">{selectedNetwork}</span>
+                    </div>
+                    <div className="flex justify-between text-sm py-2 border-b border-gray-800">
+                      <span className="text-gray-400">Merchant</span>
+                      <span className="text-white font-semibold">
+                        {merchant.businessName}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-gray-400">Reference</span>
+                      <span className="text-emerald-400 font-mono font-bold bg-emerald-500/10 px-3 py-1 rounded-lg">
+                        {transaction?.transactionId || "TXN..."}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Success Message Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-emerald-500/10 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-5 text-center shadow-xl shadow-emerald-500/10"
                 >
-                  Look at you shopping with crypto like a King that you are.
-                </motion.p>
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Sparkles className="w-5 h-5 text-emerald-400" />
+                    <span className="text-emerald-400 font-semibold">
+                      Powered by GemExRails
+                    </span>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    The merchant has been notified. You can safely close this page.
+                  </p>
+                </motion.div>
               </div>
-
-              {/* Transaction Details Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-6 shadow-2xl shadow-black/30"
-              >
-                <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  Transaction Details
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm py-2 border-b border-gray-800">
-                    <span className="text-gray-400">Amount Paid</span>
-                    <span className="text-white font-semibold">
-                      {formatCurrency(amount)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm py-2 border-b border-gray-800">
-                    <span className="text-gray-400">Crypto Sent</span>
-                    <span className="text-white font-semibold">
-                      {userCryptoAmount.toFixed(2)} {selectedAsset}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm py-2 border-b border-gray-800">
-                    <span className="text-gray-400">Network</span>
-                    <span className="text-white font-semibold">{selectedNetwork}</span>
-                  </div>
-                  <div className="flex justify-between text-sm py-2 border-b border-gray-800">
-                    <span className="text-gray-400">Merchant</span>
-                    <span className="text-white font-semibold">
-                      {merchant.businessName}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2">
-                    <span className="text-gray-400">Reference</span>
-                    <span className="text-emerald-400 font-mono font-bold bg-emerald-500/10 px-3 py-1 rounded-lg">
-                      {transaction?.transactionId || "TXN..."}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Success Message Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="bg-emerald-500/10 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-5 text-center shadow-xl shadow-emerald-500/10"
-              >
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Sparkles className="w-5 h-5 text-emerald-400" />
-                  <span className="text-emerald-400 font-semibold">
-                    Welcome to the future of payments
-                  </span>
-                </div>
-                <p className="text-gray-300 text-sm">
-                  The merchant has been notified. You can safely close this page.
-                </p>
-              </motion.div>
 
               {/* Action Buttons */}
               <motion.div
@@ -874,12 +918,23 @@ export default function PaymentPage({
                   Done
                 </motion.button>
                 <motion.button
+                  onClick={handleShareTx}
+                  disabled={isCapturing}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 rounded-2xl font-medium text-gray-400 border border-gray-700 hover:border-gray-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-2xl font-medium text-gray-400 border border-gray-700 hover:border-gray-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <ExternalLink className="w-4 h-4" />
-                  View on Explorer
+                  {isCapturing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      Save Receipt
+                    </>
+                  )}
                 </motion.button>
               </motion.div>
             </motion.div>

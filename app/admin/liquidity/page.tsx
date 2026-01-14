@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react"
 import { motion } from "framer-motion"
 import { 
   Droplets, 
-  TrendingUp, 
   ArrowUpRight, 
   ArrowDownRight,
   RefreshCw,
@@ -38,7 +37,7 @@ interface Disbursement {
 }
 
 interface LiquidityStats {
-  totalDisbursed: number
+  pendingPayouts: number
   totalDisbursedOTC: number
   totalDisbursedRails: number
   successCount: number
@@ -106,7 +105,7 @@ export default function LiquidityPage() {
         const allDisbursements: Disbursement[] = statsData.data.disbursements || []
         
         setStats({
-          totalDisbursed: allDisbursements.filter(d => d.status === "SUCCESS").reduce((sum, d) => sum + d.amount, 0),
+          pendingPayouts: allDisbursements.filter(d => d.status === "PENDING" || d.status === "PROCESSING").reduce((sum, d) => sum + d.amount, 0),
           totalDisbursedOTC: allDisbursements.filter(d => d.status === "SUCCESS" && d.source === "OTC").reduce((sum, d) => sum + d.amount, 0),
           totalDisbursedRails: allDisbursements.filter(d => d.status === "SUCCESS" && d.source === "RAILS").reduce((sum, d) => sum + d.amount, 0),
           successCount: allDisbursements.filter(d => d.status === "SUCCESS").length,
@@ -164,13 +163,13 @@ export default function LiquidityPage() {
               <p className="text-sm text-emerald-400/70 mt-1">Ready for payouts</p>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/30">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30">
               <div className="flex items-center gap-2 mb-3">
-                <TrendingUp className="w-5 h-5 text-blue-400" />
-                <span className="text-sm font-medium text-blue-400">Total Disbursed</span>
+                <Clock className="w-5 h-5 text-amber-400" />
+                <span className="text-sm font-medium text-amber-400">Pending Payouts</span>
               </div>
-              <p className="text-3xl font-bold text-white">{stats ? formatCurrency(stats.totalDisbursed) : "—"}</p>
-              <p className="text-sm text-blue-400/70 mt-1">{stats?.successCount || 0} successful payouts</p>
+              <p className="text-3xl font-bold text-white">{stats ? formatCurrency(stats.pendingPayouts) : "—"}</p>
+              <p className="text-sm text-amber-400/70 mt-1">{stats?.pendingCount || 0} awaiting payout</p>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border border-purple-500/30">
@@ -182,13 +181,13 @@ export default function LiquidityPage() {
               <p className="text-sm text-purple-400/70 mt-1">From GemEx OTC</p>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/30">
               <div className="flex items-center gap-2 mb-3">
-                <ArrowDownRight className="w-5 h-5 text-amber-400" />
-                <span className="text-sm font-medium text-amber-400">Rails Payouts</span>
+                <ArrowDownRight className="w-5 h-5 text-blue-400" />
+                <span className="text-sm font-medium text-blue-400">Rails Payouts</span>
               </div>
               <p className="text-3xl font-bold text-white">{stats ? formatCurrency(stats.totalDisbursedRails) : "—"}</p>
-              <p className="text-sm text-amber-400/70 mt-1">From GemEx Rails</p>
+              <p className="text-sm text-blue-400/70 mt-1">From GemEx Rails</p>
             </motion.div>
           </div>
 

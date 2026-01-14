@@ -1,20 +1,54 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { Shield, Bell, Save, RefreshCw } from "lucide-react"
+import { toast } from "sonner"
+import { Shield, Bell, Save, RefreshCw, Loader2, DollarSign } from "lucide-react"
+import { usePlatformSettings, useUpdatePlatformSettings } from "@/lib/hooks/use-admin"
 
 export default function SettingsPage() {
-  const [isSaving, setIsSaving] = useState(false)
-  const [settings, setSettings] = useState({
+  const { data: settings, isLoading } = usePlatformSettings()
+  const updateMutation = useUpdatePlatformSettings()
+
+  const [localSettings, setLocalSettings] = useState({
     autoVerification: false,
     emailNotifications: true,
-    slackNotifications: false,
+    bufferAmount: 1500,
+    platformFee: 1000,
+    merchantIncentive: 50,
+    minimumPayment: 5000,
   })
 
+  useEffect(() => {
+    if (settings) {
+      setLocalSettings({
+        autoVerification: settings.autoVerification,
+        emailNotifications: settings.emailNotifications,
+        bufferAmount: settings.bufferAmount,
+        platformFee: settings.platformFee,
+        merchantIncentive: settings.merchantIncentive,
+        minimumPayment: settings.minimumPayment,
+      })
+    }
+  }, [settings])
+
   const handleSave = () => {
-    setIsSaving(true)
-    setTimeout(() => setIsSaving(false), 1500)
+    updateMutation.mutate(localSettings, {
+      onSuccess: () => {
+        toast.success("Settings saved successfully")
+      },
+      onError: (err: any) => {
+        toast.error(err.message || "Failed to save settings")
+      },
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
+      </div>
+    )
   }
 
   return (
@@ -27,11 +61,11 @@ export default function SettingsPage() {
         </div>
         <button
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={updateMutation.isPending}
           className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 text-white rounded-lg transition-all font-medium"
         >
-          {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {isSaving ? "Saving..." : "Save Changes"}
+          {updateMutation.isPending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {updateMutation.isPending ? "Saving..." : "Save Changes"}
         </button>
       </div>
 
@@ -53,10 +87,10 @@ export default function SettingsPage() {
               <p className="text-sm text-gray-400">Automatically verify merchants with complete documentation</p>
             </div>
             <button
-              onClick={() => setSettings({ ...settings, autoVerification: !settings.autoVerification })}
-              className={`w-12 h-6 rounded-full transition-all ${settings.autoVerification ? "bg-emerald-500" : "bg-gray-700"}`}
+              onClick={() => setLocalSettings({ ...localSettings, autoVerification: !localSettings.autoVerification })}
+              className={`w-12 h-6 rounded-full transition-all ${localSettings.autoVerification ? "bg-emerald-500" : "bg-gray-700"}`}
             >
-              <div className={`w-5 h-5 rounded-full bg-white transition-transform ${settings.autoVerification ? "translate-x-6" : "translate-x-0.5"}`} />
+              <div className={`w-5 h-5 rounded-full bg-white transition-transform ${localSettings.autoVerification ? "translate-x-6" : "translate-x-0.5"}`} />
             </button>
           </div>
         </div>
@@ -80,23 +114,62 @@ export default function SettingsPage() {
               <p className="text-sm text-gray-400">Receive alerts for new merchants and large transactions</p>
             </div>
             <button
-              onClick={() => setSettings({ ...settings, emailNotifications: !settings.emailNotifications })}
-              className={`w-12 h-6 rounded-full transition-all ${settings.emailNotifications ? "bg-emerald-500" : "bg-gray-700"}`}
+              onClick={() => setLocalSettings({ ...localSettings, emailNotifications: !localSettings.emailNotifications })}
+              className={`w-12 h-6 rounded-full transition-all ${localSettings.emailNotifications ? "bg-emerald-500" : "bg-gray-700"}`}
             >
-              <div className={`w-5 h-5 rounded-full bg-white transition-transform ${settings.emailNotifications ? "translate-x-6" : "translate-x-0.5"}`} />
+              <div className={`w-5 h-5 rounded-full bg-white transition-transform ${localSettings.emailNotifications ? "translate-x-6" : "translate-x-0.5"}`} />
             </button>
           </div>
-          <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
-            <div>
-              <p className="text-white font-medium">Slack Notifications</p>
-              <p className="text-sm text-gray-400">Send alerts to Slack channel</p>
-            </div>
-            <button
-              onClick={() => setSettings({ ...settings, slackNotifications: !settings.slackNotifications })}
-              className={`w-12 h-6 rounded-full transition-all ${settings.slackNotifications ? "bg-emerald-500" : "bg-gray-700"}`}
-            >
-              <div className={`w-5 h-5 rounded-full bg-white transition-transform ${settings.slackNotifications ? "translate-x-6" : "translate-x-0.5"}`} />
-            </button>
+        </div>
+      </div>
+
+      {/* Payment Settings */}
+      <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+            <DollarSign className="w-5 h-5 text-emerald-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-white">Payment Settings</h2>
+            <p className="text-sm text-gray-400">Configure fees, rates, and payment limits</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-gray-800/50 rounded-xl">
+            <label className="block text-sm font-medium text-gray-400 mb-2">Platform Fee (₦)</label>
+            <input
+              type="number"
+              value={localSettings.platformFee}
+              onChange={(e) => setLocalSettings({ ...localSettings, platformFee: Number(e.target.value) })}
+              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div className="p-4 bg-gray-800/50 rounded-xl">
+            <label className="block text-sm font-medium text-gray-400 mb-2">Merchant Incentive (₦)</label>
+            <input
+              type="number"
+              value={localSettings.merchantIncentive}
+              onChange={(e) => setLocalSettings({ ...localSettings, merchantIncentive: Number(e.target.value) })}
+              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div className="p-4 bg-gray-800/50 rounded-xl">
+            <label className="block text-sm font-medium text-gray-400 mb-2">Buffer Amount (₦)</label>
+            <input
+              type="number"
+              value={localSettings.bufferAmount}
+              onChange={(e) => setLocalSettings({ ...localSettings, bufferAmount: Number(e.target.value) })}
+              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div className="p-4 bg-gray-800/50 rounded-xl">
+            <label className="block text-sm font-medium text-gray-400 mb-2">Minimum Payment (₦)</label>
+            <input
+              type="number"
+              value={localSettings.minimumPayment}
+              onChange={(e) => setLocalSettings({ ...localSettings, minimumPayment: Number(e.target.value) })}
+              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-emerald-500"
+            />
           </div>
         </div>
       </div>

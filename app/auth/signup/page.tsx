@@ -5,33 +5,22 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import {
-  AlertCircle,
-  Building2,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  ArrowRight,
-  Check,
-  X,
-  Loader2,
-} from "lucide-react"
-import { apiClient } from "@/lib/api-client"
+import { Building2, Mail, Lock, Eye, EyeOff, ArrowRight, Check, Loader2 } from "lucide-react"
+import { toast } from "sonner"
+import { useRegister } from "@/lib/hooks/use-auth"
+import type { ApiError } from "@/lib/api/types"
 
 export default function SignupPage() {
   const router = useRouter()
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
+  const registerMutation = useRegister()
 
-  // Account details
   const [businessName, setBusinessName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
 
-  const validateDetails = () => {
+  const validateDetails = (): string | null => {
     if (!businessName.trim()) return "Business name is required"
     if (!email.includes("@")) return "Please enter a valid email"
 
@@ -46,27 +35,25 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
 
-    const err = validateDetails()
-    if (err) {
-      setError(err)
+    const validationError = validateDetails()
+    if (validationError) {
+      toast.error(validationError)
       return
     }
 
-    setLoading(true)
-    try {
-      await apiClient.register({
-        businessName,
-        email,
-        password,
-      })
-      router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
-    } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.")
-    } finally {
-      setLoading(false)
-    }
+    registerMutation.mutate(
+      { businessName, email, password, contactName: businessName },
+      {
+        onSuccess: () => {
+          toast.success("Account created! Please verify your email.")
+          router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
+        },
+        onError: (err: ApiError) => {
+          toast.error(err.message || "Registration failed. Please try again.")
+        },
+      }
+    )
   }
 
   return (
@@ -77,19 +64,13 @@ export default function SignupPage() {
         exit={{ opacity: 0, x: -20 }}
       >
         <div className="text-center lg:text-left mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">
-            Create your account
-          </h1>
-          <p className="text-gray-400 mt-2">
-            Get started in seconds. Complete your profile later.
-          </p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Create your account</h1>
+          <p className="text-gray-400 mt-2">Get started in seconds. Complete your profile later.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Business Name
-            </label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Business Name</label>
             <div className="relative">
               <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
@@ -97,15 +78,14 @@ export default function SignupPage() {
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 placeholder="Your Business Name"
+                disabled={registerMutation.isPending}
                 className="gemrails-input-icon"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Email Address
-            </label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
@@ -113,15 +93,14 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="business@example.com"
+                disabled={registerMutation.isPending}
                 className="gemrails-input-icon"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
@@ -129,6 +108,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a strong password"
+                disabled={registerMutation.isPending}
                 className="w-full bg-gray-800/60 border border-gray-700 focus:border-emerald-500 text-white placeholder-gray-500 pl-12 pr-12 py-3.5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
               <button
@@ -136,11 +116,7 @@ export default function SignupPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-400"
               >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 
@@ -158,11 +134,7 @@ export default function SignupPage() {
                     ) : (
                       <div className="w-3.5 h-3.5 rounded-full border border-gray-600" />
                     )}
-                    <span
-                      className={req.met ? "text-emerald-400" : "text-gray-500"}
-                    >
-                      {req.label}
-                    </span>
+                    <span className={req.met ? "text-emerald-400" : "text-gray-500"}>{req.label}</span>
                   </div>
                 ))}
               </div>
@@ -170,9 +142,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Confirm Password
-            </label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
@@ -180,30 +150,20 @@ export default function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter password"
+                disabled={registerMutation.isPending}
                 className="gemrails-input-icon"
               />
             </div>
           </div>
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-xl"
-            >
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <span>{error}</span>
-            </motion.div>
-          )}
-
           <motion.button
             type="submit"
-            disabled={loading}
+            disabled={registerMutation.isPending}
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             className="gemrails-button w-full flex items-center justify-center gap-2"
           >
-            {loading ? (
+            {registerMutation.isPending ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span>Creating account...</span>
@@ -233,16 +193,11 @@ export default function SignupPage() {
             <div className="w-full border-t border-gray-700"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-gray-900/60 text-gray-500">
-              Already have an account?
-            </span>
+            <span className="px-4 bg-gray-900/60 text-gray-500">Already have an account?</span>
           </div>
         </div>
 
-        <Link
-          href="/auth/login"
-          className="gemrails-button-outline w-full block text-center"
-        >
+        <Link href="/auth/login" className="gemrails-button-outline w-full block text-center">
           Sign in
         </Link>
       </motion.div>

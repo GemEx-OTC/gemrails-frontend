@@ -4,65 +4,43 @@ import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { Mail, Lock, AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react"
-import { apiClient } from "@/lib/api-client"
-import { useAuth, type User } from "@/context/auth-context"
-
-interface LoginResponse {
-  data: {
-    user: User
-    tokens: {
-      accessToken: string
-      refreshToken: string
-      expiresIn: number
-    }
-  }
-}
+import { useRouter } from "next/navigation"
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react"
+import { toast } from "sonner"
+import { useLogin } from "@/lib/hooks/use-auth"
+import type { ApiError } from "@/lib/api/types"
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
+  const loginMutation = useLogin()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    setLoading(true)
 
     if (!email || !password) {
-      setError("Please fill in all fields")
-      setLoading(false)
+      toast.error("Please fill in all fields")
       return
     }
 
-    try {
-      const response = (await apiClient.login({
-        email,
-        password,
-      })) as LoginResponse
-
-      const { user, tokens } = response.data
-
-      if (tokens?.accessToken && user) {
-        login(tokens.accessToken, tokens.refreshToken, user)
-      } else {
-        throw new Error("Invalid response from server")
+    loginMutation.mutate(
+      { email, password },
+      {
+        onSuccess: () => {
+          toast.success("Login successful!")
+        },
+        onError: (err: ApiError) => {
+          if (err.code === "EMAIL_NOT_VERIFIED") {
+            toast.info("Please verify your email to continue")
+            router.push(`/auth/verify-email?email=${encodeURIComponent(email)}&resend=true`)
+          } else {
+            toast.error(err.message || "Invalid credentials. Please try again.")
+          }
+        },
       }
-    } catch (err: any) {
-      if (err.code === "EMAIL_NOT_VERIFIED") {
-        // Redirect to verify email with resend flag
-        window.location.href = `/auth/verify-email?email=${encodeURIComponent(
-          email,
-        )}&resend=true`
-        return
-      }
-      setError(err.message || "Invalid credentials. Please try again.")
-    } finally {
-      setLoading(false)
-    }
+    )
   }
 
   return (
@@ -87,6 +65,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="business@example.com"
+              disabled={loginMutation.isPending}
               className="gemrails-input-icon"
             />
           </div>
@@ -112,6 +91,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
+              disabled={loginMutation.isPending}
               className="w-full bg-gray-800/60 border border-gray-700 focus:border-emerald-500 text-white placeholder-gray-500 pl-12 pr-12 py-3.5 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
             <button
@@ -124,25 +104,14 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-xl"
-          >
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>{error}</span>
-          </motion.div>
-        )}
-
         <motion.button
           type="submit"
-          disabled={loading}
+          disabled={loginMutation.isPending}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
           className="gemrails-button w-full flex items-center justify-center gap-2"
         >
-          {loading ? (
+          {loginMutation.isPending ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
               <span>Signing in...</span>

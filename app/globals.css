@@ -156,3 +156,41 @@ input[type="number"] {
     min-width: 44px;
   }
 }
+
+/* ===== Print Styles for QR Code (OPay-inspired) ===== */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent !important;
+  }
+
+  /* Force gradient backgrounds to print */
+  .print\:bg-gradient-to-b {
+    background: linear-gradient(to bottom, #10b981, #0d9488, #0f766e) !important;
+  }
+
+  .print\:from-emerald-500 {
+    --tw-gradient-from: #10b981 !important;
+  }
+
+  .print\:via-teal-600 {
+    --tw-gradient-via: #0d9488 !important;
+  }
+
+  .print\:to-teal-700 {
+    --tw-gradient-to: #0f766e !important;
+  }
+}
