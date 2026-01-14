@@ -326,10 +326,15 @@ export default function PaymentPage({
                   src={getImageUrl(merchant.businessLogo) || undefined} 
                   alt={merchant.businessName} 
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Hide broken image and show fallback
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling;
+                    if (fallback) fallback.classList.remove('hidden');
+                  }}
                 />
-              ) : (
-                <span className="text-3xl">🏪</span>
-              )}
+              ) : null}
+              <span className={`text-3xl ${merchant.businessLogo ? 'hidden' : ''}`}>🏪</span>
             </motion.div>
             <div className="flex-1">
               <h1 className="text-white font-bold text-xl tracking-tight">

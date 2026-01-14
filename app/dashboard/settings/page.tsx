@@ -225,10 +225,18 @@ export default function SettingsPage() {
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center overflow-hidden relative group">
                   {businessLogo ? (
-                    <img src={getImageUrl(businessLogo) || undefined} alt="Business Logo" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-3xl">🏪</span>
-                  )}
+                    <img 
+                      src={getImageUrl(businessLogo) || undefined} 
+                      alt="Business Logo" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Hide broken image and show fallback
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <span className={`text-3xl ${businessLogo ? 'hidden' : ''}`}>🏪</span>
                   {uploadingLogo && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <motion.div

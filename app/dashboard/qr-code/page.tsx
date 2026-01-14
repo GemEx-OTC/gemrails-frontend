@@ -23,8 +23,26 @@ export default function QRCodePage() {
 
   const paymentUrl = user?.merchantId ? `${baseUrl}/pay/${user.merchantId}` : ""
   const businessName = user?.businessName || "My Business"
+  // Use local fallback logo if external logo fails to load
   const businessLogo = getImageUrl(user?.businessLogo) || "/logo.png"
   const merchantId = user?.merchantId || ""
+
+  // Track if external logo loaded successfully
+  const [logoLoaded, setLogoLoaded] = useState(false)
+  const [logoError, setLogoError] = useState(false)
+
+  // Preload logo to check if it's accessible
+  useEffect(() => {
+    if (user?.businessLogo) {
+      const img = new Image()
+      img.onload = () => setLogoLoaded(true)
+      img.onerror = () => setLogoError(true)
+      img.src = getImageUrl(user.businessLogo) || ""
+    }
+  }, [user?.businessLogo])
+
+  // Use fallback if logo failed to load
+  const effectiveLogo = logoError ? "/logo.png" : businessLogo
 
   const handleCopyLink = async () => {
     if (!paymentUrl) return
@@ -55,7 +73,7 @@ export default function QRCodePage() {
       qrImg.onload = async () => {
         ctx?.drawImage(qrImg, 0, 0, 512, 512)
 
-        if (businessLogo) {
+        if (effectiveLogo && effectiveLogo !== "/logo.png") {
           const logoImg = new Image()
           logoImg.crossOrigin = "anonymous"
           
@@ -73,6 +91,7 @@ export default function QRCodePage() {
           }
 
           logoImg.onerror = () => {
+            // Download without logo if it fails
             const link = document.createElement("a")
             link.download = `gemrails-qr-${user?.merchantId || "code"}.png`
             link.href = canvas.toDataURL("image/png")
@@ -80,7 +99,7 @@ export default function QRCodePage() {
             setDownloading(false)
           }
 
-          logoImg.src = businessLogo
+          logoImg.src = effectiveLogo
         } else {
           const link = document.createElement("a")
           link.download = `gemrails-qr-${user?.merchantId || "code"}.png`
@@ -198,7 +217,7 @@ export default function QRCodePage() {
             size={200}
             level="H"
             imageSettings={{
-              src: businessLogo,
+              src: effectiveLogo,
               height: 45,
               width: 45,
               excavate: true,
@@ -243,7 +262,7 @@ export default function QRCodePage() {
                   size={256}
                   level="H"
                   imageSettings={{
-                    src: businessLogo,
+                    src: effectiveLogo,
                     height: 50,
                     width: 50,
                     excavate: true,
