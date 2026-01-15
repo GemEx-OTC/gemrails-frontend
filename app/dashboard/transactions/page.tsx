@@ -119,11 +119,9 @@ export default function TransactionsPage() {
       </div>
 
       <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden">
-        <div className="hidden md:grid grid-cols-6 gap-4 p-4 bg-gray-800/50 border-b border-gray-800 text-sm font-medium text-gray-400">
-          <div>Transaction ID</div>
+        <div className="hidden md:grid grid-cols-4 gap-4 p-4 bg-gray-800/50 border-b border-gray-800 text-sm font-medium text-gray-400">
+          <div>TX Reference</div>
           <div>Amount</div>
-          <div>Crypto</div>
-          <div>Reference</div>
           <div>Status</div>
           <div>Date</div>
         </div>
@@ -154,21 +152,17 @@ export default function TransactionsPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">{tx.customerRef}</span>
+                      <span className="text-gray-400 font-mono">{tx.transactionId || tx.id}</span>
                       <span className="text-gray-500">{formatDate(tx.timestamp)}</span>
                     </div>
                   </div>
-                  <div className="hidden md:grid grid-cols-6 gap-4 items-center">
-                    <div className="text-white font-mono text-sm">{tx.id}</div>
+                  <div className="hidden md:grid grid-cols-4 gap-4 items-center">
+                    <div className="text-white font-mono text-sm">{tx.transactionId || tx.id}</div>
                     <div>
                       <p className="text-white font-medium">
                         {formatCurrency(tx.status === "Settled" ? tx.amount + (tx.incentive || 100) : tx.amount)}
                       </p>
                     </div>
-                    <div className="text-gray-300">
-                      {tx.cryptoAmount} {tx.cryptoAsset}
-                    </div>
-                    <div className="text-gray-400">{tx.customerRef}</div>
                     <div>
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusColor}`}>
                         <StatusIcon className="w-3.5 h-3.5" />
@@ -265,26 +259,14 @@ export default function TransactionsPage() {
                     </div>
                     <div className="space-y-3 p-4 bg-gray-800/50 rounded-xl">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Transaction ID</span>
+                        <span className="text-gray-400">TX Reference</span>
                         <span className="text-white font-mono">{(selectedTxDetails as any).transactionId || (selectedTxDetails as any).id}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Crypto Amount</span>
-                        <span className="text-white">
-                          {(selectedTxDetails as any).cryptoAmount} {(selectedTxDetails as any).cryptoAsset}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Network</span>
-                        <span className="text-white">{(selectedTxDetails as any).network}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Reference</span>
-                        <span className="text-white">{(selectedTxDetails as any).customerRef}</span>
-                      </div>
-                      <div className="flex justify-between">
                         <span className="text-gray-400">Initiated</span>
-                        <span className="text-white">{formatDate((selectedTxDetails as any).timestamp)}</span>
+                        <span className="text-white">
+                          {formatDate((selectedTxDetails as any).createdAt || (selectedTxDetails as any).timestamp)}
+                        </span>
                       </div>
                       {(selectedTxDetails as any).settledAt && (
                         <div className="flex justify-between">

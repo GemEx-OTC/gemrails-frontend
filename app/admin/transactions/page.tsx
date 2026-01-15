@@ -142,7 +142,7 @@ export default function TransactionsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-800 bg-gray-800/50">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Transaction</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">TX Reference</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Merchant</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Amount</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Crypto</th>
@@ -161,7 +161,6 @@ export default function TransactionsPage() {
                     >
                       <td className="px-6 py-4">
                         <div className="text-white font-mono font-medium">{tx.transactionId}</div>
-                        <div className="text-gray-500 text-sm">{tx.customerRef || "—"}</div>
                       </td>
                       <td className="px-6 py-4 text-white">{tx.merchantName}</td>
                       <td className="px-6 py-4">
@@ -255,7 +254,7 @@ export default function TransactionsPage() {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
-                  <span className="text-gray-400">Transaction ID</span>
+                  <span className="text-gray-400">TX Reference</span>
                   <span className="text-white font-mono font-bold">{selectedTx.transactionId}</span>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
@@ -278,10 +277,6 @@ export default function TransactionsPage() {
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
                   <span className="text-gray-400">Crypto</span>
                   <span className="text-white">{selectedTx.cryptoAmount} {selectedTx.cryptoAsset} ({selectedTx.network})</span>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
-                  <span className="text-gray-400">Reference</span>
-                  <span className="text-white">{selectedTx.customerRef || "—"}</span>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
                   <span className="text-gray-400">Time</span>
