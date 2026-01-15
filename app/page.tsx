@@ -160,7 +160,7 @@ export default function HomePage() {
                   {
                     icon: Zap,
                     title: "Instant Settlement",
-                    desc: "Receive Naira in your bank account within seconds of payment confirmation",
+                    desc: "Receive Naira in your bank account within seconds of payment confirmation, No custody of crypto, just settlement",
                   },
                   {
                     icon: TrendingUp,

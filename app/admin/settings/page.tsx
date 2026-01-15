@@ -1,10 +1,73 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
 import { Shield, Bell, Save, RefreshCw, Loader2, DollarSign } from "lucide-react"
 import { usePlatformSettings, useUpdatePlatformSettings } from "@/lib/hooks/use-admin"
+
+// Format number with commas as user types
+const formatNumberWithCommas = (value: string | number): string => {
+  const num = typeof value === "string" ? value.replace(/,/g, "") : String(value)
+  if (!num || isNaN(Number(num))) return ""
+  return Number(num).toLocaleString("en-NG")
+}
+
+// Parse formatted number back to raw number
+const parseFormattedNumber = (value: string): number => {
+  const parsed = Number(value.replace(/,/g, ""))
+  return isNaN(parsed) ? 0 : parsed
+}
+
+// Currency input component with live formatting
+const CurrencyInput = ({
+  label,
+  value,
+  onChange,
+  currency = "₦",
+  placeholder = "0",
+}: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+  currency?: string
+  placeholder?: string
+}) => {
+  const [displayValue, setDisplayValue] = useState(formatNumberWithCommas(value))
+
+  useEffect(() => {
+    setDisplayValue(formatNumberWithCommas(value))
+  }, [value])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/[^0-9]/g, "")
+    if (rawValue === "") {
+      setDisplayValue("")
+      onChange(0)
+      return
+    }
+    const formatted = formatNumberWithCommas(rawValue)
+    setDisplayValue(formatted)
+    onChange(parseFormattedNumber(rawValue))
+  }
+
+  return (
+    <div className="p-4 bg-gray-800/50 rounded-xl">
+      <label className="block text-sm font-medium text-gray-400 mb-2">{label}</label>
+      <div className="relative">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">{currency}</span>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={displayValue}
+          onChange={handleChange}
+          placeholder={placeholder}
+          className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-emerald-500 text-right font-mono"
+        />
+      </div>
+    </div>
+  )
+}
 
 export default function SettingsPage() {
   const { data: settings, isLoading } = usePlatformSettings()
@@ -13,9 +76,9 @@ export default function SettingsPage() {
   const [localSettings, setLocalSettings] = useState({
     autoVerification: false,
     emailNotifications: true,
-    bufferAmount: 1500,
+    bufferAmount: 1, // Now in USD
     platformFee: 1000,
-    merchantIncentive: 50,
+    merchantIncentive: 100,
     minimumPayment: 5000,
   })
 
@@ -31,6 +94,10 @@ export default function SettingsPage() {
       })
     }
   }, [settings])
+
+  const updateField = useCallback((field: string, value: number | boolean) => {
+    setLocalSettings((prev) => ({ ...prev, [field]: value }))
+  }, [])
 
   const handleSave = () => {
     updateMutation.mutate(localSettings, {
@@ -87,10 +154,12 @@ export default function SettingsPage() {
               <p className="text-sm text-gray-400">Automatically verify merchants with complete documentation</p>
             </div>
             <button
-              onClick={() => setLocalSettings({ ...localSettings, autoVerification: !localSettings.autoVerification })}
+              onClick={() => updateField("autoVerification", !localSettings.autoVerification)}
               className={`w-12 h-6 rounded-full transition-all ${localSettings.autoVerification ? "bg-emerald-500" : "bg-gray-700"}`}
             >
-              <div className={`w-5 h-5 rounded-full bg-white transition-transform ${localSettings.autoVerification ? "translate-x-6" : "translate-x-0.5"}`} />
+              <div
+                className={`w-5 h-5 rounded-full bg-white transition-transform ${localSettings.autoVerification ? "translate-x-6" : "translate-x-0.5"}`}
+              />
             </button>
           </div>
         </div>
@@ -114,10 +183,12 @@ export default function SettingsPage() {
               <p className="text-sm text-gray-400">Receive alerts for new merchants and large transactions</p>
             </div>
             <button
-              onClick={() => setLocalSettings({ ...localSettings, emailNotifications: !localSettings.emailNotifications })}
+              onClick={() => updateField("emailNotifications", !localSettings.emailNotifications)}
               className={`w-12 h-6 rounded-full transition-all ${localSettings.emailNotifications ? "bg-emerald-500" : "bg-gray-700"}`}
             >
-              <div className={`w-5 h-5 rounded-full bg-white transition-transform ${localSettings.emailNotifications ? "translate-x-6" : "translate-x-0.5"}`} />
+              <div
+                className={`w-5 h-5 rounded-full bg-white transition-transform ${localSettings.emailNotifications ? "translate-x-6" : "translate-x-0.5"}`}
+              />
             </button>
           </div>
         </div>
@@ -135,42 +206,30 @@ export default function SettingsPage() {
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-gray-800/50 rounded-xl">
-            <label className="block text-sm font-medium text-gray-400 mb-2">Platform Fee (₦)</label>
-            <input
-              type="number"
-              value={localSettings.platformFee}
-              onChange={(e) => setLocalSettings({ ...localSettings, platformFee: Number(e.target.value) })}
-              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-          <div className="p-4 bg-gray-800/50 rounded-xl">
-            <label className="block text-sm font-medium text-gray-400 mb-2">Merchant Incentive (₦)</label>
-            <input
-              type="number"
-              value={localSettings.merchantIncentive}
-              onChange={(e) => setLocalSettings({ ...localSettings, merchantIncentive: Number(e.target.value) })}
-              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-          <div className="p-4 bg-gray-800/50 rounded-xl">
-            <label className="block text-sm font-medium text-gray-400 mb-2">Buffer Amount (₦)</label>
-            <input
-              type="number"
-              value={localSettings.bufferAmount}
-              onChange={(e) => setLocalSettings({ ...localSettings, bufferAmount: Number(e.target.value) })}
-              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-          <div className="p-4 bg-gray-800/50 rounded-xl">
-            <label className="block text-sm font-medium text-gray-400 mb-2">Minimum Payment (₦)</label>
-            <input
-              type="number"
-              value={localSettings.minimumPayment}
-              onChange={(e) => setLocalSettings({ ...localSettings, minimumPayment: Number(e.target.value) })}
-              className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
+          <CurrencyInput
+            label="Platform Fee"
+            value={localSettings.platformFee}
+            onChange={(value) => updateField("platformFee", value)}
+            currency="₦"
+          />
+          <CurrencyInput
+            label="Merchant Incentive"
+            value={localSettings.merchantIncentive}
+            onChange={(value) => updateField("merchantIncentive", value)}
+            currency="₦"
+          />
+          <CurrencyInput
+            label="Buffer Amount"
+            value={localSettings.bufferAmount}
+            onChange={(value) => updateField("bufferAmount", value)}
+            currency="$"
+          />
+          <CurrencyInput
+            label="Minimum Payment"
+            value={localSettings.minimumPayment}
+            onChange={(value) => updateField("minimumPayment", value)}
+            currency="₦"
+          />
         </div>
       </div>
     </motion.div>

@@ -153,7 +153,10 @@ export default function PaymentPage({
   const amount = parseFloat(nairaAmount.replace(/,/g, '')) || 0
   const exchangeRate = rates ? (rates as any)[selectedAsset] : 0
   const cryptoAmount = exchangeRate > 0 ? amount / exchangeRate : 0
-  const minPayment = 1000 // Minimum payment of ₦1,000
+  
+  // Get minimum payment from API - this is the platform's enforced minimum
+  const minPayment = ratesData ? (ratesData as any).minimumPayment : null
+  const isMinPaymentLoaded = minPayment !== null && minPayment !== undefined
 
   // Format number with commas as user types
   const formatInputAmount = (value: string) => {
@@ -180,7 +183,12 @@ export default function PaymentPage({
 
   const handleAmountSubmit = () => {
     setError("")
+    if (!isMinPaymentLoaded) {
+      toast.error("Loading payment settings, please wait...")
+      return
+    }
     if (amount < minPayment) {
+      setError(`Minimum payment is ${formatCurrency(minPayment)}`)
       toast.error(`Minimum payment is ${formatCurrency(minPayment)}`)
       return
     }
@@ -387,9 +395,11 @@ export default function PaymentPage({
                       autoFocus
                     />
                   </div>
-                  <p className="text-gray-500 text-sm mt-4">
-                    Minimum: {formatCurrency(minPayment)}
-                  </p>
+                  {isMinPaymentLoaded && (
+                    <p className="text-gray-500 text-sm mt-4">
+                      Minimum: {formatCurrency(minPayment)}
+                    </p>
+                  )}
                 </div>
 
                 {/* Quick Amount Buttons */}
@@ -428,7 +438,7 @@ export default function PaymentPage({
 
               {/* Crypto Estimate Card */}
               <AnimatePresence>
-                {amount >= minPayment && (
+                {isMinPaymentLoaded && amount >= minPayment && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -448,12 +458,12 @@ export default function PaymentPage({
               {/* Continue Button */}
               <motion.button
                 onClick={handleAmountSubmit}
-                disabled={amount < minPayment}
+                disabled={!isMinPaymentLoaded || amount < minPayment}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 flex items-center justify-center gap-2"
               >
-                Continue
+                {!isMinPaymentLoaded ? "Loading..." : "Continue"}
                 <ArrowRight className="w-5 h-5" />
               </motion.button>
 

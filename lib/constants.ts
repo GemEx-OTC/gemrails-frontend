@@ -74,10 +74,10 @@ export const PAYMENT_STATUS = {
 } as const
 
 export const FEE_CONFIG = {
-  bufferAmount: 1500, // ₦1,500 buffer added to customer payment
-  platformFee: 1000, // ₦1,000 GemRails revenue from buffer
-  merchantIncentive: 100, // ₦100 merchant bonus from buffer
-  minimumPayment: 5000, // ₦5,000 minimum payment amount
+  bufferAmount: 1500, // ₦1,500 buffer added to customer payment (deprecated - use API)
+  platformFee: 1000, // ₦1,000 GemRails revenue from buffer (deprecated - use API)
+  merchantIncentive: 100, // ₦100 merchant bonus from buffer (deprecated - use API)
+  minimumPayment: 5000, // ₦5,000 minimum payment amount (deprecated - use API)
 } as const
 
 export const SUPPORTED_ASSETS = ["USDT", "USDC"] as const

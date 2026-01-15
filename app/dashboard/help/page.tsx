@@ -3,11 +3,19 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { HelpCircle, ChevronDown, MessageCircle, Mail, Phone, QrCode, CreditCard, Shield, Clock,BadgeDollarSign } from "lucide-react"
+import { useExchangeRate } from "@/lib/hooks/use-payments"
 
-const faqs = [
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(amount)
+
+export default function HelpPage() {
+  const { data: ratesData } = useExchangeRate()
+  const minPayment = ratesData ? (ratesData as any).minimumPayment : 5000 // Fallback for display only
+  
+  const faqs = [
   { category: "Getting Started", icon: QrCode, questions: [
     { q: "How do I start accepting payments?", a: "Simply display your unique QR code at your checkout counter. Customers scan it with their phone, enter the amount, and pay with USDT or USDC. You receive Naira instantly!" },
-    { q: "What is the minimum payment amount?", a: "The minimum payment amount is ₦5,000. This ensures efficient processing and settlement for both you and your customers." },
+    { q: "What is the minimum payment amount?", a: `The minimum payment amount is ${formatCurrency(minPayment)}. This ensures efficient processing and settlement for both you and your customers.` },
     { q: "How do I download my QR code?", a: "Go to the 'QR Code' section in your dashboard. You can download it as PNG, print it, or share the payment link directly." }
   ]},
   { category: "Payments & Settlement", icon: CreditCard, questions: [
@@ -24,7 +32,6 @@ const faqs = [
   ]}
 ]
 
-export default function HelpPage() {
   const [openCategory, setOpenCategory] = useState<string | null>("Getting Started")
   const [openQuestion, setOpenQuestion] = useState<string | null>(null)
 
