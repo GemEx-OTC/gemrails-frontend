@@ -16,7 +16,7 @@ const faqs = [
     { q: "What cryptocurrencies do you support?", a: "We currently support USDT (Tether) and USDC (USD Coin) on TRC20, BSC, and ERC20 networks. These are stable coins pegged to the US Dollar." }
   ]},
   { category: "Security & Verification", icon: Shield, questions: [
-    { q: "Is GemExRails safe to use?", a: "Yes! GemExRails is powered by GemEx, a licensed OTC trading platform. We use bank-grade security, and all merchants are verified for compliance." },
+    { q: "Is GemRails safe to use?", a: "Yes! GemRails is powered by GemEx, a licensed OTC trading platform. We use bank-grade security, and all merchants are verified for compliance." },
     { q: "How do I verify my business?", a: "During signup, you'll provide your business details and bank account. Our team verifies this information within 24 hours. You can start accepting payments once verified." }
   ]},
   { category: "Fees & Pricing", icon: Clock, questions: [

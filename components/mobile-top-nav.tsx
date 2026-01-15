@@ -57,10 +57,8 @@ export function MobileTopNav() {
         <div className="flex items-center justify-between px-4 py-3">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <span className="text-sm">⚡</span>
-            </div>
-            <span className="text-lg font-bold text-white">GemExRails</span>
+            <img src="/logo/logo_icon.png" alt="GemRails" className="w-8 h-8 rounded-lg" />
+            <span className="text-lg font-bold text-white">GemRails</span>
           </Link>
 
           {/* Right side actions */}
@@ -192,7 +190,7 @@ export function MobileTopNav() {
                 </motion.button>
 
                 <div className="text-xs text-gray-600 text-center">
-                  <p>GemExRails v1.0.0</p>
+                  <p>GemRails v1.0.0</p>
                 </div>
               </div>
             </motion.div>

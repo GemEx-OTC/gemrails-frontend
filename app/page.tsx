@@ -21,11 +21,9 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                <span className="text-xl">⚡</span>
-              </div>
+              <img src="/logo/logo_icon.png" alt="GemRails" className="w-10 h-10 rounded-xl" />
               <div>
-                <span className="text-xl font-bold text-white">GemExRails</span>
+                <span className="text-xl font-bold text-white">GemRails</span>
                 <p className="text-xs text-emerald-400">by GemEx</p>
               </div>
             </div>
@@ -155,7 +153,7 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-                Why Choose GemExRails?
+                Why Choose GemRails?
               </h2>
               <div className="space-y-6">
                 {[
@@ -237,7 +235,7 @@ export default function HomePage() {
             Ready to Accept Crypto Payments?
           </h2>
           <p className="text-xl text-gray-400 mb-8">
-            Join hundreds of businesses already using GemExRails
+            Join hundreds of businesses already using GemRails
           </p>
           <Link
             href="/auth/signup"
@@ -254,14 +252,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                <span className="text-sm">⚡</span>
-              </div>
-              <span className="text-white font-semibold">GemExRails</span>
+              <img src="/logo/logo_icon.png" alt="GemRails" className="w-8 h-8 rounded-lg" />
+              <span className="text-white font-semibold">GemRails</span>
               <span className="text-gray-500">by GemEx</span>
             </div>
             <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} GemExRails. All rights reserved.
+              © {new Date().getFullYear()} GemRails. All rights reserved.
             </p>
           </div>
         </div>

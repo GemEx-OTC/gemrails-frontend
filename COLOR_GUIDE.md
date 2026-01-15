@@ -1,12 +1,12 @@
-# GemExRails Color Guide
+# GemRails Color Guide
 
-A comprehensive color reference for brand designers working on the GemExRails Merchant Portal.
+A comprehensive color reference for brand designers working on the GemRails Merchant Portal.
 
 ---
 
 ## Brand Identity
 
-GemExRails uses an **Emerald/Teal** color theme on a dark background, creating a modern fintech aesthetic that conveys trust, growth, and professionalism.
+GemRails uses an **Emerald/Teal** color theme on a dark background, creating a modern fintech aesthetic that conveys trust, growth, and professionalism.
 
 ---
 

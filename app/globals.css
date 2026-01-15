@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* GemExRails Color Palette - Emerald/Teal Theme */
+  /* GemRails Color Palette - Emerald/Teal Theme */
   --background: #0a0d10;
   --foreground: #f8f9fa;
   --card: #111419;

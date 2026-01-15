@@ -187,10 +187,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-800">
         <div className="flex items-center justify-between px-4 py-3">
           <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-white">GemExRails Admin</span>
+            <img src="/logo/logo_icon.png" alt="GemRails" className="w-8 h-8 rounded-lg" />
+            <span className="font-bold text-white">GemRails Admin</span>
           </Link>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -224,11 +222,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Logo */}
           <div className="p-6 border-b border-gray-800">
             <Link href="/admin/dashboard" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
+              <img src="/logo/logo_icon.png" alt="GemRails" className="w-10 h-10 rounded-xl" />
               <div>
-                <span className="font-bold text-white text-lg">GemExRails</span>
+                <span className="font-bold text-white text-lg">GemRails</span>
                 <p className="text-xs text-emerald-400">Admin Portal</p>
               </div>
             </Link>
@@ -274,7 +270,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
             </motion.button>
-            <p className="text-xs text-gray-600 text-center">GemExRails Admin v1.0</p>
+            <p className="text-xs text-gray-600 text-center">GemRails Admin v1.0</p>
           </div>
         </div>
       </aside>

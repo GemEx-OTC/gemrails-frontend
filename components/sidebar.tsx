@@ -171,11 +171,9 @@ export function Sidebar({ currentPath }: SidebarProps) {
         {/* Logo */}
         <div className="p-4 lg:p-6 border-b border-gray-800">
           <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo/logo_icon.png" alt="GemRails" className="w-10 h-10 rounded-xl" />
             <div>
-              <span className="text-lg lg:text-xl font-bold text-white">GemExRails</span>
+              <span className="text-lg lg:text-xl font-bold text-white">GemRails</span>
               <p className="text-xs text-emerald-400">Merchant Portal</p>
             </div>
           </Link>
@@ -238,7 +236,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
 
           {/* Version */}
           <div className="text-xs text-gray-600 text-center">
-            <p>GemExRails v1.0.0</p>
+            <p>GemRails v1.0.0</p>
           </div>
         </div>
       </div>

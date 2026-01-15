@@ -45,11 +45,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             transition={{ delay: 0.2 }}
           >
             <Link href="/" className="flex items-center gap-3 mb-12">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <span className="text-2xl">⚡</span>
-              </div>
+              <img src="/logo/logo_icon.png" alt="GemRails" className="w-12 h-12 rounded-xl shadow-lg shadow-emerald-500/20" />
               <div>
-                <span className="text-2xl font-bold text-white">GemExRails</span>
+                <span className="text-2xl font-bold text-white">GemRails</span>
                 <p className="text-xs text-emerald-400">by GemEx</p>
               </div>
             </Link>
@@ -98,11 +96,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             {/* Mobile logo */}
             <div className="lg:hidden flex justify-center mb-8">
               <Link href="/" className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                  <span className="text-xl">⚡</span>
-                </div>
+                <img src="/logo/logo_icon.png" alt="GemRails" className="w-10 h-10 rounded-xl shadow-lg shadow-emerald-500/20" />
                 <div>
-                  <span className="text-xl font-bold text-white">GemExRails</span>
+                  <span className="text-xl font-bold text-white">GemRails</span>
                   <p className="text-xs text-emerald-400">by GemEx</p>
                 </div>
               </Link>

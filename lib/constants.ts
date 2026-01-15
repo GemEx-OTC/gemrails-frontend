@@ -1,4 +1,4 @@
-// GemExRails Platform Constants
+// GemRails Platform Constants
 
 export const CRYPTO_ASSETS = {
   USDT: { name: "Tether", symbol: "USDT", icon: "₮" },
@@ -75,7 +75,7 @@ export const PAYMENT_STATUS = {
 
 export const FEE_CONFIG = {
   bufferAmount: 1500, // ₦1,500 buffer added to customer payment
-  platformFee: 1000, // ₦1,000 GemExRails revenue from buffer
+  platformFee: 1000, // ₦1,000 GemRails revenue from buffer
   merchantIncentive: 100, // ₦100 merchant bonus from buffer
   minimumPayment: 5000, // ₦5,000 minimum payment amount
 } as const

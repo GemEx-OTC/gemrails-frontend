@@ -59,7 +59,7 @@ export default function AdminLoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@gemexrails.com"
+              placeholder="admin@gemrails.com"
               disabled={adminLoginMutation.isPending}
               className="gemrails-input-icon"
             />

@@ -268,7 +268,7 @@ export default function PaymentPage({
 
       // Download the image
       const link = document.createElement('a')
-      link.download = `gemexrails-receipt-${transaction?.transactionId || 'payment'}.png`
+      link.download = `gemrails-receipt-${transaction?.transactionId || 'payment'}.png`
       link.href = dataUrl
       link.click()
 
@@ -349,7 +349,7 @@ export default function PaymentPage({
             </div>
             <div className="flex items-center gap-1.5 px-3 py-2 bg-white/15 backdrop-blur-sm rounded-full border border-white/20">
               <Zap className="w-4 h-4 text-white" />
-              <span className="text-xs text-white font-semibold">GemExRails</span>
+              <span className="text-xs text-white font-semibold">GemRails</span>
             </div>
           </div>
         </div>
@@ -460,7 +460,7 @@ export default function PaymentPage({
               {/* Footer */}
               <p className="text-center text-xs text-gray-500">
                 Secured by{" "}
-                <span className="text-emerald-400 font-semibold">GemExRails</span>
+                <span className="text-emerald-400 font-semibold">GemRails</span>
               </p>
             </motion.div>
           )}
@@ -898,7 +898,7 @@ export default function PaymentPage({
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <Sparkles className="w-5 h-5 text-emerald-400" />
                     <span className="text-emerald-400 font-semibold">
-                      Powered by GemExRails
+                      Powered by GemRails
                     </span>
                   </div>
                   <p className="text-gray-300 text-sm">

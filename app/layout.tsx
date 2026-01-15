@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "GemExRails - Accept Crypto, Get Naira Instantly",
+  title: "GemRails - Accept Crypto, Get Naira Instantly",
   description:
     "Enable your business to accept USDT & USDC payments with instant Naira settlement. No crypto knowledge required.",
   keywords: ["crypto payments", "USDT", "USDC", "Naira", "merchant", "Nigeria", "payment gateway"],
