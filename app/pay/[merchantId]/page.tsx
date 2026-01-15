@@ -155,8 +155,11 @@ export default function PaymentPage({
   const cryptoAmount = exchangeRate > 0 ? amount / exchangeRate : 0
   
   // Get minimum payment from API - this is the platform's enforced minimum
-  const minPayment = ratesData ? (ratesData as any).minimumPayment : null
-  const isMinPaymentLoaded = minPayment !== null && minPayment !== undefined
+  // Use a more robust check: if ratesData exists and has minimumPayment property
+  const minPayment = ratesData && typeof (ratesData as any).minimumPayment === 'number' 
+    ? (ratesData as any).minimumPayment 
+    : 5000 // Fallback to default only if API hasn't loaded yet
+  const isMinPaymentLoaded = !!ratesData && typeof (ratesData as any).minimumPayment === 'number'
 
   // Format number with commas as user types
   const formatInputAmount = (value: string) => {
@@ -183,11 +186,11 @@ export default function PaymentPage({
 
   const handleAmountSubmit = () => {
     setError("")
-    if (!isMinPaymentLoaded) {
+    if (ratesLoading) {
       toast.error("Loading payment settings, please wait...")
       return
     }
-    if (amount < minPayment) {
+    if (isMinPaymentLoaded && amount < minPayment) {
       setError(`Minimum payment is ${formatCurrency(minPayment)}`)
       toast.error(`Minimum payment is ${formatCurrency(minPayment)}`)
       return
@@ -458,12 +461,12 @@ export default function PaymentPage({
               {/* Continue Button */}
               <motion.button
                 onClick={handleAmountSubmit}
-                disabled={!isMinPaymentLoaded || amount < minPayment}
+                disabled={ratesLoading || (isMinPaymentLoaded && amount < minPayment)}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 flex items-center justify-center gap-2"
               >
-                {!isMinPaymentLoaded ? "Loading..." : "Continue"}
+                {ratesLoading ? "Loading..." : "Continue"}
                 <ArrowRight className="w-5 h-5" />
               </motion.button>
 
