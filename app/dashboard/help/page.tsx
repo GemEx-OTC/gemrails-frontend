@@ -13,14 +13,13 @@ const faqs = [
   { category: "Payments & Settlement", icon: CreditCard, questions: [
     { q: "How fast do I receive my money?", a: "Settlements are instant! Once the customer's crypto payment is confirmed on the blockchain (usually 1-3 minutes), the Naira equivalent is sent to your bank account immediately." },
     { q: "What is the ₦100 merchant incentive?", a: "For every successful payment, you receive a ₦100 bonus on top of the original payment amount. This is our way of rewarding merchants for accepting crypto payments." },
-    { q: "What cryptocurrencies do you support?", a: "We currently support USDT (Tether) and USDC (USD Coin) on TRC20, BSC, and ERC20 networks. These are stable coins pegged to the US Dollar." }
+    { q: "What cryptocurrencies do you support?", a: "We currently support USDT (Tether) and USDC (USD Coin) on TRC20 and BSC networks. These are stable coins pegged to the US Dollar." }
   ]},
   { category: "Security & Verification", icon: Shield, questions: [
-    { q: "Is GemRails safe to use?", a: "Yes! GemRails is powered by GemEx, a licensed OTC trading platform. We use bank-grade security, and all merchants are verified for compliance." },
+    { q: "Is GemRails safe to use?", a: "Yes! GemRails is powered by GemOTC, an OTC trading platform. We use bank-grade security, and all merchants are verified for compliance." },
     { q: "How do I verify my business?", a: "During signup, you'll provide your business details and bank account. Our team verifies this information within 24 hours. You can start accepting payments once verified." }
   ]},
-  { category: "Fees & Pricing", icon: Clock, questions: [
-    { q: "What are the fees?", a: "There are no fees deducted from your settlement! Customers pay a small ₦1,500 processing fee, from which you receive ₦100 as an incentive. You always receive the full payment amount plus the bonus." },
+  { category: "Fees", icon: Clock, questions: [
     { q: "Are there any hidden charges?", a: "No hidden charges. What you see is what you get. The customer pays the processing fee, and you receive the full amount plus your ₦100 incentive." }
   ]}
 ]
