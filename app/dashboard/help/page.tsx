@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { HelpCircle, ChevronDown, MessageCircle, Mail, Phone, QrCode, CreditCard, Shield, Clock } from "lucide-react"
+import { HelpCircle, ChevronDown, MessageCircle, Mail, Phone, QrCode, CreditCard, Shield, Clock,BadgeDollarSign } from "lucide-react"
 
 const faqs = [
   { category: "Getting Started", icon: QrCode, questions: [
@@ -19,7 +19,7 @@ const faqs = [
     { q: "Is GemRails safe to use?", a: "Yes! GemRails is powered by GemOTC, an OTC trading platform. We use bank-grade security, and all merchants are verified for compliance." },
     { q: "How do I verify my business?", a: "During signup, you'll provide your business details and bank account. Our team verifies this information within 24 hours. You can start accepting payments once verified." }
   ]},
-  { category: "Fees", icon: Clock, questions: [
+  { category: "Fees", icon: BadgeDollarSign, questions: [
     { q: "Are there any hidden charges?", a: "No hidden charges. What you see is what you get. The customer pays the processing fee, and you receive the full amount plus your ₦100 incentive." }
   ]}
 ]
@@ -35,13 +35,13 @@ export default function HelpPage() {
       <div className="grid sm:grid-cols-3 gap-4">
         <motion.a href="mailto:support@gemrails.ng" whileHover={{ scale: 1.02 }} className="p-4 bg-gray-900/50 border border-gray-800 rounded-xl flex items-center gap-3 hover:border-emerald-500/50 transition-all">
           <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center"><Mail className="w-5 h-5 text-emerald-400" /></div>
-          <div><p className="text-white font-medium">Email Support</p><p className="text-sm text-gray-500">support@gemrails.ng</p></div>
+          <div><p className="text-white font-medium">Email Support</p><p className="text-sm text-gray-500">support@gemrails.com</p></div>
         </motion.a>
         <motion.a href="tel:+2348012345678" whileHover={{ scale: 1.02 }} className="p-4 bg-gray-900/50 border border-gray-800 rounded-xl flex items-center gap-3 hover:border-emerald-500/50 transition-all">
           <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center"><Phone className="w-5 h-5 text-emerald-400" /></div>
-          <div><p className="text-white font-medium">Phone Support</p><p className="text-sm text-gray-500">+234 801 234 5678</p></div>
+          <div><p className="text-white font-medium">Phone Support</p><p className="text-sm text-gray-500">+234 906 990 8983</p></div>
         </motion.a>
-        <motion.a href="https://wa.me/2348012345678" target="_blank" whileHover={{ scale: 1.02 }} className="p-4 bg-gray-900/50 border border-gray-800 rounded-xl flex items-center gap-3 hover:border-emerald-500/50 transition-all">
+        <motion.a href="https://wa.me/+2349069908983" target="_blank" whileHover={{ scale: 1.02 }} className="p-4 bg-gray-900/50 border border-gray-800 rounded-xl flex items-center gap-3 hover:border-emerald-500/50 transition-all">
           <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center"><MessageCircle className="w-5 h-5 text-emerald-400" /></div>
           <div><p className="text-white font-medium">WhatsApp</p><p className="text-sm text-gray-500">Chat with us</p></div>
         </motion.a>

@@ -165,8 +165,9 @@ export default function TransactionsPage() {
                       </td>
                       <td className="px-6 py-4 text-white">{tx.merchantName}</td>
                       <td className="px-6 py-4">
-                        <div className="text-emerald-400 font-medium">{formatCurrency(tx.amount)}</div>
-                        {tx.incentive > 0 && <div className="text-emerald-500 text-xs">+{formatCurrency(tx.incentive)} bonus</div>}
+                        <div className="text-emerald-400 font-medium">
+                          {formatCurrency(tx.status === "Settled" && tx.incentive > 0 ? tx.amount + tx.incentive : tx.amount)}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-white">{tx.cryptoAmount} {tx.cryptoAsset}</div>
@@ -270,7 +271,9 @@ export default function TransactionsPage() {
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
                   <span className="text-gray-400">Amount</span>
-                  <span className="text-emerald-400 font-bold">{formatCurrency(selectedTx.amount)}</span>
+                  <span className="text-emerald-400 font-bold">
+                    {formatCurrency(selectedTx.status === "Settled" && selectedTx.incentive > 0 ? selectedTx.amount + selectedTx.incentive : selectedTx.amount)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
                   <span className="text-gray-400">Crypto</span>

@@ -145,7 +145,9 @@ export default function TransactionsPage() {
                 >
                   <div className="md:hidden space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-white font-medium">{formatCurrency(tx.amount)}</span>
+                      <span className="text-white font-medium">
+                        {formatCurrency(tx.status === "Settled" ? tx.amount + (tx.incentive || 100) : tx.amount)}
+                      </span>
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusColor}`}>
                         <StatusIcon className="w-3.5 h-3.5" />
                         {PAYMENT_STATUS[tx.status as keyof typeof PAYMENT_STATUS]?.label}
@@ -159,8 +161,9 @@ export default function TransactionsPage() {
                   <div className="hidden md:grid grid-cols-6 gap-4 items-center">
                     <div className="text-white font-mono text-sm">{tx.id}</div>
                     <div>
-                      <p className="text-white font-medium">{formatCurrency(tx.amount)}</p>
-                      {tx.status === "Settled" && <p className="text-xs text-emerald-400">+₦{tx.incentive} bonus</p>}
+                      <p className="text-white font-medium">
+                        {formatCurrency(tx.status === "Settled" ? tx.amount + (tx.incentive || 100) : tx.amount)}
+                      </p>
                     </div>
                     <div className="text-gray-300">
                       {tx.cryptoAmount} {tx.cryptoAsset}
