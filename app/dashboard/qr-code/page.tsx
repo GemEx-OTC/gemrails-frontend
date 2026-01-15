@@ -161,86 +161,86 @@ export default function QRCodePage() {
       <div className="hidden print:flex print:fixed print:inset-0 print:z-[9999] print:flex-col print:items-center print:justify-start print:min-h-screen print:w-full print:bg-gradient-to-b print:from-emerald-500 print:via-teal-600 print:to-teal-700">
         
         {/* Top Logo Badge */}
-        <div className="mt-8 mb-6 w-20 h-20 bg-white rounded-2xl shadow-2xl flex items-center justify-center">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <div className="mt-16 mb-12 w-40 h-40 bg-white rounded-3xl shadow-2xl flex items-center justify-center">
+          <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+            <svg className="w-16 h-16 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
         </div>
 
         {/* Main Title */}
-        <h1 className="text-4xl md:text-5xl font-black text-emerald-950 tracking-tight mb-2 text-center px-4">
+        <h1 className="text-7xl md:text-8xl font-black text-emerald-950 tracking-tight mb-4 text-center px-8">
           PAY WITH CRYPTO
         </h1>
-        <p className="text-sm font-bold text-emerald-800 tracking-[0.3em] uppercase mb-4">
+        <p className="text-2xl font-bold text-emerald-800 tracking-[0.3em] uppercase mb-8">
           Fast & Secure Payments
         </p>
 
         {/* Platform Badge */}
-        <div className="flex items-center gap-2 mb-6">
-          <span className="text-emerald-800 text-sm font-medium">Powered by</span>
-          <span className="text-2xl font-black text-emerald-950">
+        <div className="flex items-center gap-4 mb-12">
+          <span className="text-emerald-800 text-2xl font-medium">Powered by</span>
+          <span className="text-5xl font-black text-emerald-950">
             GemRails
           </span>
         </div>
 
         {/* Merchant ID Card */}
-        {/* <div className="w-[90%] max-w-[400px] bg-white rounded-2xl shadow-xl p-6 mb-4 relative">
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg">
+        {/* <div className="w-[90%] max-w-[800px] bg-white rounded-3xl shadow-xl p-12 mb-8 relative">
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-lg font-bold px-8 py-3 rounded-full uppercase tracking-wider shadow-lg">
             Merchant ID
           </div>
-          <p className="text-3xl md:text-4xl font-black text-emerald-950 text-center tracking-wider mt-2">
+          <p className="text-6xl md:text-7xl font-black text-emerald-950 text-center tracking-wider mt-4">
             {merchantId}
           </p>
         </div> */}
 
         {/* Business Name Card */}
-        <div className="w-[90%] max-w-[400px] bg-white rounded-2xl shadow-xl p-5 mb-6 relative">
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg">
+        <div className="w-[90%] max-w-[800px] bg-white rounded-3xl shadow-xl p-10 mb-12 relative">
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-lg font-bold px-8 py-3 rounded-full uppercase tracking-wider shadow-lg">
             Business Name
           </div>
-          <p className="text-xl md:text-2xl font-bold text-emerald-950 text-center uppercase mt-2">
+          <p className="text-4xl md:text-5xl font-bold text-emerald-950 text-center uppercase mt-4">
             {businessName}
           </p>
         </div>
 
         {/* Scan Instruction */}
-        <p className="text-emerald-900 font-semibold text-base mb-4">
+        <p className="text-emerald-900 font-semibold text-3xl mb-8">
           Scan to Pay with USDT or USDC
         </p>
 
         {/* QR Code */}
-        <div className="bg-white p-5 rounded-2xl shadow-2xl mb-4">
+        <div className="bg-white p-10 rounded-3xl shadow-2xl mb-8">
           <QRCodeSVG
             value={paymentUrl}
-            size={200}
+            size={400}
             level="H"
             imageSettings={{
               src: effectiveLogo,
-              height: 45,
-              width: 45,
+              height: 90,
+              width: 90,
               excavate: true,
             }}
           />
         </div>
 
         {/* Tagline */}
-        <p className="text-emerald-800 font-medium text-sm italic mb-6">
+        <p className="text-emerald-800 font-medium text-2xl italic mb-12">
           GemRails — Crypto Payments Made Simple
         </p>
 
         {/* Footer */}
-        <div className="w-[90%] max-w-[400px] bg-emerald-950/20 backdrop-blur rounded-xl py-3 px-6 flex items-center justify-center gap-4">
-          <span className="text-white text-xs font-semibold flex items-center gap-1">
+        <div className="w-[90%] max-w-[800px] bg-emerald-950/20 backdrop-blur rounded-2xl py-6 px-12 flex items-center justify-center gap-8">
+          <span className="text-white text-xl font-semibold flex items-center gap-2">
             <span>🔒</span> Secure
           </span>
-          <span className="text-white/40">|</span>
-          <span className="text-white text-xs font-semibold flex items-center gap-1">
+          <span className="text-white/40 text-2xl">|</span>
+          <span className="text-white text-xl font-semibold flex items-center gap-2">
             <span>⚡</span> Instant
           </span>
-          <span className="text-white/40">|</span>
-          <span className="text-white text-xs font-semibold flex items-center gap-1">
+          <span className="text-white/40 text-2xl">|</span>
+          <span className="text-white text-xl font-semibold flex items-center gap-2">
             <span>💎</span> GemRails
           </span>
         </div>
