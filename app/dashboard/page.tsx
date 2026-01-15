@@ -91,7 +91,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-white">Dashboard</h1>
-          <p className="text-gray-400 mt-1">Welcome back, {user?.businessName || "Merchant"}</p>
+          <p className="text-gray-400 mt-1 capitalize">Welcome back, {user?.businessName || "Merchant"}</p>
         </div>
         <Link href="/dashboard/qr-code">
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="gemrails-button flex items-center gap-2">
