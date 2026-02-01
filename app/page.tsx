@@ -629,20 +629,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ========== FEATURES GRID ========== */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      {/* ========== FEATURES SECTION ========== */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 relative">
+        {/* Subtle background glow */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-3xl" />
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
           <motion.div 
             className="text-center mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-medium mb-4">
-              <Star className="w-4 h-4" /> Why Choose Us
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium mb-6">
+              <Star className="w-4 h-4" />
+              Why Choose Us
             </span>
             <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-              Built for Nigerian Businesses
+              Built for <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Nigerian Businesses</span>
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto text-lg">
               Everything you need to accept crypto payments and grow your business
@@ -651,12 +657,42 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Zap, title: "Instant Settlement", desc: "Receive Naira in your bank account within seconds of payment confirmation", gradient: "from-yellow-500 to-orange-500" },
-              { icon: TrendingUp, title: "₦100 Per Transaction", desc: "Earn bonus on every successful payment — it adds up fast!", gradient: "from-emerald-500 to-teal-500" },
-              { icon: Shield, title: "Bank-Grade Security", desc: "Enterprise security with full regulatory compliance", gradient: "from-blue-500 to-indigo-500" },
-              { icon: QrCode, title: "Simple QR Payments", desc: "No complex integrations — just display your QR code", gradient: "from-purple-500 to-pink-500" },
-              { icon: Smartphone, title: "Mobile Dashboard", desc: "Monitor your business from anywhere with our app", gradient: "from-cyan-500 to-blue-500" },
-              { icon: Users, title: "24/7 Support", desc: "Dedicated support team ready to help you grow", gradient: "from-rose-500 to-red-500" },
+              { 
+                icon: Zap, 
+                title: "Instant Settlement", 
+                desc: "Receive Naira in your bank account within seconds of payment confirmation",
+                stat: "2s avg"
+              },
+              { 
+                icon: TrendingUp, 
+                title: "₦100 Per Transaction", 
+                desc: "Earn bonus on every successful payment — it adds up fast!",
+                stat: "₦100K+/mo"
+              },
+              { 
+                icon: Shield, 
+                title: "Bank-Grade Security", 
+                desc: "Enterprise security with full regulatory compliance",
+                stat: "256-bit"
+              },
+              { 
+                icon: QrCode, 
+                title: "Simple QR Payments", 
+                desc: "No complex integrations — just display your QR code",
+                stat: "1 step"
+              },
+              { 
+                icon: Smartphone, 
+                title: "Mobile Dashboard", 
+                desc: "Monitor your business from anywhere with our app",
+                stat: "Real-time"
+              },
+              { 
+                icon: Users, 
+                title: "24/7 Support", 
+                desc: "Dedicated support team ready to help you grow",
+                stat: "Always on"
+              },
             ].map((feature, idx) => (
               <motion.div
                 key={idx}
@@ -664,20 +700,32 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                whileHover={{ y: -5, scale: 1.02 }}
+                whileHover={{ y: -8 }}
                 className="group relative"
               >
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative bg-gray-900/80 border border-gray-800 rounded-2xl p-6 h-full group-hover:border-emerald-500/30 transition-all backdrop-blur-sm">
+                {/* Hover glow effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                
+                <div className="relative bg-gray-900/90 border border-gray-800 rounded-2xl p-6 h-full group-hover:border-emerald-500/40 transition-all duration-300 backdrop-blur-sm">
+                  {/* Icon */}
                   <motion.div 
-                    className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4`}
-                    whileHover={{ rotate: 15, scale: 1.1 }}
-                    transition={{ type: "spring" }}
+                    className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-5 shadow-lg shadow-emerald-500/20"
+                    whileHover={{ rotate: 12, scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <feature.icon className="w-6 h-6 text-white" />
+                    <feature.icon className="w-7 h-7 text-white" />
                   </motion.div>
-                  <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-                  <p className="text-gray-400">{feature.desc}</p>
+                  
+                  {/* Content */}
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-emerald-400 transition-colors">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-400 mb-4 leading-relaxed">{feature.desc}</p>
+                  
+                  {/* Stat badge */}
+                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <span className="text-emerald-400 text-sm font-medium">{feature.stat}</span>
+                  </div>
                 </div>
               </motion.div>
             ))}
