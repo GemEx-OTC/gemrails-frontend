@@ -48,7 +48,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <img src="/logo/logo_icon.png" alt="GemRails" className="w-12 h-12 rounded-xl shadow-lg shadow-emerald-500/20" />
               <div>
                 <span className="text-2xl font-bold text-white">GemRails</span>
-                <p className="text-xs text-emerald-400">by GemEx</p>
               </div>
             </Link>
 
@@ -99,7 +98,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 <img src="/logo/logo_icon.png" alt="GemRails" className="w-10 h-10 rounded-xl shadow-lg shadow-emerald-500/20" />
                 <div>
                   <span className="text-xl font-bold text-white">GemRails</span>
-                  <p className="text-xs text-emerald-400">by GemEx</p>
                 </div>
               </Link>
             </div>
