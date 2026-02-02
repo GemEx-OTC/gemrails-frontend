@@ -383,9 +383,11 @@ export default function PaymentPage({
                 <span className="font-medium">Verified Merchant</span>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-2 bg-white/15 backdrop-blur-sm rounded-full border border-white/20">
-              <img src="/logo/logo_icon.png" alt="GemRails" className="w-4 h-4" />
-              <span className="text-xs text-white font-semibold">GemRails</span>
+            <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-full border border-gray-200 shadow-lg shadow-black/10">
+              <div className="w-5 h-5 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden">
+                <img src="/logo/logo_icon.png" alt="GemRails" className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">GemRails</span>
             </div>
           </div>
         </div>
