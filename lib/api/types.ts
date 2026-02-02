@@ -224,6 +224,8 @@ export interface InitiatePaymentInput {
   cryptoAsset: 'USDT' | 'USDC';
   network: 'TRC20' | 'BSC';
   customerRef?: string;
+  customerName: string;
+  customerEmail: string;
 }
 
 export interface InitiatePaymentResponse {

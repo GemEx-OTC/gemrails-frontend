@@ -24,7 +24,7 @@ import { copyToClipboard } from "@/lib/clipboard"
 import { useMerchantInfo, useExchangeRate, useInitiatePayment, usePaymentStatus, useConfirmPayment } from "@/lib/hooks/use-payments"
 import { getImageUrl } from "@/lib/utils/image"
 
-type PaymentStep = "amount" | "crypto" | "payment" | "processing" | "success"
+type PaymentStep = "customer" | "amount" | "crypto" | "payment" | "processing" | "success"
 
 interface Merchant {
   id: string
@@ -57,41 +57,25 @@ const formatCurrency = (amount: number) =>
     minimumFractionDigits: 0,
   }).format(amount)
 
-// Step indicator component
-const StepIndicator = ({ currentStep }: { currentStep: PaymentStep }) => {
-  const steps = ["amount", "crypto", "payment"]
+// Progress bar component (replaces numbered StepIndicator)
+const ProgressBar = ({ currentStep }: { currentStep: PaymentStep }) => {
+  const steps = ["customer", "amount", "crypto", "payment"]
   const currentIndex = steps.indexOf(currentStep)
 
   if (currentStep === "processing" || currentStep === "success") return null
 
+  const progress = currentIndex > 0 ? (currentIndex / (steps.length - 1)) * 100 : 0
+
   return (
-    <div className="flex items-center justify-center gap-2 mb-6">
-      {steps.map((step, index) => (
-        <div key={step} className="flex items-center gap-2">
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${index < currentIndex
-              ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
-              : index === currentIndex
-                ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400"
-                : "bg-gray-800 border border-gray-700 text-gray-500"
-              }`}
-          >
-            {index < currentIndex ? (
-              <Check className="w-4 h-4" />
-            ) : (
-              index + 1
-            )}
-          </motion.div>
-          {index < steps.length - 1 && (
-            <div
-              className={`w-8 h-0.5 transition-all ${index < currentIndex ? "bg-emerald-500" : "bg-gray-700"
-                }`}
-            />
-          )}
-        </div>
-      ))}
+    <div className="mb-6">
+      <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+        <motion.div
+          className="h-full bg-gradient-to-r from-emerald-500 to-teal-500"
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        />
+      </div>
     </div>
   )
 }
@@ -114,7 +98,7 @@ export default function PaymentPage({
   const merchant = merchantData as unknown as Merchant | null
   const rates = ratesData as unknown as Rates | null
 
-  const [step, setStep] = useState<PaymentStep>("amount")
+  const [step, setStep] = useState<PaymentStep>("customer")
   const [nairaAmount, setNairaAmount] = useState("")
   const [selectedAsset, setSelectedAsset] = useState<"USDT" | "USDC">("USDT")
   const [selectedNetwork, setSelectedNetwork] = useState<"TRC20" | "BSC">("TRC20")
@@ -123,7 +107,19 @@ export default function PaymentPage({
   const [timeLeft, setTimeLeft] = useState(900)
   const [isConfirming, setIsConfirming] = useState(false)
   const [isCapturing, setIsCapturing] = useState(false)
+  const [customerName, setCustomerName] = useState("")
+  const [customerEmail, setCustomerEmail] = useState("")
+  const [saveDetails, setSaveDetails] = useState(false)
   const pageRef = useRef<HTMLDivElement>(null)
+
+  // Load saved customer details from localStorage on mount
+  useEffect(() => {
+    const savedName = localStorage.getItem('gemrails_customer_name')
+    const savedEmail = localStorage.getItem('gemrails_customer_email')
+    if (savedName) setCustomerName(savedName)
+    if (savedEmail) setCustomerEmail(savedEmail)
+    if (savedName || savedEmail) setSaveDetails(true)
+  }, [])
 
   // Poll for Payment Status
   const { data: paymentStatusData } = usePaymentStatus(transaction?.transactionId || "", {
@@ -184,6 +180,32 @@ export default function PaymentPage({
   const formatTime = (seconds: number) =>
     `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`
 
+  // Email validation helper
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+
+  const handleCustomerSubmit = () => {
+    setError("")
+    if (customerName.trim().length < 2) {
+      setError("Please enter your full name")
+      toast.error("Please enter your full name")
+      return
+    }
+    if (!isValidEmail(customerEmail)) {
+      setError("Please enter a valid email address")
+      toast.error("Please enter a valid email address")
+      return
+    }
+    // Save or clear localStorage based on checkbox
+    if (saveDetails) {
+      localStorage.setItem('gemrails_customer_name', customerName.trim())
+      localStorage.setItem('gemrails_customer_email', customerEmail.trim())
+    } else {
+      localStorage.removeItem('gemrails_customer_name')
+      localStorage.removeItem('gemrails_customer_email')
+    }
+    setStep("amount")
+  }
+
   const handleAmountSubmit = () => {
     setError("")
     if (ratesLoading) {
@@ -206,6 +228,8 @@ export default function PaymentPage({
         amount,
         cryptoAsset: selectedAsset,
         network: selectedNetwork,
+        customerName: customerName.trim(),
+        customerEmail: customerEmail.trim(),
       },
       {
         onSuccess: (data: any) => {
@@ -255,7 +279,8 @@ export default function PaymentPage({
   }
 
   const handleBack = () => {
-    if (step === "crypto") setStep("amount")
+    if (step === "amount") setStep("customer")
+    else if (step === "crypto") setStep("amount")
     else if (step === "payment") setStep("crypto")
   }
 
@@ -359,7 +384,7 @@ export default function PaymentPage({
               </div>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-2 bg-white/15 backdrop-blur-sm rounded-full border border-white/20">
-              <Zap className="w-4 h-4 text-white" />
+              <img src="/logo/logo_icon.png" alt="GemRails" className="w-4 h-4" />
               <span className="text-xs text-white font-semibold">GemRails</span>
             </div>
           </div>
@@ -368,10 +393,119 @@ export default function PaymentPage({
 
       {/* Main Content */}
       <main className="relative z-10 max-w-lg mx-auto px-4 py-6">
-        {/* Step Indicator */}
-        <StepIndicator currentStep={step} />
+        {/* Progress Bar */}
+        <ProgressBar currentStep={step} />
 
         <AnimatePresence mode="wait">
+          {/* Customer Details Step */}
+          {step === "customer" && (
+            <motion.div
+              key="customer"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-5"
+            >
+              {/* Customer Details Card */}
+              <div className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-6 shadow-2xl shadow-black/30">
+                <h3 className="text-white font-semibold mb-5 text-center">Your Details</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Full Name</label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Enter your full name"
+                      className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Email Address</label>
+                    <input
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      placeholder="Enter your email address"
+                      className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                    />
+                  </div>
+                  {/* Save for next time checkbox */}
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={saveDetails}
+                        onChange={(e) => setSaveDetails(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                        saveDetails 
+                          ? 'bg-emerald-500 border-emerald-500' 
+                          : 'border-gray-600 group-hover:border-gray-500'
+                      }`}>
+                        {saveDetails && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                      Save for next time
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                    exit={{ opacity: 0, y: -10, height: 0 }}
+                    className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-2xl backdrop-blur-xl"
+                  >
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <span className="text-sm font-medium">{error}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Info Card */}
+              <div className="bg-emerald-500/10 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-5 shadow-xl shadow-emerald-500/10">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-emerald-400 font-semibold mb-1">Secure Payment</p>
+                    <p className="text-gray-300 text-sm">
+                      Your details are only shared with the merchant for payment confirmation.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Continue Button */}
+              <motion.button
+                onClick={handleCustomerSubmit}
+                disabled={!customerName.trim() || !customerEmail.trim()}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 flex items-center justify-center gap-2"
+              >
+                Continue
+                <ArrowRight className="w-5 h-5" />
+              </motion.button>
+
+              {/* Footer */}
+              <p className="text-center text-xs text-gray-500">
+                Secured by{" "}
+                <span className="text-emerald-400 font-semibold">GemRails</span>
+              </p>
+            </motion.div>
+          )}
+
           {/* Amount Entry Step */}
           {step === "amount" && (
             <motion.div
