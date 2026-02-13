@@ -324,7 +324,7 @@ export default function HomePage() {
 
               {/* Hero Heading with Glitch Effect */}
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6">
-                Accept Crypto,{" "}
+                Accept Digital Assets,{" "}
                 <motion.span 
                   className="relative inline-block bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-400 bg-clip-text text-transparent bg-[length:200%_auto]"
                   animate={{ backgroundPosition: ["0% center", "200% center"] }}
@@ -432,11 +432,11 @@ export default function HomePage() {
           {[...Array(3)].map((_, idx) => (
             <div key={idx} className="flex gap-12">
               {[
-                { label: "Total Settled", value: "₦500M+", icon: Banknote },
-                { label: "Active Merchants", value: "10,000+", icon: Users },
-                { label: "Avg Settlement", value: "2 sec", icon: Clock },
-                { label: "Success Rate", value: "99.9%", icon: CheckCircle },
-                { label: "Bonus Paid", value: "₦1M+", icon: Sparkles },
+                { label: "Daily Volume", value: "₦50M+", icon: TrendingUp },
+                { label: "System Uptime", value: "99.99%", icon: Zap },
+                { label: "Security Level", value: "Bank Grade", icon: Shield },
+                { label: "Platform", value: "Web & Mobile", icon: Smartphone },
+                { label: "Transaction Speed", value: "Instant", icon: Rocket },
               ].map((stat, i) => (
                 <div key={i} className="flex items-center gap-3 text-gray-400">
                   <stat.icon className="w-5 h-5 text-emerald-500" />
@@ -607,7 +607,7 @@ export default function HomePage() {
               <div className="space-y-4">
                 {[
                   "Customer scans your business QR code",
-                  "Pays with USDT, USDC, or other stablecoins",
+                  "Pays with Stablecoins",
                   "You receive Naira + ₦100 bonus instantly",
                   "Track all transactions in real-time dashboard",
                 ].map((step, idx) => (
@@ -665,8 +665,8 @@ export default function HomePage() {
               },
               { 
                 icon: TrendingUp, 
-                title: "₦100 Per Transaction", 
-                desc: "Earn bonus on every successful payment — it adds up fast!",
+                title: "Earn Bonus Per Transaction", 
+                desc: "You get ₦100 bonus on every successful payment — it adds up fast!",
                 stat: "₦100K+/mo"
               },
               { 
