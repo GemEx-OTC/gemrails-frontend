@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
-import { QRCodeSVG } from "qrcode.react"
+import { QRCode } from "react-qrcode-logo"
 import { Download, Share2, Copy, Check, Smartphone, Printer, ExternalLink, Loader2 } from "lucide-react"
 import { copyToClipboard } from "@/lib/clipboard"
 import { useAuth } from "@/context/auth-context"
@@ -56,60 +56,25 @@ export default function QRCodePage() {
   const handleDownload = async () => {
     setDownloading(true)
     try {
-      const svg = qrRef.current?.querySelector("svg")
-      if (!svg) return
-
-      const canvas = document.createElement("canvas")
-      const ctx = canvas.getContext("2d")
-      canvas.width = 512
-      canvas.height = 512
-
-      ctx!.fillStyle = "white"
-      ctx?.fillRect(0, 0, canvas.width, canvas.height)
-
-      const svgData = new XMLSerializer().serializeToString(svg)
-      const qrImg = new Image()
-      
-      qrImg.onload = async () => {
-        ctx?.drawImage(qrImg, 0, 0, 512, 512)
-
-        if (effectiveLogo && effectiveLogo !== "/logo.png") {
-          const logoImg = new Image()
-          logoImg.crossOrigin = "anonymous"
-          
-          logoImg.onload = () => {
-            const logoSize = 106
-            const logoX = (canvas.width - logoSize) / 2
-            const logoY = (canvas.height - logoSize) / 2
-            ctx?.drawImage(logoImg, logoX, logoY, logoSize, logoSize)
-
-            const link = document.createElement("a")
-            link.download = `gemrails-qr-${user?.merchantId || "code"}.png`
-            link.href = canvas.toDataURL("image/png")
-            link.click()
-            setDownloading(false)
-          }
-
-          logoImg.onerror = () => {
-            // Download without logo if it fails
-            const link = document.createElement("a")
-            link.download = `gemrails-qr-${user?.merchantId || "code"}.png`
-            link.href = canvas.toDataURL("image/png")
-            link.click()
-            setDownloading(false)
-          }
-
-          logoImg.src = effectiveLogo
-        } else {
-          const link = document.createElement("a")
-          link.download = `gemrails-qr-${user?.merchantId || "code"}.png`
-          link.href = canvas.toDataURL("image/png")
-          link.click()
-          setDownloading(false)
-        }
+      const canvas = qrRef.current?.querySelector("canvas")
+      if (!canvas) {
+        // Fallback to searching for img if it's rendered as image (though react-qrcode-logo usually uses canvas)
+        const img = qrRef.current?.querySelector("img")
+        if (!img) return
+        
+        const link = document.createElement("a")
+        link.download = `gemrails-qr-${user?.merchantId || "code"}.png`
+        link.href = img.src
+        link.click()
+        setDownloading(false)
+        return
       }
 
-      qrImg.src = "data:image/svg+xml;base64," + btoa(decodeURIComponent(encodeURIComponent(svgData)))
+      const link = document.createElement("a")
+      link.download = `gemrails-qr-${user?.merchantId || "code"}.png`
+      link.href = canvas.toDataURL("image/png", 1.0)
+      link.click()
+      setDownloading(false)
     } catch (err) {
       console.error("Download failed:", err)
       setDownloading(false)
@@ -208,17 +173,19 @@ export default function QRCodePage() {
 
         {/* QR Code */}
         <div className="bg-white p-6 rounded-2xl shadow-2xl mb-4">
-          <QRCodeSVG
+          <QRCode
             value={paymentUrl}
-            size={400}
-            level="H"
-            imageSettings={{
-              src: effectiveLogo,
-              height: 65,
-              width: 65,
-              excavate: true,
-            }}
-          />
+            size={450}
+            qrStyle="dots"
+            eyeRadius={15}
+            logoImage={effectiveLogo}
+            logoWidth={150}
+            logoHeight={150}
+            logoPadding={0}
+            logoPaddingStyle="circle"
+            removeQrCodeBehindLogo={true}
+            ecLevel="H"
+          />  
         </div>
 
         {/* Tagline */}
@@ -252,17 +219,19 @@ export default function QRCodePage() {
         <div className="grid lg:grid-cols-2 gap-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-gray-900/50 border border-gray-800 rounded-xl">
             <div className="text-center">
-              <div ref={qrRef} className="inline-block p-6 bg-white rounded-2xl shadow-xl mb-6">
-                <QRCodeSVG
+              <div ref={qrRef} className="inline-block p-1 bg-white rounded-2xl shadow-xl mb-6">
+                <QRCode
                   value={paymentUrl}
-                  size={256}
-                  level="H"
-                  imageSettings={{
-                    src: effectiveLogo,
-                    height: 50,
-                    width: 50,
-                    excavate: true,
-                  }}
+                  size={300}
+                  qrStyle="dots"
+                  eyeRadius={10}
+                  logoImage={effectiveLogo}
+                  logoWidth={100}
+                  logoHeight={100}
+                  logoPadding={0}
+                  logoPaddingStyle="circle"
+                  removeQrCodeBehindLogo={true}
+                  ecLevel="H"
                 />
               </div>
 

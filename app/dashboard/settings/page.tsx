@@ -153,6 +153,13 @@ export default function SettingsPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large. Maximum size is 5MB")
+      e.target.value = ""
+      return
+    }
+
     const formData = new FormData()
     formData.append("logo", file)
 
@@ -272,7 +279,7 @@ export default function SettingsPage() {
                       </button>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500">PNG or JPG, max 2MB</p>
+                  <p className="text-xs text-gray-500">PNG or JPG, max 5MB</p>
                 </div>
               </div>
             </div>
