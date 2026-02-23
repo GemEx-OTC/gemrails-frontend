@@ -45,9 +45,8 @@ interface LiquidityStats {
   pendingCount: number
 }
 
-const LIQUIDITY_API_URL = process.env.NEXT_PUBLIC_LIQUIDITY_API_URL || "http://localhost:3003"
-
 const formatCurrency = (amount: number) => {
+  if (amount >= 1000000000) return `₦${(amount / 1000000000).toFixed(2)}B`
   if (amount >= 1000000) return `₦${(amount / 1000000).toFixed(2)}M`
   if (amount >= 1000) return `₦${(amount / 1000).toFixed(1)}K`
   return `₦${amount.toLocaleString()}`
@@ -86,20 +85,25 @@ export default function LiquidityPage() {
     else setLoading(true)
 
     try {
-      const balanceRes = await fetch(`${LIQUIDITY_API_URL}/api/disbursements/balance`)
+      const headers = {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      }
+
+      const balanceRes = await fetch(`${process.env.NEXT_PUBLIC_GEMRAILS_API_BASE_URL}/api/v1/admin/liquidity/balance`, { headers })
       if (balanceRes.ok) {
         const balanceData = await balanceRes.json()
         setBalance(balanceData.data)
       }
 
-      const disbursementsRes = await fetch(`${LIQUIDITY_API_URL}/api/disbursements?page=${page}&limit=10`)
+      const disbursementsRes = await fetch(`${process.env.NEXT_PUBLIC_GEMRAILS_API_BASE_URL}/api/v1/admin/liquidity/disbursements?page=${page}&limit=10`, { headers })
       if (disbursementsRes.ok) {
         const disbursementsData = await disbursementsRes.json()
         setDisbursements(disbursementsData.data.disbursements || [])
         setTotal(disbursementsData.data.total || 0)
       }
 
-      const statsRes = await fetch(`${LIQUIDITY_API_URL}/api/disbursements?limit=1000`)
+      const statsRes = await fetch(`${process.env.NEXT_PUBLIC_GEMRAILS_API_BASE_URL}/api/v1/admin/liquidity/disbursements?limit=1000`, { headers })
       if (statsRes.ok) {
         const statsData = await statsRes.json()
         const allDisbursements: Disbursement[] = statsData.data.disbursements || []
