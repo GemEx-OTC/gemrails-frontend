@@ -4,13 +4,24 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Building2, User, CreditCard, Bell, Shield, Save, Check, Upload, MapPin, Mail, Phone, X, Lock } from "lucide-react"
 import { toast } from "sonner"
-import { NIGERIAN_BANKS, BUSINESS_CATEGORIES } from "@/lib/constants"
+import { BUSINESS_CATEGORIES } from "@/lib/constants"
 import { OTPInput } from "@/components/otp-input"
 import { InlineAlert } from "@/components/alert"
 import { useAuth } from "@/context/auth-context"
-import { useUpdateProfile, useUpdateSettings, useUpdateBankAccount, useUploadLogo, useDeleteLogo } from "@/lib/hooks/use-auth"
+import { 
+  useUpdateProfile, 
+  useUpdateSettings, 
+  useUpdateBankAccount, 
+  useUploadLogo, 
+  useDeleteLogo,
+  useBanks, 
+  useVerifyBankAccount,
+  useSendBankOtp
+} from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
 import { getImageUrl } from "@/lib/utils/image"
+import { BankSelector } from "@/components/bank-selector"
+import { Loader2 } from "lucide-react"
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth()
@@ -22,6 +33,7 @@ export default function SettingsPage() {
   const updateBankMutation = useUpdateBankAccount()
   const uploadLogoMutation = useUploadLogo()
   const deleteLogoMutation = useDeleteLogo()
+  const sendOtpMutation = useSendBankOtp()
 
   // Business form state
   const [businessName, setBusinessName] = useState("")
@@ -43,6 +55,10 @@ export default function SettingsPage() {
   const [otpSending, setOtpSending] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [verifying, setVerifying] = useState(false)
+
+  const { data: banksData, isLoading: banksLoading } = useBanks()
+  const verifyBankMutation = useVerifyBankAccount()
+  const [verifyingAccount, setVerifyingAccount] = useState(false)
 
   // Notification state
   const [notifyEmail, setNotifyEmail] = useState(false)
@@ -109,13 +125,48 @@ export default function SettingsPage() {
     setOtpSent(false)
   }
 
+  const handleAccountNumberChange = (value: string) => {
+    const cleaned = value.replace(/\D/g, "").slice(0, 10)
+    setAccountNumber(cleaned)
+    setAccountName("")
+
+    if (cleaned.length === 10 && bankCode) {
+      setVerifyingAccount(true)
+      verifyBankMutation.mutate(
+        { bankCode, accountNumber: cleaned },
+        {
+          onSuccess: (data: { accountName: string }) => {
+            setAccountName(data.accountName)
+            setVerifyingAccount(false)
+          },
+          onError: (err: ApiError) => {
+            toast.error(err.message || "Failed to verify account")
+            setVerifyingAccount(false)
+          },
+        }
+      )
+    }
+  }
+
+  useEffect(() => {
+    if (accountNumber.length === 10 && bankCode && !accountName && !verifyingAccount) {
+      handleAccountNumberChange(accountNumber)
+    }
+  }, [bankCode])
+
   const handleSendOtp = () => {
     setOtpSending(true)
-    setTimeout(() => {
-      setOtpSending(false)
-      setOtpSent(true)
-      toast.success("OTP sent to your phone!")
-    }, 1500)
+    sendOtpMutation.mutate(undefined, {
+      onSuccess: () => {
+        setOtpSending(false)
+        setOtpSent(true)
+        toast.success("OTP sent to your email!")
+      },
+      onError: (err: ApiError) => {
+        setOtpSending(false)
+        toast.error(err.message || "Failed to send OTP")
+      },
+    })
   }
 
   const handleVerifyOtp = async () => {
@@ -126,27 +177,23 @@ export default function SettingsPage() {
     }
 
     setVerifying(true)
-    // Simulated OTP verification
-    if (otpValue === "123456") {
-      const bank = NIGERIAN_BANKS.find((b) => b.code === bankCode)
-      updateBankMutation.mutate(
-        { bankCode, bankName: bank?.name || "", accountNumber, accountName },
-        {
-          onSuccess: () => {
-            toast.success("Bank account updated successfully!")
-            setShowBankChangeModal(false)
-            refreshUser()
-          },
-          onError: (err: ApiError) => {
-            toast.error(err.message || "Failed to update bank account")
-          },
-        }
-      )
-    } else {
-      setOtpError(true)
-      toast.error("Invalid OTP code")
-    }
-    setVerifying(false)
+    const bank = banksData?.find((b) => b.code === bankCode)
+    updateBankMutation.mutate(
+      { bankCode, bankName: bank?.name || "", accountNumber, accountName, otp: otpValue },
+      {
+        onSuccess: () => {
+          toast.success("Bank account updated successfully!")
+          setShowBankChangeModal(false)
+          refreshUser()
+          setVerifying(false)
+        },
+        onError: (err: ApiError) => {
+          toast.error(err.message || "Failed to update bank account")
+          setVerifying(false)
+          setOtpError(true)
+        },
+      }
+    )
   }
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,9 +271,9 @@ export default function SettingsPage() {
         })}
       </div>
 
-      <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+      <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 w-fit min-w-[650px]">
         {activeTab === "business" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 w-[650px]">
             <div>
               <label className="block text-sm font-medium text-white mb-3">Business Logo</label>
               <div className="flex items-center gap-4">
@@ -379,7 +426,7 @@ export default function SettingsPage() {
         )}
 
         {activeTab === "bank" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 w-[550px]">
             <InlineAlert
               type="warning"
               title="Bank changes require verification"
@@ -389,26 +436,37 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-white mb-2">Bank</label>
-                <select value={bankCode} onChange={(e) => setBankCode(e.target.value)} className="gemrails-select">
-                  {NIGERIAN_BANKS.map((bank) => (
-                    <option key={bank.code} value={bank.code}>
-                      {bank.name}
-                    </option>
-                  ))}
-                </select>
+                <BankSelector
+                  value={bankCode}
+                  onChange={(code: string, name: string) => setBankCode(code)}
+                  banks={banksData || []}
+                  isLoading={banksLoading}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-white mb-2">Account Number</label>
-                <input
-                  type="text"
-                  value={accountNumber}
-                  onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  className="gemrails-input"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={accountNumber}
+                    onChange={(e) => handleAccountNumberChange(e.target.value)}
+                    className="gemrails-input"
+                    placeholder="Enter 10-digit account number"
+                  />
+                  {verifyingAccount && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                      <Loader2 className="w-5 h-5 text-emerald-400 animate-spin" />
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="p-4 bg-gray-800/60 border border-gray-700 rounded-xl">
+              <div className="p-4 bg-gray-800/60 border border-gray-700 rounded-xl min-h-[72px] flex flex-col justify-center">
                 <p className="text-sm text-gray-400 mb-1">Account Name</p>
-                <p className="text-white font-medium">{accountName}</p>
+                {accountName ? (
+                  <p className="text-white font-medium">{accountName}</p>
+                ) : (
+                  <p className="text-gray-600 text-sm italic">Enter account number to verify</p>
+                )}
               </div>
             </div>
 
@@ -528,7 +586,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold text-white">Verify Bank Change</h2>
-                      <p className="text-sm text-gray-400">Enter the OTP sent to your phone</p>
+                      <p className="text-sm text-gray-400">Enter the OTP sent to your email</p>
                     </div>
                   </div>
                   <button onClick={() => setShowBankChangeModal(false)} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
@@ -542,8 +600,10 @@ export default function SettingsPage() {
                   <>
                     <div className="text-center">
                       <p className="text-gray-400 mb-4">
-                        We'll send a 6-digit verification code to your registered phone number ending in{" "}
-                        <span className="text-white font-medium">****{phone.slice(-4)}</span>
+                        We'll send a 6-digit verification code to your registered email address{" "}
+                        <span className="text-white font-medium">
+                          {user?.email ? `${user.email.charAt(0)}***${user.email.split('@')[0].slice(-1)}@${user.email.split('@')[1]}` : "your email"}
+                        </span>
                       </p>
                     </div>
                     <motion.button
@@ -574,7 +634,9 @@ export default function SettingsPage() {
                   <>
                     <div className="text-center mb-6">
                       <p className="text-gray-400">
-                        Enter the 6-digit code sent to <span className="text-white font-medium">****{phone.slice(-4)}</span>
+                        Enter the 6-digit code sent to <span className="text-white font-medium">
+                          {user?.email ? `${user.email.charAt(0)}***${user.email.split('@')[0].slice(-1)}@${user.email.split('@')[1]}` : "your email"}
+                        </span>
                       </p>
                     </div>
 
