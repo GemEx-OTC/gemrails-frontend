@@ -14,6 +14,7 @@ import {
   Loader2
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
+import { getLiquidityBalance, getLiquidityDisbursements } from "@/lib/api/admin"
 
 interface LiquidityBalance {
   availableBalance: number
@@ -85,38 +86,27 @@ export default function LiquidityPage() {
     else setLoading(true)
 
     try {
-      const headers = {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
+      // 1. Fetch balance using apiClient
+      const balanceData = await getLiquidityBalance()
+      setBalance(balanceData)
 
-      const balanceRes = await fetch(`${process.env.NEXT_PUBLIC_GEMRAILS_API_BASE_URL}/api/v1/admin/liquidity/balance`, { headers })
-      if (balanceRes.ok) {
-        const balanceData = await balanceRes.json()
-        setBalance(balanceData.data)
-      }
+      // 2. Fetch paginated disbursements using apiClient
+      const paginatedData = await getLiquidityDisbursements({ page, limit: 10 })
+      setDisbursements(paginatedData.disbursements || [])
+      setTotal(paginatedData.total || 0)
 
-      const disbursementsRes = await fetch(`${process.env.NEXT_PUBLIC_GEMRAILS_API_BASE_URL}/api/v1/admin/liquidity/disbursements?page=${page}&limit=10`, { headers })
-      if (disbursementsRes.ok) {
-        const disbursementsData = await disbursementsRes.json()
-        setDisbursements(disbursementsData.data.disbursements || [])
-        setTotal(disbursementsData.data.total || 0)
-      }
-
-      const statsRes = await fetch(`${process.env.NEXT_PUBLIC_GEMRAILS_API_BASE_URL}/api/v1/admin/liquidity/disbursements?limit=1000`, { headers })
-      if (statsRes.ok) {
-        const statsData = await statsRes.json()
-        const allDisbursements: Disbursement[] = statsData.data.disbursements || []
-        
-        setStats({
-          pendingPayouts: allDisbursements.filter(d => d.status === "PENDING" || d.status === "PROCESSING").reduce((sum, d) => sum + d.amount, 0),
-          totalDisbursedOTC: allDisbursements.filter(d => d.status === "SUCCESS" && d.source === "OTC").reduce((sum, d) => sum + d.amount, 0),
-          totalDisbursedRails: allDisbursements.filter(d => d.status === "SUCCESS" && d.source === "RAILS").reduce((sum, d) => sum + d.amount, 0),
-          successCount: allDisbursements.filter(d => d.status === "SUCCESS").length,
-          failedCount: allDisbursements.filter(d => d.status === "FAILED").length,
-          pendingCount: allDisbursements.filter(d => d.status === "PENDING" || d.status === "PROCESSING").length,
-        })
-      }
+      // 3. Fetch all disbursements for stats using apiClient
+      const statsData = await getLiquidityDisbursements({ limit: 1000 })
+      const allDisbursements: Disbursement[] = statsData.disbursements || []
+      
+      setStats({
+        pendingPayouts: allDisbursements.filter(d => d.status === "PENDING" || d.status === "PROCESSING").reduce((sum, d) => sum + d.amount, 0),
+        totalDisbursedOTC: allDisbursements.filter(d => d.status === "SUCCESS" && d.source === "OTC").reduce((sum, d) => sum + d.amount, 0),
+        totalDisbursedRails: allDisbursements.filter(d => d.status === "SUCCESS" && d.source === "RAILS").reduce((sum, d) => sum + d.amount, 0),
+        successCount: allDisbursements.filter(d => d.status === "SUCCESS").length,
+        failedCount: allDisbursements.filter(d => d.status === "FAILED").length,
+        pendingCount: allDisbursements.filter(d => d.status === "PENDING" || d.status === "PROCESSING").length,
+      })
     } catch (error) {
       console.error("Failed to fetch liquidity data:", error)
     } finally {
