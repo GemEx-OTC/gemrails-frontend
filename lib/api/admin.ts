@@ -13,6 +13,8 @@ import type {
   BroadcastInput,
   BroadcastResponse,
   AdminDashboard,
+  LiquidityBalance,
+  LiquidityDisbursementsResponse,
 } from './types';
 
 // Dashboard
@@ -122,5 +124,26 @@ export const getSettings = async (): Promise<PlatformSettings> => {
 
 export const updateSettings = async (data: Partial<PlatformSettings>): Promise<PlatformSettings> => {
   const response = await apiClient.put<ApiResponse<PlatformSettings>>('/admin/settings', data);
+  return response.data.data;
+};
+
+// Liquidity
+export const getLiquidityBalance = async (): Promise<LiquidityBalance> => {
+  const response = await apiClient.get<ApiResponse<LiquidityBalance>>('/admin/liquidity/balance');
+  return response.data.data;
+};
+
+export const getLiquidityDisbursements = async (params?: {
+  page?: number;
+  limit?: number;
+}): Promise<LiquidityDisbursementsResponse> => {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.append('page', params.page.toString());
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+  
+  const query = searchParams.toString();
+  const response = await apiClient.get<ApiResponse<LiquidityDisbursementsResponse>>(
+    `/admin/liquidity/disbursements${query ? `?${query}` : ''}`
+  );
   return response.data.data;
 };
