@@ -180,6 +180,32 @@ export const useDeleteLogo = () => {
   });
 };
 
+// Get banks query
+export const useBanks = () => {
+  const { accessToken } = getTokens();
+
+  return useQuery({
+    queryKey: ['banks'],
+    queryFn: authApi.getBanks,
+    enabled: !!accessToken,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+  });
+};
+
+// Verify bank account mutation
+export const useVerifyBankAccount = () => {
+  return useMutation({
+    mutationFn: (data: { bankCode: string; accountNumber: string }) => authApi.verifyBankAccount(data),
+  });
+};
+
+// Send bank change OTP mutation
+export const useSendBankOtp = () => {
+  return useMutation({
+    mutationFn: () => authApi.sendBankOtp(),
+  });
+};
+
 // Logout mutation
 export const useLogout = () => {
   const router = useRouter();
