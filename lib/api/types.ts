@@ -114,6 +114,7 @@ export interface UpdateBankAccountInput {
   bankName: string;
   accountNumber: string;
   accountName: string;
+  otp?: string;
 }
 
 export interface UpdateSettingsInput {
@@ -399,4 +400,42 @@ export interface AdminDashboard {
     severity: string;
     createdAt: string;
   }[];
+}
+
+// Liquidity Types
+export interface LiquidityBalance {
+  availableBalance: number;
+  ledgerBalance: number;
+  currency: string;
+}
+
+export interface Disbursement {
+  id: string;
+  reference: string;
+  sourceReference: string;
+  source: "OTC" | "RAILS";
+  amount: number;
+  fee: number;
+  destinationBankName: string;
+  destinationAccountNumber: string;
+  destinationAccountName: string;
+  status: "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED";
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface LiquidityStats {
+  pendingPayouts: number;
+  totalDisbursedOTC: number;
+  totalDisbursedRails: number;
+  successCount: number;
+  failedCount: number;
+  pendingCount: number;
+}
+
+export interface LiquidityDisbursementsResponse {
+  disbursements: Disbursement[];
+  total: number;
+  page: number;
+  limit: number;
 }
