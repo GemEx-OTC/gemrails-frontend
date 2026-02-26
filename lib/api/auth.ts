@@ -117,3 +117,21 @@ export const deleteLogo = async (): Promise<{ message: string }> => {
   const response = await apiClient.delete<ApiResponse<{ message: string }>>('/auth/logo');
   return response.data.data;
 };
+
+// Get supported banks
+export const getBanks = async (): Promise<Array<{ code: string; name: string }>> => {
+  const response = await apiClient.get<ApiResponse<Array<{ code: string; name: string }>>>('/auth/banks');
+  return response.data.data;
+};
+
+// Verify bank account
+export const verifyBankAccount = async (data: { bankCode: string; accountNumber: string }): Promise<{ accountName: string; accountNumber: string; bankCode: string }> => {
+  const response = await apiClient.post<ApiResponse<{ accountName: string; accountNumber: string; bankCode: string }>>('/auth/verify-bank', data);
+  return response.data.data;
+};
+
+// Send bank change OTP
+export const sendBankOtp = async (): Promise<{ message: string }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string }>>('/auth/send-bank-otp', {});
+  return response.data.data;
+};
