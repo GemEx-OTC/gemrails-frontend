@@ -49,6 +49,24 @@ function VerifyEmailContent() {
     if (value && index < 5) otpRefs.current[index + 1]?.focus()
   }
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData("text/plain").replace(/\D/g, "").slice(0, 6)
+    if (!pastedData) return
+
+    const newOtp = [...otp]
+    pastedData.split("").forEach((char, index) => {
+      if (index < 6) {
+        newOtp[index] = char
+      }
+    })
+    setOtp(newOtp)
+
+    // Focus last filled input or the next empty one
+    const nextIndex = Math.min(pastedData.length, 5)
+    otpRefs.current[nextIndex]?.focus()
+  }
+
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus()
@@ -132,6 +150,7 @@ function VerifyEmailContent() {
               value={digit}
               onChange={(e) => handleOtpChange(index, e.target.value)}
               onKeyDown={(e) => handleOtpKeyDown(index, e)}
+              onPaste={handlePaste}
               disabled={isLoading}
               className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-bold bg-gray-800/60 border border-gray-700 focus:border-emerald-500 text-white rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50"
             />

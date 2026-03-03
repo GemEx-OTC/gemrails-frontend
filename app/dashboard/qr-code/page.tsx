@@ -21,11 +21,12 @@ export default function QRCodePage() {
 
   const baseUrl = process.env.NEXT_PUBLIC_GEMRAILS_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "")
 
-  const paymentUrl = user?.merchantId ? `${baseUrl}/pay/${user.merchantId}` : ""
+  const isEnterpriseNoMerchantId = user?.accountType === 'enterprise' && !user?.merchantId
+  const effectiveMerchantId = user?.merchantId || (isEnterpriseNoMerchantId ? "demo-merchant" : "")
+  const paymentUrl = effectiveMerchantId ? `${baseUrl}/pay/${effectiveMerchantId}` : ""
   const businessName = user?.businessName || "My Business"
   // Use local fallback logo if external logo fails to load
   const businessLogo = getImageUrl(user?.businessLogo) || "/logo.png"
-  const merchantId = user?.merchantId || ""
 
   // Track if external logo loaded successfully
   const [logoLoaded, setLogoLoaded] = useState(false)
@@ -63,7 +64,7 @@ export default function QRCodePage() {
         if (!img) return
         
         const link = document.createElement("a")
-        link.download = `gemrails-qr-${user?.merchantId || "code"}.png`
+        link.download = `gemrails-qr-${effectiveMerchantId || "code"}.png`
         link.href = img.src
         link.click()
         setDownloading(false)
@@ -71,7 +72,7 @@ export default function QRCodePage() {
       }
 
       const link = document.createElement("a")
-      link.download = `gemrails-qr-${user?.merchantId || "code"}.png`
+      link.download = `gemrails-qr-${effectiveMerchantId || "code"}.png`
       link.href = canvas.toDataURL("image/png", 1.0)
       link.click()
       setDownloading(false)
@@ -109,7 +110,7 @@ export default function QRCodePage() {
     )
   }
 
-  if (!user?.merchantId) {
+  if (!effectiveMerchantId && !isEnterpriseNoMerchantId) {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl md:text-3xl font-bold text-white">Your Payment QR Code</h1>
@@ -119,6 +120,10 @@ export default function QRCodePage() {
       </div>
     )
   }
+
+  // If it's an enterprise without merchantId, show a friendly "Demo Mode" notice if not already showing
+  // paymentUrl is already declared above.
+
 
   return (
     <>
@@ -145,16 +150,6 @@ export default function QRCodePage() {
             GemRails
           </span>
         </div>
-
-        {/* Merchant ID Card */}
-        {/* <div className="w-[90%] max-w-[600px] bg-white rounded-2xl shadow-xl p-6 mb-4 relative">
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold px-6 py-2 rounded-full uppercase tracking-wider shadow-lg">
-            Merchant ID
-          </div>
-          <p className="text-4xl md:text-5xl font-black text-emerald-950 text-center tracking-wider mt-2">
-            {merchantId}
-          </p>
-        </div> */}
 
         {/* Business Name Card */}
         <div className="w-[90%] max-w-[600px] bg-white rounded-2xl shadow-xl p-6 mb-6 relative">
@@ -211,9 +206,19 @@ export default function QRCodePage() {
 
       {/* ========== SCREEN VIEW ========== */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 print:hidden">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">Your Payment QR Code</h1>
-          <p className="text-gray-400 mt-1">Display this QR code to receive crypto payments</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">Your Payment QR Code</h1>
+            <p className="text-gray-400 mt-1">Display this QR code to receive crypto payments</p>
+          </div>
+          {isEnterpriseNoMerchantId && (
+            <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+              <span className="text-emerald-400 text-sm font-bold flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Enterprise Demo Mode
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
@@ -282,7 +287,6 @@ export default function QRCodePage() {
               <div className="space-y-3">
                 <motion.button onClick={handlePrint} whileHover={{ scale: 1.02, x: 4 }} className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-xl hover:border-emerald-500/50 transition-all">
                   <div className="flex items-center gap-3"><Printer className="w-5 h-5 text-emerald-400" /><span className="text-white font-medium">Print QR Code</span></div>
-                  {/* <span className="text-xs text-emerald-400 bg-emerald-500/20 px-2 py-1 rounded-full">Pro Style</span> */}
                 </motion.button>
                 <motion.button onClick={() => window.open(paymentUrl, "_blank")} whileHover={{ scale: 1.02, x: 4 }} className="w-full flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-emerald-500/50 transition-all">
                   <div className="flex items-center gap-3"><Smartphone className="w-5 h-5 text-gray-400" /><span className="text-white">Preview Payment Page</span></div>

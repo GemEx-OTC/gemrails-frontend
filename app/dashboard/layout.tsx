@@ -8,6 +8,7 @@ import { MobileTopNav } from "@/components/mobile-top-nav"
 import { useAuth } from "@/context/auth-context"
 import { useEffect } from "react"
 import { NotificationProvider } from "@/context/notification-context"
+import { OnboardingModal } from "@/components/onboarding-modal"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -52,6 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="print:hidden">
           <BottomNav currentPath={pathname} />
         </div>
+        <OnboardingModal />
       </div>
     </NotificationProvider>
   )

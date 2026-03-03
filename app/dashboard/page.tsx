@@ -12,6 +12,8 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  Building2,
+  MonitorDot
 } from "lucide-react"
 import { toast } from "sonner"
 import { PAYMENT_STATUS, FEE_CONFIG } from "@/lib/constants"
@@ -43,30 +45,53 @@ export default function DashboardPage() {
     }
   }, [error])
 
+  const isEnterprise = user?.accountType === 'enterprise';
+  const isBranchMod = user?.role === 'branch_mod';
+
+  const stats = (data as any)?.stats || {};
+
   const statCards = [
     {
       title: "Total Received",
-      value: data ? formatCurrency((data as any).stats?.totalReceived || 0) : "-",
+      value: data ? formatCurrency(stats.totalReceived || 0) : "-",
       change: "+0%",
       icon: DollarSign,
     },
-    {
-      title: "Incentives Earned",
-      value: data ? formatCurrency((data as any).stats?.totalIncentives || 0) : "-",
-      subtitle: `₦${FEE_CONFIG.merchantIncentive} per transaction`,
-      icon: TrendingUp,
-    },
+    ...(isEnterprise && !isBranchMod ? [
+      {
+        title: "Total Branches",
+        value: data ? (stats.branchCount || 0).toString() : "-",
+        subtitle: "Active locations",
+        icon: Building2,
+      },
+      {
+        title: "Total Terminals",
+        value: data ? (stats.terminalCount || 0).toString() : "-",
+        subtitle: "Across all branches",
+        icon: MonitorDot,
+      }
+    ] : []),
+    ...(isBranchMod ? [
+      {
+        title: "Staff Terminals",
+        value: data ? (stats.terminalCount || 0).toString() : "-",
+        subtitle: "In this branch",
+        icon: MonitorDot,
+      }
+    ] : []),
+    ...(!isEnterprise && !isBranchMod ? [
+      {
+        title: "Incentives Earned",
+        value: data ? formatCurrency(stats.totalIncentives || 0) : "-",
+        subtitle: `₦${FEE_CONFIG.merchantIncentive} per transaction`,
+        icon: TrendingUp,
+      }
+    ] : []),
     {
       title: "Total Transactions",
-      value: data ? ((data as any).stats?.totalTransactions || 0).toString() : "-",
+      value: data ? (stats.totalTransactions || 0).toString() : "-",
       change: "+0",
       icon: Users,
-    },
-    {
-      title: "Pending Payments",
-      value: data ? ((data as any).stats?.pendingPayments || 0).toString() : "-",
-      subtitle: "Awaiting confirmation",
-      icon: Clock,
     },
   ]
 
@@ -83,19 +108,33 @@ export default function DashboardPage() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       {/* Onboarding Banner */}
-      <OnboardingBanner
-        isProfileComplete={dashboardData?.user?.isProfileComplete ?? !!user?.businessCategory}
-        isBankAdded={dashboardData?.user?.isBankAdded ?? !!user?.bankAccount?.accountNumber}
-      />
+      {!isBranchMod && (
+        <OnboardingBanner
+          isProfileComplete={dashboardData?.user?.isProfileComplete ?? !!user?.businessCategory}
+          isBankAdded={dashboardData?.user?.isBankAdded ?? (isEnterprise ? true : !!user?.bankAccount?.accountNumber)}
+        />
+      )}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">Dashboard</h1>
-          <p className="text-gray-400 mt-1 capitalize">Welcome back, {user?.businessName || "Merchant"}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">
+            {isBranchMod ? "Branch Manager" : "Dashboard"}
+          </h1>
+          <p className="text-gray-400 mt-1">
+            Welcome back, <span className="text-white font-medium">{user?.businessName || (isBranchMod ? "Moderator" : "Merchant")}</span>
+          </p>
         </div>
-        <Link href="/dashboard/qr-code">
+        <Link href={isEnterprise ? "/dashboard/enterprise/branches" : "/dashboard/qr-code"}>
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="gemrails-button flex items-center gap-2">
-            <QrCode className="w-5 h-5" /> View QR Code
+            {isEnterprise ? (
+              <>
+                <Building2 className="w-5 h-5" /> Manage Branches
+              </>
+            ) : (
+              <>
+                <QrCode className="w-5 h-5" /> View QR Code
+              </>
+            )}
           </motion.button>
         </Link>
       </div>
@@ -118,7 +157,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat, index) => {
-          const Icon = stat.icon
+          const Icon = stat.icon as any
           return (
             <motion.div
               key={stat.title}

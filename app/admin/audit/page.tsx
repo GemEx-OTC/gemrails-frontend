@@ -6,7 +6,7 @@ import {
   FileText, Search, Filter, ChevronLeft, ChevronRight,
   Shield, UserCheck, UserX, LogIn, LogOut, RefreshCw,
   Settings, CreditCard, AlertCircle, CheckCircle, Clock,
-  AlertTriangle, Loader2,
+  AlertTriangle, Loader2, Building2, Landmark,
 } from "lucide-react"
 import { useAuditLogs } from "@/lib/hooks/use-admin"
 
@@ -27,6 +27,8 @@ const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })
 
 const getActionIcon = (action: string) => {
+  if (action.includes("BRANCH")) return <Building2 className="w-4 h-4" />
+  if (action.includes("TERMINAL")) return <Landmark className="w-4 h-4" />
   if (action.includes("LOGIN")) return <LogIn className="w-4 h-4" />
   if (action.includes("LOGOUT")) return <LogOut className="w-4 h-4" />
   if (action.includes("SUSPEND") || action.includes("REJECT")) return <UserX className="w-4 h-4" />
@@ -53,6 +55,7 @@ const getSeverityConfig = (severity: string) => {
 const getActionStyles = (action: string) => {
   if (action.includes("SUSPEND") || action.includes("REJECT") || action.includes("FAIL")) return { bg: "from-red-500/15 to-rose-500/10", border: "border-red-500/30", text: "text-red-300" }
   if (action.includes("VERIFY") || action.includes("SETTLE") || action.includes("REACTIVATE") || action.includes("REGISTER")) return { bg: "from-emerald-500/15 to-green-500/10", border: "border-emerald-500/30", text: "text-emerald-300" }
+  if (action.includes("BRANCH") || action.includes("TERMINAL")) return { bg: "from-blue-500/15 to-indigo-500/10", border: "border-blue-500/30", text: "text-blue-300" }
   if (action.includes("UPDATE") || action.includes("CHANGE") || action.includes("BANK")) return { bg: "from-amber-500/15 to-yellow-500/10", border: "border-amber-500/30", text: "text-amber-300" }
   if (action.includes("LOGIN") || action.includes("LOGOUT")) return { bg: "from-cyan-500/15 to-blue-500/10", border: "border-cyan-500/30", text: "text-cyan-300" }
   if (action.includes("TRANSACTION") || action.includes("PAYMENT")) return { bg: "from-purple-500/15 to-violet-500/10", border: "border-purple-500/30", text: "text-purple-300" }

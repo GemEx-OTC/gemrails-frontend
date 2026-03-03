@@ -140,7 +140,7 @@ export default function AdminDashboardPage() {
           >
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-purple-400" />
-              <p className="text-sm font-medium text-purple-400">Total Volume</p>
+              <p className="text-sm font-medium text-purple-400">Total Volume (Inc. Bonuses)</p>
             </div>
             <p className="text-2xl font-bold text-white">{formatCurrency(transactions.totalVolume)}</p>
             <p className="text-sm text-purple-400 mt-1">{transactions.total.toLocaleString()} transactions</p>
@@ -154,7 +154,7 @@ export default function AdminDashboardPage() {
           >
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle className="w-4 h-4 text-emerald-400" />
-              <p className="text-sm font-medium text-emerald-400">Settled</p>
+              <p className="text-sm font-medium text-emerald-400">Settled (Inc. Bonuses)</p>
             </div>
             <p className="text-2xl font-bold text-white">{formatCurrency(transactions.settledVolume)}</p>
             <p className="text-sm text-emerald-400 mt-1">{transactions.settled.toLocaleString()} transactions</p>

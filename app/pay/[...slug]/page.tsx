@@ -18,13 +18,12 @@ import {
   Loader2,
 } from "lucide-react"
 import { toast } from "sonner"
-import domtoimage from "dom-to-image-more"
 import { SUPPORTED_ASSETS } from "@/lib/constants"
 import { copyToClipboard } from "@/lib/clipboard"
 import { useMerchantInfo, useExchangeRate, useInitiatePayment, usePaymentStatus, useConfirmPayment } from "@/lib/hooks/use-payments"
 import { getImageUrl } from "@/lib/utils/image"
 
-type PaymentStep = "customer" | "amount" | "crypto" | "payment" | "processing" | "success"
+type PaymentStep = "amount" | "crypto" | "payment" | "processing" | "success" | "receipt"
 
 interface Merchant {
   id: string
@@ -32,6 +31,7 @@ interface Merchant {
   businessLogo?: string
   merchantId: string
   verified: boolean
+  isDemo?: boolean
 }
 
 interface Rates {
@@ -59,7 +59,7 @@ const formatCurrency = (amount: number) =>
 
 // Progress bar component (replaces numbered StepIndicator)
 const ProgressBar = ({ currentStep }: { currentStep: PaymentStep }) => {
-  const steps = ["customer", "amount", "crypto", "payment"]
+  const steps = ["amount", "crypto", "payment"]
   const currentIndex = steps.indexOf(currentStep)
 
   if (currentStep === "processing" || currentStep === "success") return null
@@ -83,9 +83,11 @@ const ProgressBar = ({ currentStep }: { currentStep: PaymentStep }) => {
 export default function PaymentPage({
   params,
 }: {
-  params: Promise<{ merchantId: string }>
+  params: Promise<{ slug: string[] }>
 }) {
-  const { merchantId } = use(params)
+  const { slug } = use(params)
+  // The terminal/merchant ID is either the only segment or the last segment
+  const merchantId = slug[slug.length - 1]
 
   const { data: merchantData, isLoading: merchantLoading, error: merchantError } = useMerchantInfo(merchantId)
   const { data: ratesData, isLoading: ratesLoading } = useExchangeRate()
@@ -98,7 +100,7 @@ export default function PaymentPage({
   const merchant = merchantData as unknown as Merchant | null
   const rates = ratesData as unknown as Rates | null
 
-  const [step, setStep] = useState<PaymentStep>("customer")
+  const [step, setStep] = useState<PaymentStep>("amount")
   const [nairaAmount, setNairaAmount] = useState("")
   const [selectedAsset, setSelectedAsset] = useState<"USDT" | "USDC">("USDT")
   const [selectedNetwork, setSelectedNetwork] = useState<"TRC20" | "BSC">("TRC20")
@@ -109,7 +111,11 @@ export default function PaymentPage({
   const [isCapturing, setIsCapturing] = useState(false)
   const [customerName, setCustomerName] = useState("")
   const [customerEmail, setCustomerEmail] = useState("")
+  const [customerAddress, setCustomerAddress] = useState("")
   const [saveDetails, setSaveDetails] = useState(false)
+  const [receiptType, setReceiptType] = useState<"email" | "whatsapp">("email")
+  const [receiptContact, setReceiptContact] = useState("")
+  const [isSendingReceipt, setIsSendingReceipt] = useState(false)
   const pageRef = useRef<HTMLDivElement>(null)
 
   // Load saved customer details from localStorage on mount
@@ -228,8 +234,8 @@ export default function PaymentPage({
         amount,
         cryptoAsset: selectedAsset,
         network: selectedNetwork,
-        customerName: customerName.trim(),
-        customerEmail: customerEmail.trim(),
+        customerName: customerName.trim() || undefined,
+        customerEmail: customerEmail.trim() || undefined,
       },
       {
         onSuccess: (data: any) => {
@@ -279,9 +285,48 @@ export default function PaymentPage({
   }
 
   const handleBack = () => {
-    if (step === "amount") setStep("customer")
-    else if (step === "crypto") setStep("amount")
+    if (step === "crypto") setStep("amount")
     else if (step === "payment") setStep("crypto")
+    else if (step === "receipt") setStep("success")
+  }
+
+  const handleReceiptRequest = async () => {
+    if (!receiptContact) {
+      toast.error(`Please enter your ${receiptType === 'email' ? 'email' : 'phone number'}`)
+      return
+    }
+
+    if (receiptType === 'email' && !isValidEmail(receiptContact)) {
+      toast.error("Please enter a valid email address")
+      return
+    }
+
+    setIsSendingReceipt(true)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_GEMRAILS_BASE_URL}/payments/request-receipt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionId: transaction?.transactionId,
+          type: receiptType,
+          contact: receiptContact,
+          customerName: customerName.trim(),
+          customerAddress: customerAddress.trim(),
+        }),
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        toast.success(`Receipt sent via ${receiptType}!`)
+        setStep("success")
+      } else {
+        toast.error(result.message || "Failed to send receipt")
+      }
+    } catch (err) {
+      toast.error("An error occurred while sending the receipt")
+    } finally {
+      setIsSendingReceipt(false)
+    }
   }
 
   const handleShareTx = async () => {
@@ -289,7 +334,8 @@ export default function PaymentPage({
     
     setIsCapturing(true)
     try {
-      // Use dom-to-image-more with adjusted settings to reduce border artifacts
+      // Lazy load dom-to-image-more
+      const domtoimage = (await import('dom-to-image-more')).default;
       const dataUrl = await domtoimage.toPng(pageRef.current, {
         quality: 1,
         bgcolor: '#0a0d10',
@@ -398,115 +444,25 @@ export default function PaymentPage({
         {/* Progress Bar */}
         <ProgressBar currentStep={step} />
 
+        {/* Demo Mode Banner */}
+        {merchant?.isDemo && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mb-4"
+          >
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+              <div>
+                <p className="text-amber-500 text-sm font-bold">Enterprise Demo Mode</p>
+                <p className="text-amber-500/80 text-xs">This is a simulated payment flow for demonstration purposes.</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         <AnimatePresence mode="wait">
-          {/* Customer Details Step */}
-          {step === "customer" && (
-            <motion.div
-              key="customer"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-5"
-            >
-              {/* Customer Details Card */}
-              <div className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-6 shadow-2xl shadow-black/30">
-                <h3 className="text-white font-semibold mb-5 text-center">Your Details</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm text-gray-400 mb-2 block">Full Name</label>
-                    <input
-                      type="text"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Enter your full name"
-                      className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
-                      autoFocus
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-400 mb-2 block">Email Address</label>
-                    <input
-                      type="email"
-                      value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      placeholder="Enter your email address"
-                      className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
-                    />
-                  </div>
-                  {/* Save for next time checkbox */}
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        checked={saveDetails}
-                        onChange={(e) => setSaveDetails(e.target.checked)}
-                        className="sr-only"
-                      />
-                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                        saveDetails 
-                          ? 'bg-emerald-500 border-emerald-500' 
-                          : 'border-gray-600 group-hover:border-gray-500'
-                      }`}>
-                        {saveDetails && <Check className="w-3 h-3 text-white" />}
-                      </div>
-                    </div>
-                    <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-                      Save for next time
-                    </span>
-                  </label>
-                </div>
-              </div>
 
-              {/* Error Message */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: "auto" }}
-                    exit={{ opacity: 0, y: -10, height: 0 }}
-                    className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-2xl backdrop-blur-xl"
-                  >
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    <span className="text-sm font-medium">{error}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Info Card */}
-              <div className="bg-emerald-500/10 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-5 shadow-xl shadow-emerald-500/10">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                    <Shield className="w-5 h-5 text-emerald-400" />
-                  </div>
-                  <div>
-                    <p className="text-emerald-400 font-semibold mb-1">Secure Payment</p>
-                    <p className="text-gray-300 text-sm">
-                      Your details are only shared with the merchant for payment confirmation.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Continue Button */}
-              <motion.button
-                onClick={handleCustomerSubmit}
-                disabled={!customerName.trim() || !customerEmail.trim()}
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 flex items-center justify-center gap-2"
-              >
-                Continue
-                <ArrowRight className="w-5 h-5" />
-              </motion.button>
-
-              {/* Footer */}
-              <p className="text-center text-xs text-gray-500">
-                Secured by{" "}
-                <span className="text-emerald-400 font-semibold">GemRails</span>
-              </p>
-            </motion.div>
-          )}
 
           {/* Amount Entry Step */}
           {step === "amount" && (
@@ -1063,34 +1019,177 @@ export default function PaymentPage({
                 transition={{ delay: 0.6 }}
                 className="space-y-3"
               >
+                <div className="grid grid-cols-2 gap-3">
+                  <motion.button
+                    onClick={() => {
+                      if (transaction?.transactionId) {
+                        window.open(`${process.env.NEXT_PUBLIC_GEMRAILS_BASE_URL}/payments/receipt/${transaction.transactionId}/download`, '_blank');
+                      }
+                    }}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Download className="w-5 h-5" />
+                    Download
+                  </motion.button>
+                  <motion.button
+                    onClick={() => setStep("receipt")}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="py-4 rounded-2xl font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Zap className="w-5 h-5" />
+                    Send
+                  </motion.button>
+                </div>
                 <motion.button
                   onClick={() => window.close()}
-                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-2xl font-medium text-gray-400 border border-gray-700 hover:border-gray-600 hover:text-white transition-all flex items-center justify-center gap-2"
                 >
                   Done
                 </motion.button>
-                <motion.button
-                  onClick={handleShareTx}
-                  disabled={isCapturing}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 rounded-2xl font-medium text-gray-400 border border-gray-700 hover:border-gray-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {isCapturing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4" />
-                      Save Receipt
-                    </>
-                  )}
-                </motion.button>
               </motion.div>
+            </motion.div>
+          )}
+
+          {/* Receipt Step */}
+          {step === "receipt" && (
+            <motion.div
+              key="receipt"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-5"
+            >
+              {/* Back Button */}
+              <motion.button
+                onClick={handleBack}
+                whileHover={{ x: -4 }}
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
+              >
+                <ChevronLeft className="w-5 h-5 group-hover:text-emerald-400 transition-colors" />
+                <span className="font-medium">Back to Success</span>
+              </motion.button>
+
+              <div className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-6 shadow-2xl shadow-black/30">
+                <h3 className="text-white font-semibold mb-2 text-center text-xl">Get Your Receipt</h3>
+                <p className="text-gray-400 text-sm mb-6 text-center">Enter your details to receive a professional PDF receipt.</p>
+                
+                <div className="space-y-4">
+                  {/* Delivery Mode Toggle */}
+                  <div className="flex bg-gray-800/50 p-1 rounded-xl border border-gray-700/50">
+                    <button
+                      onClick={() => {
+                        setReceiptType("email")
+                        setReceiptContact("")
+                      }}
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                        receiptType === "email" 
+                          ? "bg-emerald-500 text-white shadow-lg" 
+                          : "text-gray-400 hover:text-gray-200"
+                      }`}
+                    >
+                      Email
+                    </button>
+                    <button
+                      onClick={() => {
+                        setReceiptType("whatsapp")
+                        setReceiptContact("+234")
+                      }}
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                        receiptType === "whatsapp" 
+                          ? "bg-emerald-500 text-white shadow-lg" 
+                          : "text-gray-400 hover:text-gray-200"
+                      }`}
+                    >
+                      WhatsApp
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">
+                      {receiptType === "email" ? "Email Address" : "WhatsApp Number"}
+                    </label>
+                    <input
+                      type={receiptType === "email" ? "email" : "tel"}
+                      value={receiptContact}
+                      onChange={(e) => setReceiptContact(e.target.value)}
+                      placeholder={receiptType === "email" ? "name@example.com" : "+234..."}
+                      className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="text-sm text-gray-400 mb-2 block">Full Name (Optional)</label>
+                      <input
+                        type="text"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Your full name"
+                        className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Save for next time checkbox */}
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={saveDetails}
+                        onChange={(e) => setSaveDetails(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                        saveDetails 
+                          ? 'bg-emerald-500 border-emerald-500' 
+                          : 'border-gray-600 group-hover:border-gray-500'
+                      }`}>
+                        {saveDetails && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                      Save my details for future receipts
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <motion.button
+                onClick={handleReceiptRequest}
+                disabled={isSendingReceipt || !receiptContact}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSendingReceipt ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-5 h-5" />
+                    Send My Receipt
+                  </>
+                )}
+              </motion.button>
+
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  onClick={() => window.close()}
+                  className="text-gray-500 hover:text-gray-300 text-sm transition-colors"
+                >
+                  I'll skip for now
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

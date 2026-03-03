@@ -31,7 +31,7 @@ export interface User {
   id: string;
   email: string;
   emailVerified?: boolean;
-  role?: 'merchant' | 'admin';
+  role?: 'merchant' | 'admin' | 'branch_mod';
   businessName?: string;
   businessCategory?: string;
   businessAddress?: string;
@@ -40,7 +40,10 @@ export interface User {
   phone?: string;
   rcNumber?: string;
   merchantStatus?: 'pending' | 'active' | 'suspended';
+  accountType?: 'merchant' | 'enterprise';
   merchantId?: string;
+  branchId?: string;
+  enterpriseId?: string;
   bankAccount?: BankAccount;
   settings?: UserSettings;
   createdAt?: string;
@@ -68,8 +71,12 @@ export interface RegisterInput {
   email: string;
   password: string;
   businessName: string;
-  contactName: string;
+  accountType?: 'merchant' | 'enterprise';
+  contactName?: string;
   phone?: string;
+  businessCategory?: string;
+  businessAddress?: string;
+  rcNumber?: string;
 }
 
 export interface RegisterResponse {
@@ -225,8 +232,8 @@ export interface InitiatePaymentInput {
   cryptoAsset: 'USDT' | 'USDC';
   network: 'TRC20' | 'BSC';
   customerRef?: string;
-  customerName: string;
-  customerEmail: string;
+  customerName?: string;
+  customerEmail?: string;
 }
 
 export interface InitiatePaymentResponse {
@@ -261,6 +268,7 @@ export interface AdminMerchant {
   email: string;
   phone?: string;
   status: 'pending' | 'verified' | 'suspended';
+  accountType?: 'merchant' | 'enterprise';
   totalTransactions: number;
   totalVolume: number;
   bankAccount?: BankAccount;
@@ -285,6 +293,27 @@ export interface AdminMerchantDetails extends AdminMerchant {
   merchantId?: string;
   settings?: UserSettings;
   recentTransactions: AdminTransaction[];
+  branches: {
+    id: string;
+    name: string;
+    address: string;
+    moderators?: {
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+    }[];
+    moderatorCount: number;
+    createdAt: string;
+  }[];
+  terminals: {
+    id: string;
+    name: string;
+    merchantId: string;
+    isActive: boolean;
+    bankAccount?: BankAccount;
+    createdAt: string;
+  }[];
   updatedAt: string;
 }
 
@@ -297,8 +326,10 @@ export interface AdminTransaction {
   cryptoAsset: string;
   network: string;
   incentive: number;
+  totalAmount: number;
   status: string;
   customerRef?: string;
+  payoutAccount?: BankAccount;
   timestamp: string;
 }
 

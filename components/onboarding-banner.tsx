@@ -8,16 +8,18 @@ import { AlertCircle, ArrowRight, X } from "lucide-react"
 interface OnboardingBannerProps {
   isProfileComplete?: boolean
   isBankAdded?: boolean
+  userRole?: string
 }
 
 export function OnboardingBanner({
   isProfileComplete = false,
   isBankAdded = false,
+  userRole = "merchant",
 }: OnboardingBannerProps) {
   const [dismissed, setDismissed] = useState(false)
 
-  // Don't show if everything is complete or dismissed
-  if ((isProfileComplete && isBankAdded) || dismissed) {
+  // Don't show if everything is complete or dismissed or if user is a moderator
+  if ((isProfileComplete && isBankAdded) || dismissed || userRole === "branch_mod") {
     return null
   }
 

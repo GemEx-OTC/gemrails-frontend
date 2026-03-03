@@ -243,7 +243,7 @@ export default function LiquidityPage() {
                               <p className="font-semibold text-white truncate">{d.destinationAccountName}</p>
                               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${sourceBadge.bg} ${sourceBadge.color}`}>{sourceBadge.label}</span>
                             </div>
-                            <p className="text-sm text-gray-400">{d.destinationBankName} • ****{d.destinationAccountNumber.slice(-4)}</p>
+                            <p className="text-sm text-gray-400">{d.destinationBankName} • {d.destinationAccountNumber}</p>
                             <p className="text-xs text-gray-500 mt-1">{formatDistanceToNow(new Date(d.createdAt), { addSuffix: true })}</p>
                           </div>
                         </div>

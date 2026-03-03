@@ -16,7 +16,8 @@ import {
   useDeleteLogo,
   useBanks, 
   useVerifyBankAccount,
-  useSendBankOtp
+  useSendBankOtp,
+  useChangePassword
 } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
 import { getImageUrl } from "@/lib/utils/image"
@@ -25,7 +26,13 @@ import { Loader2 } from "lucide-react"
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth()
-  const [activeTab, setActiveTab] = useState<"business" | "bank" | "notifications">("business")
+  const [activeTab, setActiveTab] = useState<"business" | "bank" | "notifications" | "security">("security")
+
+  useEffect(() => {
+    if (user && user.role !== 'branch_mod') {
+      setActiveTab("business")
+    }
+  }, [user])
 
   // Mutations
   const updateProfileMutation = useUpdateProfile()
@@ -34,6 +41,7 @@ export default function SettingsPage() {
   const uploadLogoMutation = useUploadLogo()
   const deleteLogoMutation = useDeleteLogo()
   const sendOtpMutation = useSendBankOtp()
+  const changePasswordMutation = useChangePassword()
 
   // Business form state
   const [businessName, setBusinessName] = useState("")
@@ -55,6 +63,12 @@ export default function SettingsPage() {
   const [otpSending, setOtpSending] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [verifying, setVerifying] = useState(false)
+
+  // Security state
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
 
   const { data: banksData, isLoading: banksLoading } = useBanks()
   const verifyBankMutation = useVerifyBankAccount()
@@ -112,6 +126,34 @@ export default function SettingsPage() {
           },
           onError: (err: ApiError) => {
             toast.error(err.message || "Failed to update settings")
+          },
+        }
+      )
+    } else if (activeTab === "security") {
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        toast.error("Please fill in all password fields")
+        return
+      }
+      if (newPassword !== confirmPassword) {
+        toast.error("New passwords do not match")
+        return
+      }
+      if (newPassword.length < 8) {
+        toast.error("Password must be at least 8 characters")
+        return
+      }
+
+      changePasswordMutation.mutate(
+        { currentPassword, newPassword },
+        {
+          onSuccess: () => {
+            toast.success("Password updated successfully!")
+            setCurrentPassword("")
+            setNewPassword("")
+            setConfirmPassword("")
+          },
+          onError: (err: ApiError) => {
+            toast.error(err.message || "Failed to update password")
           },
         }
       )
@@ -239,9 +281,12 @@ export default function SettingsPage() {
   const uploadingLogo = uploadLogoMutation.isPending || deleteLogoMutation.isPending
 
   const tabs = [
-    { id: "business", label: "Business Profile", icon: Building2 },
-    { id: "bank", label: "Bank Account", icon: CreditCard },
+    ...(user?.role !== 'branch_mod' ? [
+      { id: "business", label: "Business Profile", icon: Building2 },
+      { id: "bank", label: "Bank Account", icon: CreditCard }
+    ] : []),
     { id: "notifications", label: "Notifications", icon: Bell },
+    { id: "security", label: "Security", icon: Shield },
   ]
 
   return (
@@ -302,31 +347,33 @@ export default function SettingsPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <label
-                      className={`gemrails-button-outline flex items-center gap-2 cursor-pointer ${uploadingLogo ? "opacity-50 cursor-not-allowed" : ""}`}
-                    >
-                      <Upload className="w-4 h-4" />
-                      {businessLogo ? "Change Logo" : "Upload Logo"}
-                      <input
-                        type="file"
-                        className="sr-only"
-                        accept="image/png, image/jpeg, image/jpg"
-                        onChange={handleLogoUpload}
-                        disabled={uploadingLogo}
-                      />
-                    </label>
-                    {businessLogo && (
-                      <button
-                        onClick={handleLogoDelete}
-                        disabled={uploadingLogo}
-                        className="p-2.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors border border-red-500/20"
+                  {user?.role !== 'branch_mod' && (
+                    <div className="flex gap-2">
+                      <label
+                        className={`gemrails-button-outline flex items-center gap-2 cursor-pointer ${uploadingLogo ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500">PNG or JPG, max 5MB</p>
+                        <Upload className="w-4 h-4" />
+                        {businessLogo ? "Change Logo" : "Upload Logo"}
+                        <input
+                          type="file"
+                          className="sr-only"
+                          accept="image/png, image/jpeg, image/jpg"
+                          onChange={handleLogoUpload}
+                          disabled={uploadingLogo}
+                        />
+                      </label>
+                      {businessLogo && (
+                        <button
+                          onClick={handleLogoDelete}
+                          disabled={uploadingLogo}
+                          className="p-2.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors border border-red-500/20"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">{user?.role === 'branch_mod' ? "Business Identity" : "PNG or JPG, max 5MB"}</p>
                 </div>
               </div>
             </div>
@@ -353,48 +400,69 @@ export default function SettingsPage() {
                     type="text"
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
-                    className="gemrails-input-icon"
+                    disabled={user?.role === 'branch_mod'}
+                    className={`gemrails-input-icon ${user?.role === 'branch_mod' ? 'bg-gray-800/30' : ''}`}
                   />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-white mb-2">Business Category</label>
-                <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="gemrails-select">
-                  {BUSINESS_CATEGORIES.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
+                {user?.role !== 'branch_mod' ? (
+                  <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="gemrails-select">
+                    {BUSINESS_CATEGORIES.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="gemrails-input bg-gray-800/30 flex items-center capitalize">
+                    {BUSINESS_CATEGORIES.find(c => c.value === businessCategory)?.label || businessCategory || "N/A"}
+                  </div>
+                )}
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">RC Number (Optional)</label>
-              <div className="relative">
-                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                <input
-                  type="text"
-                  value={rcNumber}
-                  onChange={(e) => setRcNumber(e.target.value)}
-                  placeholder="RC123456"
-                  className="gemrails-input-icon"
-                />
+            {user?.role !== 'branch_mod' ? (
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">RC Number (Optional)</label>
+                <div className="relative">
+                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="text"
+                    value={rcNumber}
+                    onChange={(e) => setRcNumber(e.target.value)}
+                    placeholder="RC123456"
+                    className="gemrails-input-icon"
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-4 bg-gray-800/30 border border-gray-800/50 rounded-xl">
+                <p className="text-sm text-gray-400">RC Number</p>
+                <p className="text-white font-medium">{rcNumber || "Not Linked"}</p>
+              </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">Business Address</label>
-              <div className="relative">
-                <MapPin className="absolute left-4 top-4 w-5 h-5 text-gray-500" />
-                <textarea
-                  value={businessAddress}
-                  onChange={(e) => setBusinessAddress(e.target.value)}
-                  rows={2}
-                  className="gemrails-input-icon resize-none"
-                />
+            {user?.role !== 'branch_mod' ? (
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">Business Address</label>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-4 w-5 h-5 text-gray-500" />
+                  <textarea
+                    value={businessAddress}
+                    onChange={(e) => setBusinessAddress(e.target.value)}
+                    rows={2}
+                    className="gemrails-input-icon resize-none"
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-4 bg-gray-800/30 border border-gray-800/50 rounded-xl">
+                <p className="text-sm text-gray-400">Business Address</p>
+                <p className="text-white font-medium">{businessAddress || "N/A"}</p>
+              </div>
+            )}
 
             <div className="border-t border-gray-800 pt-6">
               <h3 className="text-lg font-medium text-white mb-4">Contact Information</h3>
@@ -403,21 +471,39 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-white mb-2">Contact Person</label>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <input type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} className="gemrails-input-icon" />
+                    <input 
+                      type="text" 
+                      value={contactName} 
+                      onChange={(e) => setContactName(e.target.value)} 
+                      disabled={user?.role === 'branch_mod'}
+                      className={`gemrails-input-icon ${user?.role === 'branch_mod' ? 'bg-gray-800/30' : ''}`} 
+                    />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">Email Address</label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="gemrails-input-icon" />
+                    <input 
+                      type="email" 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                      disabled={user?.role === 'branch_mod'}
+                      className={`gemrails-input-icon ${user?.role === 'branch_mod' ? 'bg-gray-800/30' : ''}`} 
+                    />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">Phone Number</label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="gemrails-input-icon" />
+                    <input 
+                      type="tel" 
+                      value={phone} 
+                      onChange={(e) => setPhone(e.target.value)} 
+                      disabled={user?.role === 'branch_mod'}
+                      className={`gemrails-input-icon ${user?.role === 'branch_mod' ? 'bg-gray-800/30' : ''}`} 
+                    />
                   </div>
                 </div>
               </div>
@@ -532,17 +618,79 @@ export default function SettingsPage() {
             </div>
           </motion.div>
         )}
+        
+        {activeTab === "security" && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 w-[550px]">
+            <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+              <Shield className="w-5 h-5 text-emerald-400" />
+              <p className="text-sm text-emerald-100">Update your account password to keep your account secure.</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">Current Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="gemrails-input-icon"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">New Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="gemrails-input-icon"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">Confirm New Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="gemrails-input-icon"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+              >
+                {showPassword ? "Hide Passwords" : "Show Passwords"}
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         {activeTab !== "bank" && (
           <div className="mt-6 pt-6 border-t border-gray-800 flex justify-end">
             <motion.button
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || changePasswordMutation.isPending}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="gemrails-button flex items-center gap-2"
             >
-              {saving ? (
+              {saving || changePasswordMutation.isPending ? (
                 <>
                   <motion.div
                     animate={{ rotate: 360 }}

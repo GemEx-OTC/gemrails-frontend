@@ -68,7 +68,7 @@ export default function TransactionsPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-xl bg-linear-to-br from-purple-500/20 to-violet-500/10 border border-purple-500/30">
-          <p className="text-sm text-purple-400 mb-1">Total Volume</p>
+          <p className="text-sm text-purple-400 mb-1">Total Volume (Inc. Bonuses)</p>
           <p className="text-2xl font-bold text-white">{stats ? formatCurrency(stats.totalVolume) : "—"}</p>
         </div>
         <div className="p-4 rounded-xl bg-linear-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30">
@@ -282,6 +282,24 @@ export default function TransactionsPage() {
                   <span className="text-gray-400">Time</span>
                   <span className="text-white">{formatDate(selectedTx.timestamp)}</span>
                 </div>
+                
+                {selectedTx.status === "Settled" && selectedTx.payoutAccount && (
+                  <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2">
+                    <p className="text-[10px] uppercase font-bold tracking-widest text-emerald-500/60">Settlement Destination</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400 text-sm">Bank Name</span>
+                      <span className="text-white font-medium text-sm">{selectedTx.payoutAccount.bankName}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400 text-sm">Account Number</span>
+                      <span className="text-white font-medium text-sm">{selectedTx.payoutAccount.accountNumber}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400 text-sm">Account Name</span>
+                      <span className="text-white font-medium text-sm text-right truncate max-w-[200px]">{selectedTx.payoutAccount.accountName}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button

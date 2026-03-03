@@ -15,7 +15,11 @@ import {
   Bell,
   ChevronDown,
   Store,
-  Zap
+  Zap,
+  Building2,
+  Landmark,
+  MonitorDot,
+  Users
 } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { useNotification } from "@/context/notification-context"
@@ -174,15 +178,19 @@ export function Sidebar({ currentPath }: SidebarProps) {
             <img src="/logo/logo_icon.png" alt="GemRails" className="w-10 h-10 rounded-xl" />
             <div>
               <span className="text-lg lg:text-xl font-bold text-white">GemRails</span>
-              <p className="text-xs text-emerald-400">Merchant Portal</p>
+              <p className="text-xs text-emerald-400">
+                {user?.role === 'admin' ? 'Admin Portal' : 
+                 user?.role === 'branch_mod' ? 'Moderator' : 
+                 user?.accountType === 'enterprise' ? 'Enterprise Portal' : 'Merchant Portal'}
+              </p>
             </div>
           </Link>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-3 lg:p-4 space-y-4 overflow-y-auto">
-          {/* Grouped Menu */}
-          {menuGroups.map((group) => (
+          {/* Business Group (For merchants/enterprise admins, maybe hide/adjust for mods) */}
+          {user?.role !== 'branch_mod' && menuGroups.map((group) => (
             <CollapsibleGroup 
               key={group.label} 
               group={group} 
@@ -190,6 +198,28 @@ export function Sidebar({ currentPath }: SidebarProps) {
               defaultOpen={true}
             />
           ))}
+
+          {/* Enterprise/Branch Menu Group (Conditionally rendered) */}
+          {(user?.accountType === 'enterprise' || user?.role === 'branch_mod') && (
+            <CollapsibleGroup 
+              group={{
+                label: user?.role === 'branch_mod' ? "Branch" : "Enterprise",
+                icon: user?.role === 'branch_mod' ? Landmark : Building2,
+                items: user?.role === 'branch_mod' 
+                  ? [
+                      { name: "Terminals", href: "/dashboard/enterprise/terminals", icon: MonitorDot },
+                      { name: "Branch Info", href: "/dashboard/enterprise/branches", icon: Landmark },
+                    ]
+                  : [
+                      { name: "Branches", href: "/dashboard/enterprise/branches", icon: Landmark },
+                      { name: "Terminals", href: "/dashboard/enterprise/terminals", icon: MonitorDot },
+                      { name: "Moderators", href: "/dashboard/enterprise/moderators", icon: Users },
+                    ]
+              }}
+              currentPath={currentPath}
+              defaultOpen={true}
+            />
+          )}
 
           {/* Separator */}
           <div className="border-t border-gray-800 my-4" />
@@ -218,8 +248,10 @@ export function Sidebar({ currentPath }: SidebarProps) {
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user?.businessName}</p>
-              <p className="text-xs text-gray-500 truncate">{`#${user?.merchantId}`}</p>
+              <p className="text-sm font-medium text-white truncate">{user?.businessName || user?.email}</p>
+              <p className="text-xs text-gray-500 truncate">
+                {user?.merchantId ? `#${user?.merchantId}` : user?.role === 'branch_mod' ? 'Moderator' : user?.accountType}
+              </p>
             </div>
           </div>
 

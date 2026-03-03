@@ -139,11 +139,20 @@ export const getLiquidityDisbursements = async (params?: {
 }): Promise<LiquidityDisbursementsResponse> => {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append('page', params.page.toString());
-  if (params?.limit) searchParams.append('limit', params.limit.toString());
-  
   const query = searchParams.toString();
   const response = await apiClient.get<ApiResponse<LiquidityDisbursementsResponse>>(
     `/admin/liquidity/disbursements${query ? `?${query}` : ''}`
   );
+  return response.data.data;
+};
+
+// Support Management
+export const toggleTerminalStatus = async (terminalId: string, isActive: boolean): Promise<any> => {
+  const response = await apiClient.post<ApiResponse<any>>('/admin/terminals/toggle-status', { terminalId, isActive });
+  return response.data.data;
+};
+
+export const updateBranch = async (branchId: string, data: { name?: string; address?: string }): Promise<any> => {
+  const response = await apiClient.patch<ApiResponse<any>>('/admin/branches/update', { branchId, ...data });
   return response.data.data;
 };

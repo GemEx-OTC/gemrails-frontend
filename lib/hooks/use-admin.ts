@@ -126,3 +126,27 @@ export const useUpdatePlatformSettings = () => {
     },
   });
 };
+
+// Support Management
+export const useToggleTerminalStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ terminalId, isActive }: { terminalId: string; isActive: boolean }) =>
+      adminApi.toggleTerminalStatus(terminalId, isActive),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-merchant'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-merchants'] });
+    },
+  });
+};
+
+export const useUpdateBranchByAdmin = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ branchId, name, address }: { branchId: string; name?: string; address?: string }) =>
+      adminApi.updateBranch(branchId, { name, address }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-merchant'] });
+    },
+  });
+};
