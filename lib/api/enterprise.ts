@@ -46,7 +46,7 @@ export const enterpriseApi = {
     return response.data.data as Branch[];
   },
   
-  createBranch: async (data: { name: string; address: string; moderatorEmail?: string }) => {
+  createBranch: async (data: { name: string; address: string; moderatorEmail: string; moderatorFullName: string }) => {
     const response = await apiClient.post('/enterprise/branches', data);
     return response.data.data as Branch;
   },
