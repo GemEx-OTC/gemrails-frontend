@@ -27,6 +27,8 @@ import {
   Linkedin,
   Mail,
   Send,
+  Menu,
+  X,
 } from "lucide-react"
 
 // Floating Particle Component
@@ -175,6 +177,7 @@ export default function HomePage() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null)
   const [transactions, setTransactions] = useState(100)
   const [showFloatingCTA, setShowFloatingCTA] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const heroRef = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll()
@@ -225,10 +228,8 @@ export default function HomePage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0d10]/80 backdrop-blur-lg border-b border-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <motion.div 
-              className="flex items-center gap-3"
-              whileHover={{ scale: 1.02 }}
-            >
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <motion.img 
                 src="/logo/logo_icon.png" 
                 alt="GemRails" 
@@ -236,22 +237,57 @@ export default function HomePage() {
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               />
-              <div>
-                <span className="text-xl font-bold text-white">GemRails</span>
-              </div>
-            </motion.div>
+              <span className="text-xl font-bold text-white">GemRails</span>
+            </Link>
             
-            {/* Live Status Indicator */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <motion.div
-                className="w-2 h-2 rounded-full bg-emerald-400"
-                animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
-              <span className="text-xs text-emerald-400 font-medium">SYSTEM LIVE</span>
-            </div>
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-8">
+              <Link
+                href="/about"
+                className="text-gray-400 hover:text-white transition-colors relative group"
+              >
+                About Us
+                <motion.span 
+                  className="absolute bottom-0 left-0 h-0.5 bg-emerald-400"
+                  initial={{ width: 0 }}
+                  whileHover={{ width: "100%" }}
+                  transition={{ duration: 0.2 }}
+                />
+              </Link>
+              <Link
+                href="/how-it-works"
+                className="text-gray-400 hover:text-white transition-colors relative group"
+              >
+                How It Works
+                <motion.span 
+                  className="absolute bottom-0 left-0 h-0.5 bg-emerald-400"
+                  initial={{ width: 0 }}
+                  whileHover={{ width: "100%" }}
+                  transition={{ duration: 0.2 }}
+                />
+              </Link>
+              <span
+                className="text-gray-600 cursor-not-allowed relative"
+                title="Coming Soon"
+              >
+                Pricing
+              </span>
+              <Link
+                href="#faq"
+                className="text-gray-400 hover:text-white transition-colors relative group"
+              >
+                FAQ
+                <motion.span 
+                  className="absolute bottom-0 left-0 h-0.5 bg-emerald-400"
+                  initial={{ width: 0 }}
+                  whileHover={{ width: "100%" }}
+                  transition={{ duration: 0.2 }}
+                />
+              </Link>
+            </nav>
 
-            <div className="flex items-center gap-4">
+            {/* Desktop Auth Buttons */}
+            <div className="hidden md:flex items-center gap-4">
               <Link
                 href="/auth/login"
                 className="text-gray-400 hover:text-white transition-colors relative group"
@@ -273,8 +309,83 @@ export default function HomePage() {
                 </Link>
               </motion.div>
             </div>
+
+            {/* Mobile Menu Button */}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
+              aria-label="Toggle menu"
+            >
+              <motion.div
+                animate={{ rotate: mobileMenuOpen ? 90 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
+              </motion.div>
+            </motion.button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden border-t border-gray-800 bg-[#0a0d10]/95 backdrop-blur-lg"
+            >
+              <div className="px-4 py-6 space-y-4">
+                <Link
+                  href="/about"
+                  className="block text-gray-400 hover:text-white transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  About Us
+                </Link>
+                <Link
+                  href="/how-it-works"
+                  className="block text-gray-400 hover:text-white transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  How It Works
+                </Link>
+                <span className="block text-gray-600 cursor-not-allowed py-2">
+                  Pricing <span className="text-xs">(Coming Soon)</span>
+                </span>
+                <Link
+                  href="#faq"
+                  className="block text-gray-400 hover:text-white transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  FAQ
+                </Link>
+                <div className="pt-4 border-t border-gray-800 space-y-3">
+                  <Link
+                    href="/auth/login"
+                    className="block text-center py-2 text-gray-400 hover:text-white transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/auth/signup"
+                    className="block text-center px-4 py-2 rounded-lg font-medium text-white bg-gradient-to-r from-emerald-500 to-teal-500"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Get Started
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* ========== HERO SECTION ========== */}
@@ -889,7 +1000,7 @@ export default function HomePage() {
       </section>
 
       {/* ========== FAQ SECTION ========== */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-900/30">
+      <section id="faq" className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-900/30">
         <div className="max-w-3xl mx-auto">
           <motion.div 
             className="text-center mb-12"
@@ -1021,12 +1132,16 @@ export default function HomePage() {
             <div>
               <h4 className="text-white font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2">
-                {["About Us", "How It Works", "Pricing", "FAQ"].map((link, idx) => (
+                {[
+                  { name: "Contact Us", href: "/contact" },
+                  { name: "Terms & Conditions", href: "/terms" },
+                  { name: "Privacy Policy", href: "/privacy" }
+                ].map((link, idx) => (
                   <li key={idx}>
-                    <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors relative group">
-                      {link}
+                    <Link href={link.href} className="text-gray-400 hover:text-emerald-400 transition-colors relative group">
+                      {link.name}
                       <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-400 group-hover:w-full transition-all" />
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -1059,8 +1174,9 @@ export default function HomePage() {
               © {new Date().getFullYear()} GemRails. All rights reserved.
             </p>
             <div className="flex items-center gap-6 text-sm text-gray-500">
-              <a href="#" className="hover:text-emerald-400 transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-emerald-400 transition-colors">Terms of Service</a>
+              <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-emerald-400 transition-colors">Terms & Conditions</Link>
+              <Link href="/contact" className="hover:text-emerald-400 transition-colors">Contact Us</Link>
             </div>
           </div>
         </div>
