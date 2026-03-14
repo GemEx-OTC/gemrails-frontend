@@ -191,12 +191,21 @@ export default function HomePage() {
     return () => window.removeEventListener("mousemove", handleMouseMove)
   }, [])
 
-  // Show floating CTA after scrolling past hero
+  // Show floating CTA after scrolling past hero, hide when near footer
   useEffect(() => {
     const handleScroll = () => {
       if (heroRef.current) {
         const heroBottom = heroRef.current.offsetHeight
-        setShowFloatingCTA(window.scrollY > heroBottom)
+        const scrollPosition = window.scrollY + window.innerHeight
+        const documentHeight = document.documentElement.scrollHeight
+        
+        // Show CTA after hero section
+        const shouldShow = window.scrollY > heroBottom
+        
+        // Hide CTA when within 200px of the bottom (footer area)
+        const isNearBottom = scrollPosition >= documentHeight - 200
+        
+        setShowFloatingCTA(shouldShow && !isNearBottom)
       }
     }
     window.addEventListener("scroll", handleScroll)
