@@ -207,6 +207,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
                 icon: user?.role === 'branch_mod' ? Landmark : Building2,
                 items: user?.role === 'branch_mod' 
                   ? [
+                      { name: "Transactions", href: "/dashboard/transactions", icon: History },
                       { name: "Terminals", href: "/dashboard/enterprise/terminals", icon: MonitorDot },
                       { name: "Branch Info", href: "/dashboard/enterprise/branches", icon: Landmark },
                     ]
