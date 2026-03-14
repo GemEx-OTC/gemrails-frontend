@@ -6,9 +6,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Plus, MapPin, Building2, Loader2, Search, Trash2, Edit2, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { ConfirmationModal } from "@/components/confirmation-modal"
+import { useAuth } from "@/context/auth-context"
 import { useBranches, useCreateBranch, useUpdateBranch, useDeleteBranch } from "@/lib/hooks/use-enterprise"
 
 export default function BranchesPage() {
+  const { user } = useAuth()
   const { data: branches, isLoading } = useBranches()
   const createBranchMutation = useCreateBranch()
   const updateBranchMutation = useUpdateBranch()
@@ -101,13 +103,15 @@ export default function BranchesPage() {
           <h1 className="text-2xl font-bold text-white">Branches</h1>
           <p className="text-gray-400 mt-1">Manage your enterprise business locations</p>
         </div>
-        <button
-          onClick={() => setIsAdding(true)}
-          className="gemrails-button flex items-center justify-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add Branch</span>
-        </button>
+        {user?.role !== 'branch_mod' && (
+          <button
+            onClick={() => setIsAdding(true)}
+            className="gemrails-button flex items-center justify-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Branch</span>
+          </button>
+        )}
       </div>
 
       <div className="bg-gray-800/20 border border-gray-800 rounded-2xl p-4">
