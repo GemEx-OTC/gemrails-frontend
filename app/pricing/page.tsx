@@ -120,38 +120,38 @@ export default function PricingPage() {
       {/* Pricing Cards - Carousel on mobile, grid on desktop */}
       <section className="relative px-4 sm:px-6 lg:px-8 pb-8">
         <div className="max-w-5xl mx-auto">
-          {/* Desktop: side by side */}
-          <div className="hidden md:grid md:grid-cols-2 gap-6">
+          {/* Tablet & Desktop: side by side */}
+          <div className="hidden sm:grid sm:grid-cols-2 gap-4 md:gap-6">
             {/* Merchant Card */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity" />
-              <div className="relative bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 group-hover:border-emerald-500/50 transition-all">
+              <div className="relative bg-gray-900 border border-gray-800 rounded-2xl p-5 sm:p-6 md:p-8 group-hover:border-emerald-500/50 transition-all">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                    <Building2 className="w-5 h-5 md:w-6 md:h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Merchants</h3>
+                    <h3 className="text-lg md:text-xl font-bold text-white">Merchants</h3>
                     <p className="text-gray-500 text-xs">For businesses</p>
                   </div>
                 </div>
-                <div className="mb-6">
+                <div className="mb-5 md:mb-6">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-white">$0</span>
+                    <span className="text-3xl md:text-4xl font-black text-white">$0</span>
                     <span className="text-gray-500 text-sm">onboarding</span>
                   </div>
                   <p className="text-emerald-400 text-sm mt-1">Free to get started</p>
                 </div>
-                <ul className="space-y-3 mb-6">
+                <ul className="space-y-2.5 md:space-y-3 mb-5 md:mb-6">
                   {["Accept stablecoin payments", "Auto-convert to NGN", "Direct bank settlement", "Zero crypto exposure", "API / checkout integration", "Dedicated onboarding support"].map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                    <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-gray-300">
                       <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
                       {item}
                     </li>
                   ))}
                 </ul>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Link href="/auth/signup" className="block w-full text-center py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-lg hover:shadow-emerald-500/30 transition-all">
+                  <Link href="/auth/signup" className="block w-full text-center py-2.5 md:py-3 rounded-xl font-semibold text-sm md:text-base text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-lg hover:shadow-emerald-500/30 transition-all">
                     Start Accepting Payments
                   </Link>
                 </motion.div>
@@ -160,36 +160,36 @@ export default function PricingPage() {
             {/* Consumer Card */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity" />
-              <div className="relative bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 group-hover:border-teal-500/50 transition-all">
-                <div className="absolute top-4 right-4">
+              <div className="relative bg-gray-900 border border-gray-800 rounded-2xl p-5 sm:p-6 md:p-8 group-hover:border-teal-500/50 transition-all">
+                <div className="absolute top-3 md:top-4 right-3 md:right-4">
                   <span className="text-[10px] px-2 py-1 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20 font-medium">EXPANSION PHASE</span>
                 </div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
-                    <User className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                    <User className="w-5 h-5 md:w-6 md:h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Consumers</h3>
+                    <h3 className="text-lg md:text-xl font-bold text-white">Consumers</h3>
                     <p className="text-gray-500 text-xs">For individuals</p>
                   </div>
                 </div>
-                <div className="mb-6">
+                <div className="mb-5 md:mb-6">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-white">$0</span>
+                    <span className="text-3xl md:text-4xl font-black text-white">$0</span>
                     <span className="text-gray-500 text-sm">transaction fees</span>
                   </div>
                   <p className="text-teal-400 text-sm mt-1">During network expansion phase</p>
                 </div>
-                <ul className="space-y-3 mb-6">
+                <ul className="space-y-2.5 md:space-y-3 mb-5 md:mb-6">
                   {["Pay merchants with stablecoins", "Simple payment experience", "Zero transaction fees (expansion phase)", "Use existing stablecoin wallets", "No conversion needed", "Standard consumer support"].map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                    <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-gray-300">
                       <CheckCircle className="w-4 h-4 text-teal-400 mt-0.5 flex-shrink-0" />
                       {item}
                     </li>
                   ))}
                 </ul>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Link href="/auth/signup" className="block w-full text-center py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:shadow-lg hover:shadow-teal-500/30 transition-all">
+                  <Link href="/auth/signup" className="block w-full text-center py-2.5 md:py-3 rounded-xl font-semibold text-sm md:text-base text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:shadow-lg hover:shadow-teal-500/30 transition-all">
                     Start Paying with Crypto
                   </Link>
                 </motion.div>
@@ -198,7 +198,7 @@ export default function PricingPage() {
           </div>
 
           {/* Mobile: Swipeable carousel */}
-          <div className="md:hidden">
+          <div className="sm:hidden">
             {/* Tab buttons above carousel */}
             <div className="flex items-center gap-2 mb-4">
               <button
@@ -385,8 +385,41 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* Quick Stats Strip */}
+      <section className="py-8 sm:py-10 md:py-12 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+            {[
+              { value: "$0", label: "Setup Cost", icon: CircleDollarSign, gradient: "from-emerald-500 to-teal-500" },
+              { value: "<1min", label: "Settlement", icon: Zap, gradient: "from-teal-500 to-cyan-500" },
+              { value: "24/7", label: "Availability", icon: RefreshCw, gradient: "from-cyan-500 to-blue-500" },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="relative bg-gray-900/60 border border-gray-800/50 rounded-2xl p-4 sm:p-5 md:p-6 text-center overflow-hidden group"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity`} />
+                <motion.div
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg`}
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                >
+                  <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </motion.div>
+                <div className={`text-xl sm:text-2xl md:text-3xl font-black bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>{stat.value}</div>
+                <div className="text-gray-500 text-[10px] sm:text-xs mt-0.5 sm:mt-1">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
       {/* Comparison Section - Interactive */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+      <section className="py-10 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
@@ -430,12 +463,12 @@ export default function PricingPage() {
           </motion.div>
 
           {/* Feature cards in a bento-style grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Feature cards - horizontal scroll on mobile, grid on desktop */}
+          <div className="hidden sm:grid sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             {comparisonRows.map((row, idx) => {
               const isHighlight = row.highlight
               const content = activeTab === "merchant" ? row.merchant : row.consumer
               const FeatureIcon = row.icon
-
               return (
                 <motion.div
                   key={row.feature}
@@ -444,88 +477,94 @@ export default function PricingPage() {
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.06, type: "spring", stiffness: 200 }}
                   whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                  className={`group relative rounded-2xl p-5 transition-all duration-300 cursor-default overflow-hidden ${
+                  className={`group relative rounded-2xl p-4 md:p-5 transition-all duration-300 cursor-default overflow-hidden ${
                     isHighlight
-                      ? "bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border-2 border-emerald-500/30 sm:col-span-2 lg:col-span-1"
+                      ? "bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border-2 border-emerald-500/30"
                       : "bg-gray-900/50 border border-gray-800/60 hover:border-gray-700 hover:bg-gray-900/70"
                   }`}
                 >
-                  {/* Animated gradient on hover */}
                   <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none ${
-                    isHighlight 
-                      ? "bg-gradient-to-br from-emerald-500/10 to-transparent" 
-                      : "bg-gradient-to-br from-gray-700/20 to-transparent"
+                    isHighlight ? "bg-gradient-to-br from-emerald-500/10 to-transparent" : "bg-gradient-to-br from-gray-700/20 to-transparent"
                   }`} />
-
-                  {/* Highlight badge */}
                   {isHighlight && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute top-3 right-3"
-                    >
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-3 right-3">
                       <span className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">
-                        <Zap className="w-3 h-3" />
-                        KEY
+                        <Zap className="w-3 h-3" />KEY
                       </span>
                     </motion.div>
                   )}
-
-                  {/* Icon with animated ring */}
-                  <div className="relative mb-4">
-                    <motion.div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        isHighlight 
-                          ? "bg-gradient-to-br from-emerald-500 to-teal-500" 
-                          : "bg-gray-800 group-hover:bg-gray-700"
-                      } transition-colors`}
-                      whileHover={{ rotate: [0, -10, 10, 0] }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <FeatureIcon className={`w-5 h-5 ${isHighlight ? "text-white" : "text-gray-300"}`} />
+                  <div className="relative mb-3 md:mb-4">
+                    <motion.div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${isHighlight ? "bg-gradient-to-br from-emerald-500 to-teal-500" : "bg-gray-800 group-hover:bg-gray-700"} transition-colors`} whileHover={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 0.4 }}>
+                      <FeatureIcon className={`w-4 h-4 md:w-5 md:h-5 ${isHighlight ? "text-white" : "text-gray-300"}`} />
                     </motion.div>
                     {isHighlight && (
-                      <motion.div
-                        className="absolute inset-0 rounded-xl border-2 border-emerald-400/50"
-                        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
+                      <motion.div className="absolute inset-0 rounded-xl border-2 border-emerald-400/50" animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }} transition={{ duration: 2, repeat: Infinity }} />
                     )}
                   </div>
-
-                  {/* Feature name */}
-                  <h3 className={`text-sm font-bold mb-2 ${isHighlight ? "text-emerald-300" : "text-white"}`}>
-                    {row.feature}
-                  </h3>
-
-                  {/* Content with animated swap */}
-                  <motion.p
-                    key={`${row.feature}-${activeTab}`}
-                    initial={{ opacity: 0, x: activeTab === "merchant" ? -10 : 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="text-sm text-gray-400 leading-relaxed"
-                  >
+                  <h3 className={`text-sm font-bold mb-2 ${isHighlight ? "text-emerald-300" : "text-white"}`}>{row.feature}</h3>
+                  <motion.p key={`${row.feature}-${activeTab}`} initial={{ opacity: 0, x: activeTab === "merchant" ? -10 : 10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }} className="text-sm text-gray-400 leading-relaxed">
                     {content}
                   </motion.p>
-
-                  {/* Bottom indicator */}
-                  <div className={`absolute bottom-0 left-0 right-0 h-1 ${
-                    isHighlight 
-                      ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-transparent" 
-                      : "bg-gradient-to-r from-gray-700 to-transparent opacity-0 group-hover:opacity-100"
-                  } transition-opacity`} />
+                  <div className={`absolute bottom-0 left-0 right-0 h-1 ${isHighlight ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-transparent" : "bg-gradient-to-r from-gray-700 to-transparent opacity-0 group-hover:opacity-100"} transition-opacity`} />
                 </motion.div>
               )
             })}
+          </div>
+
+          {/* Mobile: horizontal scroll cards */}
+          <div className="sm:hidden">
+            <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+              {comparisonRows.map((row, idx) => {
+                const isHighlight = row.highlight
+                const content = activeTab === "merchant" ? row.merchant : row.consumer
+                const FeatureIcon = row.icon
+                return (
+                  <motion.div
+                    key={row.feature}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.05 }}
+                    className={`flex-shrink-0 w-[75vw] snap-center rounded-2xl p-5 overflow-hidden relative ${
+                      isHighlight
+                        ? "bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border-2 border-emerald-500/30"
+                        : "bg-gray-900/50 border border-gray-800/60"
+                    }`}
+                  >
+                    {isHighlight && (
+                      <span className="absolute top-3 right-3 flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">
+                        <Zap className="w-3 h-3" />KEY
+                      </span>
+                    )}
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${isHighlight ? "bg-gradient-to-br from-emerald-500 to-teal-500" : "bg-gray-800"}`}>
+                      <FeatureIcon className={`w-5 h-5 ${isHighlight ? "text-white" : "text-gray-300"}`} />
+                    </div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <h3 className={`text-sm font-bold ${isHighlight ? "text-emerald-300" : "text-white"}`}>{row.feature}</h3>
+                      <span className="text-[10px] text-gray-600 font-mono">{idx + 1}/{comparisonRows.length}</span>
+                    </div>
+                    <motion.p key={`${row.feature}-${activeTab}-m`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="text-xs text-gray-400 leading-relaxed">
+                      {content}
+                    </motion.p>
+                    <div className={`absolute bottom-0 left-0 right-0 h-1 ${isHighlight ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-transparent" : "bg-transparent"}`} />
+                  </motion.div>
+                )
+              })}
+            </div>
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <motion.div animate={{ x: [0, 6, 0] }} transition={{ duration: 1.5, repeat: Infinity }} className="text-gray-600">
+                <ArrowRight className="w-3.5 h-3.5" />
+              </motion.div>
+              <p className="text-gray-600 text-[11px]">Swipe to explore features</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Network Expansion Note */}
-      <section className="px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16">
+      <section className="px-4 sm:px-6 lg:px-8 pb-12 sm:pb-14 md:pb-16">
         <div className="max-w-3xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="relative bg-gradient-to-r from-emerald-500/5 to-teal-500/5 border border-emerald-500/20 rounded-2xl p-6 sm:p-8">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="relative bg-gradient-to-r from-emerald-500/5 to-teal-500/5 border border-emerald-500/20 rounded-2xl p-5 sm:p-6 md:p-8">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Info className="w-5 h-5 text-emerald-400" />
@@ -545,13 +584,13 @@ export default function PricingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-12 sm:py-16 px-4">
+      <section className="py-10 sm:py-12 md:py-16 px-4">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative text-center py-16 px-8 rounded-3xl overflow-hidden"
+            className="relative text-center py-12 sm:py-14 md:py-16 px-6 sm:px-8 rounded-3xl overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-emerald-500/10" />
             <motion.div
@@ -600,11 +639,11 @@ export default function PricingPage() {
               >
                 <Rocket className="w-8 h-8 text-emerald-400" />
               </motion.div>
-              <h3 className="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to Get Started?</h3>
-              <p className="text-gray-400 mb-8 max-w-md mx-auto">Join hundreds of businesses already accepting stablecoin payments with GemRails</p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 md:mb-4">Ready to Get Started?</h3>
+              <p className="text-gray-400 text-sm md:text-base mb-6 md:mb-8 max-w-md mx-auto">Join hundreds of businesses already accepting stablecoin payments with GemRails</p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link href="/auth/signup" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-xl hover:shadow-emerald-500/30 transition-all">
+                  <Link href="/auth/signup" className="inline-flex items-center gap-2 px-6 sm:px-7 md:px-8 py-3 md:py-4 rounded-xl font-semibold text-sm md:text-base text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-xl hover:shadow-emerald-500/30 transition-all">
                     Register Your Business
                     <motion.div animate={{ x: [0, 5, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
                       <ArrowRight className="w-5 h-5" />
@@ -612,7 +651,7 @@ export default function PricingPage() {
                   </Link>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link href="/contact" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all">
+                  <Link href="/contact" className="inline-flex items-center gap-2 px-6 sm:px-7 md:px-8 py-3 md:py-4 rounded-xl font-semibold text-sm md:text-base text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all">
                     Contact Sales
                   </Link>
                 </motion.div>
