@@ -350,7 +350,7 @@ export default function HowItWorksPage() {
                                     transition={{ duration: 0.3, ease: "easeInOut" }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="flex flex-wrap gap-2 pt-1 pb-1">
+                                    <div className="flex flex-wrap gap-1 pt-1 pb-1">
                                       {step.items.map((item, i) => (
                                         <span key={i} className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
                                           <CheckCircle className="w-3 h-3" />
