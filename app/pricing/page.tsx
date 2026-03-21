@@ -497,9 +497,11 @@ export default function PricingPage() {
                     <motion.div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${isHighlight ? "bg-gradient-to-br from-emerald-500 to-teal-500" : "bg-gray-800 group-hover:bg-gray-700"} transition-colors`} whileHover={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 0.4 }}>
                       <FeatureIcon className={`w-4 h-4 md:w-5 md:h-5 ${isHighlight ? "text-white" : "text-gray-300"}`} />
                     </motion.div>
-                    {isHighlight && (
-                      <motion.div className="absolute inset-0 rounded-xl border-2 border-emerald-400/50" animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }} transition={{ duration: 2, repeat: Infinity }} />
-                    )}
+                    <motion.div
+                      className={`absolute inset-0 rounded-xl border-2 ${isHighlight ? "border-emerald-400/50" : "border-gray-600/40"}`}
+                      animate={{ scale: [1, 1.25, 1], opacity: [0.6, 0, 0.6] }}
+                      transition={{ duration: isHighlight ? 2 : 3, repeat: Infinity, delay: idx * 0.2 }}
+                    />
                   </div>
                   <h3 className={`text-sm font-bold mb-2 ${isHighlight ? "text-emerald-300" : "text-white"}`}>{row.feature}</h3>
                   <motion.p key={`${row.feature}-${activeTab}`} initial={{ opacity: 0, x: activeTab === "merchant" ? -10 : 10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }} className="text-sm text-gray-400 leading-relaxed">
@@ -536,8 +538,15 @@ export default function PricingPage() {
                         <Zap className="w-3 h-3" />KEY
                       </span>
                     )}
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${isHighlight ? "bg-gradient-to-br from-emerald-500 to-teal-500" : "bg-gray-800"}`}>
-                      <FeatureIcon className={`w-5 h-5 ${isHighlight ? "text-white" : "text-gray-300"}`} />
+                    <div className="relative mb-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isHighlight ? "bg-gradient-to-br from-emerald-500 to-teal-500" : "bg-gray-800"}`}>
+                        <FeatureIcon className={`w-5 h-5 ${isHighlight ? "text-white" : "text-gray-300"}`} />
+                      </div>
+                      <motion.div
+                        className={`absolute inset-0 rounded-lg border-2 ${isHighlight ? "border-emerald-400/50" : "border-gray-600/40"}`}
+                        animate={{ scale: [1, 1.25, 1], opacity: [0.6, 0, 0.6] }}
+                        transition={{ duration: isHighlight ? 2 : 3, repeat: Infinity, delay: idx * 0.2 }}
+                      />
                     </div>
                     <div className="flex items-center justify-between mb-1.5">
                       <h3 className={`text-sm font-bold ${isHighlight ? "text-emerald-300" : "text-white"}`}>{row.feature}</h3>
