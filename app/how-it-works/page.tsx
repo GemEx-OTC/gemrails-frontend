@@ -313,7 +313,7 @@ export default function HowItWorksPage() {
                 <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">4 Steps to <span className="text-emerald-400">Get Started</span></h2>
                 <p className="text-gray-500 text-sm">From registration to receiving payments</p>
               </motion.div>
-              <div className="absolute left-[23px] top-[120px] bottom-4 w-[2px] bg-gradient-to-b from-emerald-500/30 via-cyan-500/30 to-blue-500/30 hidden sm:block" />
+              <div className="absolute left-[23px] top-[120px] bottom-[52px] w-[2px] bg-gradient-to-b from-emerald-500/30 via-cyan-500/30 to-blue-500/30 hidden sm:block z-0" />
               <div className="space-y-4 sm:space-y-6">
                 {steps.map((step, idx) => {
                   const colors = colorMap[step.color]
@@ -322,7 +322,7 @@ export default function HowItWorksPage() {
                   return (
                     <motion.div key={idx} initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.1 }} onClick={() => setActiveStep(idx)} className="relative cursor-pointer group">
                       <div className="hidden sm:block absolute left-0 top-6 z-10">
-                        <motion.div className={`w-[48px] h-[48px] rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isActive ? `bg-gradient-to-br ${step.gradient} border-transparent shadow-lg` : "bg-gray-900 border-gray-700 group-hover:border-gray-500"}`} animate={isActive ? { scale: [1, 1.1, 1] } : {}} transition={{ duration: 1.5, repeat: Infinity }}>
+                        <motion.div className={`w-[48px] h-[48px] rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isActive ? `bg-gradient-to-br ${step.gradient} border-transparent shadow-lg` : "bg-[#0a0d10] border-gray-700 group-hover:border-gray-500"}`} animate={isActive ? { scale: [1, 1.1, 1] } : {}} transition={{ duration: 1.5, repeat: Infinity }}>
                           <StepIcon className={`w-5 h-5 ${isActive ? "text-white" : "text-gray-500 group-hover:text-gray-300"}`} />
                         </motion.div>
                         {isActive && <motion.div className={`absolute inset-0 rounded-full border-2 ${colors.border}`} animate={{ scale: [1, 1.6], opacity: [0.5, 0] }} transition={{ duration: 1.5, repeat: Infinity }} />}
@@ -387,13 +387,13 @@ export default function HowItWorksPage() {
             <p className="text-gray-500 text-sm">How your payment moves from customer to your bank</p>
           </motion.div>
           <div className="hidden md:flex items-center justify-between relative">
-            <div className="absolute top-1/2 left-[10%] right-[10%] h-[2px] -translate-y-1/2">
+            <div className="absolute top-[32px] left-[32px] right-[32px] h-[2px] -translate-y-1/2 z-0">
               <div className="w-full h-full bg-gradient-to-r from-emerald-500/30 via-cyan-500/30 to-emerald-500/30" />
               <motion.div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50" animate={{ left: ["0%", "100%"] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
             </div>
             {flowNodes.map((node, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }} className="relative z-10 flex flex-col items-center">
-                <motion.div whileHover={{ scale: 1.1, y: -5 }} className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl border ${i === 2 ? "bg-[#0a0d10] border-emerald-500/50 shadow-lg shadow-emerald-500/20" : "bg-gray-900 border-gray-700"}`}>
+                <motion.div whileHover={{ scale: 1.1, y: -5 }} className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl border ${i === 2 ? "bg-[#0a0d10] border-emerald-500/50 shadow-lg shadow-emerald-500/20" : "bg-[#0a0d10] border-gray-700"}`}>
                   {node.imgSrc ? (
                     <img src={node.imgSrc} alt={node.label} className="w-10 h-10 rounded-lg" />
                   ) : node.Icon ? (
