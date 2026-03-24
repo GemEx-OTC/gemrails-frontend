@@ -43,6 +43,7 @@ const adminMenuGroups: MenuGroup[] = [
     items: [
       { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { href: "/admin/liquidity", label: "Liquidity", icon: Droplets },
+      { href: "/admin/sweep", label: "Sweep Funds", icon: Zap },
       { href: "/admin/transactions", label: "Transactions", icon: Receipt },
     ]
   },

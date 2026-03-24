@@ -82,7 +82,6 @@ export default function TerminalsPage() {
         name, 
         merchantId, 
         bankAccount,
-        network: 'BSC'
       },
       {
         onSuccess: () => {

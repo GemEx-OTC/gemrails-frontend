@@ -141,12 +141,19 @@ export default function PaymentPage({
 
   useEffect(() => {
     if (paymentStatusData) {
-      const status = (paymentStatusData as any).status
+      const { status, cryptoRemaining, overpaymentAmount } = paymentStatusData as any
+      
       if (status === "Settled" || status === "CryptoReceived" || status === "Processing") {
         setStep("success")
+      } else if (status === "AwaitingRemainder") {
+        // If we were in processing, go back to payment to show remainder
+        if (step === "processing") {
+          setStep("payment")
+          toast.warning(`Underpayment detected. Please send the remaining ${cryptoRemaining} ${selectedAsset}`)
+        }
       }
     }
-  }, [paymentStatusData])
+  }, [paymentStatusData, step, selectedAsset])
 
 
   const walletAddress = transaction?.walletAddress || ""
@@ -272,16 +279,24 @@ export default function PaymentPage({
     confirmPaymentMutation.mutate(
       { transactionId: transaction.transactionId },
       {
-        onSuccess: () => {
-          setStep("processing")
-          setTimeout(() => setStep("success"), 2000)
+        onSuccess: (data: any) => {
+          if (data.status === 'AwaitingRemainder') {
+            toast.warning(`Underpayment detected. Still need ${data.cryptoRemaining} ${selectedAsset}`)
+            setIsConfirming(false)
+          } else {
+            setStep("processing")
+          }
         },
-        onError: () => {
-          setStep("processing")
+        onError: (err: any) => {
+          if (err.code === 'NO_DEPOSIT_DETECTED') {
+             toast.error("No deposit detected yet. Please check your wallet or wait a few moments.")
+          } else {
+             toast.error(err.message || "Verification failed")
+          }
+          setIsConfirming(false)
         },
       }
     )
-    setIsConfirming(false)
   }
 
   const handleBack = () => {
@@ -742,12 +757,23 @@ export default function PaymentPage({
               <div className="bg-gradient-to-br from-emerald-500/20 via-emerald-500/10 to-teal-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-3xl p-8 text-center shadow-2xl shadow-emerald-500/10 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.2),transparent_50%)]" />
                 <div className="relative">
-                  <p className="text-gray-300 text-sm mb-2 font-medium">Send exactly</p>
+                  <p className="text-gray-300 text-sm mb-2 font-medium">
+                    {(paymentStatusData as any)?.status === 'AwaitingRemainder' ? "Remaining amount to send" : "Send exactly"}
+                  </p>
                   <div className="flex items-center justify-center gap-2">
                     <p className="text-5xl font-bold text-white">
-                      {cryptoAmount.toFixed(2)}
+                      {(paymentStatusData as any)?.status === 'AwaitingRemainder' 
+                        ? (paymentStatusData as any).cryptoRemaining?.toFixed(2) 
+                        : cryptoAmount.toFixed(2)}
                     </p>
                   </div>
+                  
+                  {(paymentStatusData as any)?.status === 'AwaitingRemainder' && (
+                    <div className="mt-2 text-amber-400 text-sm font-medium">
+                      Received: {(paymentStatusData as any).cryptoReceived?.toFixed(2)} {selectedAsset}
+                    </div>
+                  )}
+
                   <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-emerald-500/20 rounded-full mt-4 border border-emerald-500/30">
                     <span className="text-emerald-400 font-bold text-lg">
                       {selectedAsset}

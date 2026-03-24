@@ -248,12 +248,17 @@ export interface InitiatePaymentResponse {
 
 export interface PaymentStatus {
   transactionId: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'expired';
+  status: 'Initiated' | 'AwaitingCrypto' | 'AwaitingRemainder' | 'CryptoReceived' | 'Processing' | 'Settled' | 'Failed' | 'expired';
   amount: number;
   currency: string;
   nairaAmount: number;
   txHash?: string;
   completedAt?: string;
+  // Verification details
+  cryptoReceived?: number;
+  cryptoRemaining?: number;
+  overpaymentAmount?: number;
+  verifiedAt?: string;
 }
 
 export interface ConfirmPaymentInput {

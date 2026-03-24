@@ -21,11 +21,6 @@ export interface Terminal {
     accountName: string;
     isVerified: boolean;
   };
-  hotWallet: {
-    address: string;
-    network: string;
-    isActivated: boolean;
-  };
   isActive: boolean;
   createdAt: string;
 }
@@ -73,7 +68,6 @@ export const enterpriseApi = {
     name: string; 
     merchantId: string; 
     bankAccount: any;
-    network?: string;
   }) => {
     const response = await apiClient.post('/enterprise/terminals', data);
     return response.data.data as Terminal;
