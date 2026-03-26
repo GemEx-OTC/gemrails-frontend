@@ -29,6 +29,7 @@ import {
   Send,
   Menu,
   X,
+  User,
 } from "lucide-react"
 
 // Floating Particle Component
@@ -275,12 +276,18 @@ export default function HomePage() {
                   transition={{ duration: 0.2 }}
                 />
               </Link>
-              <span
-                className="text-gray-600 cursor-not-allowed relative"
-                title="Coming Soon"
+              <Link
+                href="/pricing"
+                className="text-gray-400 hover:text-white transition-colors relative group"
               >
                 Pricing
-              </span>
+                <motion.span 
+                  className="absolute bottom-0 left-0 h-0.5 bg-emerald-400"
+                  initial={{ width: 0 }}
+                  whileHover={{ width: "100%" }}
+                  transition={{ duration: 0.2 }}
+                />
+              </Link>
               <Link
                 href="#faq"
                 className="text-gray-400 hover:text-white transition-colors relative group"
@@ -365,9 +372,13 @@ export default function HomePage() {
                 >
                   How It Works
                 </Link>
-                <span className="block text-gray-600 cursor-not-allowed py-2">
-                  Pricing <span className="text-xs">(Coming Soon)</span>
-                </span>
+                <Link
+                  href="/pricing"
+                  className="block text-gray-400 hover:text-white transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Pricing
+                </Link>
                 <Link
                   href="#faq"
                   className="block text-gray-400 hover:text-white transition-colors py-2"
@@ -409,10 +420,10 @@ export default function HomePage() {
             <FloatingParticle
               key={i}
               delay={i * 0.5}
-              duration={3 + Math.random() * 2}
-              size={4 + Math.random() * 8}
-              left={`${Math.random() * 100}%`}
-              top={`${Math.random() * 100}%`}
+              duration={3 + ((i * 7 + 3) % 10) / 5}
+              size={4 + ((i * 13 + 5) % 10) * 0.8}
+              left={`${((i * 17 + 11) % 100)}%`}
+              top={`${((i * 23 + 7) % 100)}%`}
             />
           ))}
           
@@ -1005,6 +1016,257 @@ export default function HomePage() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ========== ZERO FEES SECTION ========== */}
+      <section className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Dramatic background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] sm:w-[700px] sm:h-[700px] rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)" }}
+            animate={{ scale: [1, 1.15, 1] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Orbiting rings */}
+          {[280, 360, 440].map((size, i) => (
+            <motion.div
+              key={i}
+              className="absolute top-1/2 left-1/2 rounded-full border border-emerald-500/[0.06]"
+              style={{ width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 30 + i * 15, repeat: Infinity, ease: "linear" }}
+            />
+          ))}
+          {/* Floating dollar signs */}
+          {[
+            { left: "8%", top: "20%", delay: 0 },
+            { left: "85%", top: "15%", delay: 1.5 },
+            { left: "15%", top: "75%", delay: 3 },
+            { left: "80%", top: "70%", delay: 0.8 },
+            { left: "50%", top: "10%", delay: 2.2 },
+            { left: "92%", top: "45%", delay: 1 },
+          ].map((pos, i) => (
+            <motion.div
+              key={i}
+              className="absolute text-emerald-500/10 text-2xl sm:text-3xl font-black select-none"
+              style={{ left: pos.left, top: pos.top }}
+              animate={{ y: [0, -20, 0], opacity: [0.3, 0.8, 0.3], rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 4 + i * 0.5, repeat: Infinity, delay: pos.delay }}
+            >
+              $
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="max-w-5xl mx-auto relative">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex justify-center mb-6"
+          >
+            <motion.div
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/20"
+              animate={{ boxShadow: ["0 0 0px rgba(16,185,129,0)", "0 0 30px rgba(16,185,129,0.15)", "0 0 0px rgba(16,185,129,0)"] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              <motion.div
+                className="w-2 h-2 rounded-full bg-emerald-400"
+                animate={{ scale: [1, 1.5, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+              <span className="text-emerald-400 text-sm font-semibold tracking-wide">Network Expansion Phase</span>
+            </motion.div>
+          </motion.div>
+
+          {/* Massive $0 hero */}
+          <div className="text-center mb-12">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ type: "spring", stiffness: 150, damping: 15 }}
+              className="relative inline-block mb-4"
+            >
+              {/* Glow layers */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+                <div className="text-[120px] sm:text-[160px] lg:text-[200px] font-black text-emerald-500/10 blur-3xl select-none">$0</div>
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+                <div className="text-[120px] sm:text-[160px] lg:text-[200px] font-black text-emerald-400/5 blur-xl select-none">$0</div>
+              </div>
+              {/* Main text */}
+              <motion.span
+                className="relative text-[120px] sm:text-[160px] lg:text-[200px] font-black leading-none bg-gradient-to-b from-white via-emerald-100 to-emerald-500 bg-clip-text text-transparent"
+                animate={{ backgroundPosition: ["0% 0%", "0% 100%", "0% 0%"] }}
+                transition={{ duration: 5, repeat: Infinity }}
+                style={{ backgroundSize: "100% 200%" }}
+              >
+                $0
+              </motion.span>
+            </motion.div>
+
+            {/* Strikethrough comparison */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center justify-center gap-3 mb-4"
+            >
+              <span className="text-gray-600 line-through text-lg">Hidden fees</span>
+              <ArrowRight className="w-4 h-4 text-gray-600" />
+              <span className="text-emerald-400 font-bold text-lg">Zero. Nada. Nothing.</span>
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="text-gray-400 max-w-xl mx-auto leading-relaxed text-base sm:text-lg"
+            >
+              No onboarding fees for merchants. No transaction fees for consumers. We are building the future of payments in Africa — and you can join for free.
+            </motion.p>
+          </div>
+
+          {/* Animated comparison cards */}
+          <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto mb-12">
+            {[
+              {
+                type: "Merchants",
+                icon: Building2,
+                price: "$0",
+                sub: "onboarding",
+                color: "emerald",
+                gradient: "from-emerald-500 to-teal-500",
+                items: [
+                  { text: "Free to register", icon: CheckCircle },
+                  { text: "Free bank settlement", icon: Banknote },
+                  { text: "No hidden charges", icon: Shield },
+                  { text: "Instant setup", icon: Zap },
+                ],
+              },
+              {
+                type: "Consumers",
+                icon: User,
+                price: "$0",
+                sub: "per transaction",
+                color: "teal",
+                gradient: "from-teal-500 to-cyan-500",
+                items: [
+                  { text: "Zero fees to pay", icon: CheckCircle },
+                  { text: "No conversion charges", icon: Banknote },
+                  { text: "Pay with any stablecoin", icon: Shield },
+                  { text: "Expansion phase pricing", icon: Sparkles },
+                ],
+              },
+            ].map((card, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 30, rotateX: 10 }}
+                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 + idx * 0.15, type: "spring" }}
+                whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                className="group relative"
+              >
+                {/* Hover glow */}
+                <div className={`absolute -inset-0.5 bg-gradient-to-r ${card.gradient} rounded-2xl blur opacity-0 group-hover:opacity-40 transition-opacity duration-500`} />
+
+                <div className={`relative bg-gray-900/80 backdrop-blur border border-gray-800 rounded-2xl p-6 group-hover:border-${card.color}-500/40 transition-all overflow-hidden`}>
+                  {/* Corner decoration */}
+                  <div className={`absolute -top-12 -right-12 w-32 h-32 bg-gradient-to-bl ${card.gradient} opacity-[0.07] rounded-full blur-2xl`} />
+
+                  <div className="relative">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="flex items-center gap-3">
+                        <motion.div
+                          className={`w-11 h-11 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center shadow-lg`}
+                          whileHover={{ rotate: [0, -8, 8, 0] }}
+                          transition={{ duration: 0.4 }}
+                        >
+                          <card.icon className="w-5 h-5 text-white" />
+                        </motion.div>
+                        <span className="text-white font-bold">{card.type}</span>
+                      </div>
+                    </div>
+
+                    {/* Price */}
+                    <div className={`p-4 rounded-xl bg-${card.color}-500/5 border border-${card.color}-500/10 mb-5`}>
+                      <div className="flex items-baseline gap-2">
+                        <motion.span
+                          className={`text-5xl font-black bg-gradient-to-r ${card.gradient} bg-clip-text text-transparent`}
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: 0.5 + idx * 0.1, type: "spring" }}
+                        >
+                          {card.price}
+                        </motion.span>
+                        <span className="text-gray-500 text-sm">{card.sub}</span>
+                      </div>
+                    </div>
+
+                    {/* Feature list */}
+                    <div className="space-y-3">
+                      {card.items.map((item, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: -15 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: 0.5 + idx * 0.1 + i * 0.08 }}
+                          className="flex items-center gap-3"
+                        >
+                          <div className={`w-7 h-7 rounded-lg bg-${card.color}-500/10 flex items-center justify-center flex-shrink-0`}>
+                            <item.icon className={`w-3.5 h-3.5 text-${card.color}-400`} />
+                          </div>
+                          <span className="text-sm text-gray-300">{item.text}</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* CTA row */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.6 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-xl hover:shadow-emerald-500/25 transition-all"
+              >
+                View Full Pricing
+                <motion.div animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                  <ArrowRight className="w-4 h-4" />
+                </motion.div>
+              </Link>
+            </motion.div>
+          </motion.div>
+
+          {/* Bottom note */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.7 }}
+            className="text-center text-gray-600 text-xs mt-8"
+          >
+            Future pricing will remain transparent and transaction-based — designed to be cheaper than traditional payment rails.
+          </motion.p>
         </div>
       </section>
 
