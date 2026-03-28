@@ -128,7 +128,7 @@ export default function QRCodePage() {
   return (
     <>
       {/* ========== PRINT VIEW - OPay Inspired with GemRails Branding ========== */}
-      <div className="hidden print:flex print:fixed print:inset-0 print:z-[9999] print:flex-col print:items-center print:justify-start print:min-h-screen print:w-full print:bg-gradient-to-b print:from-emerald-500 print:via-teal-600 print:to-teal-700">
+      <div className="hidden print:flex print:fixed print:inset-0 print:z-9999 print:flex-col print:items-center print:justify-start print:min-h-screen print:w-full print:bg-linear-to-b print:from-emerald-500 print:via-teal-600 print:to-teal-700">
         
         {/* Top Logo Badge */}
         <div className="mt-8 mb-6 w-20 h-20 bg-white rounded-2xl shadow-2xl flex items-center justify-center p-2">
@@ -153,7 +153,7 @@ export default function QRCodePage() {
 
         {/* Business Name Card */}
         <div className="w-[90%] max-w-[600px] bg-white rounded-2xl shadow-xl p-6 mb-6 relative">
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold px-6 py-2 rounded-full uppercase tracking-wider shadow-lg">
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-linear-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold px-6 py-2 rounded-full uppercase tracking-wider shadow-lg">
             Business Name
           </div>
           <p className="text-2xl md:text-3xl font-bold text-emerald-950 text-center uppercase mt-2">
@@ -285,7 +285,7 @@ export default function QRCodePage() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-6 bg-gray-900/50 border border-gray-800 rounded-xl">
               <h3 className="text-lg font-semibold text-white mb-4">More Options</h3>
               <div className="space-y-3">
-                <motion.button onClick={handlePrint} whileHover={{ scale: 1.02, x: 4 }} className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-xl hover:border-emerald-500/50 transition-all">
+                <motion.button onClick={handlePrint} whileHover={{ scale: 1.02, x: 4 }} className="w-full flex items-center justify-between p-3 bg-linear-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-xl hover:border-emerald-500/50 transition-all">
                   <div className="flex items-center gap-3"><Printer className="w-5 h-5 text-emerald-400" /><span className="text-white font-medium">Print QR Code</span></div>
                 </motion.button>
                 <motion.button onClick={() => window.open(paymentUrl, "_blank")} whileHover={{ scale: 1.02, x: 4 }} className="w-full flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-emerald-500/50 transition-all">
