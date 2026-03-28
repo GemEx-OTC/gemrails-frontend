@@ -135,3 +135,15 @@ export const sendBankOtp = async (): Promise<{ message: string }> => {
   const response = await apiClient.post<ApiResponse<{ message: string }>>('/auth/send-bank-otp', {});
   return response.data.data;
 };
+
+// Send phone verification OTP
+export const sendPhoneOtp = async (phone: string): Promise<{ message: string }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string }>>('/enterprise/phone/send-otp', { phoneNumber: phone });
+  return response.data.data;
+};
+
+// Verify phone with OTP
+export const verifyPhoneOtp = async (phone: string, otp: string): Promise<{ message: string; phoneVerified: boolean }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string; phoneVerified: boolean }>>('/enterprise/phone/verify-otp', { phoneNumber: phone, otp });
+  return response.data.data;
+};
