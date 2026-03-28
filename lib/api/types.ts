@@ -31,6 +31,7 @@ export interface User {
   id: string;
   email: string;
   emailVerified?: boolean;
+  phoneVerified?: boolean;
   role?: 'merchant' | 'admin' | 'branch_mod';
   businessName?: string;
   businessCategory?: string;
