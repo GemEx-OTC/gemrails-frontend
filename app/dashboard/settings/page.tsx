@@ -17,11 +17,14 @@ import {
   useBanks, 
   useVerifyBankAccount,
   useSendBankOtp,
-  useChangePassword
+  useChangePassword,
+  useSendPhoneOtp,
+  useVerifyPhoneOtp
 } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
 import { getImageUrl } from "@/lib/utils/image"
 import { BankSelector } from "@/components/bank-selector"
+import { PhoneVerificationModal } from "@/components/phone-verification-modal"
 import { Loader2 } from "lucide-react"
 
 export default function SettingsPage() {
@@ -42,6 +45,8 @@ export default function SettingsPage() {
   const deleteLogoMutation = useDeleteLogo()
   const sendOtpMutation = useSendBankOtp()
   const changePasswordMutation = useChangePassword()
+  const sendPhoneOtpMutation = useSendPhoneOtp()
+  const verifyPhoneOtpMutation = useVerifyPhoneOtp()
 
   // Business form state
   const [businessName, setBusinessName] = useState("")
@@ -63,6 +68,8 @@ export default function SettingsPage() {
   const [otpSending, setOtpSending] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [verifying, setVerifying] = useState(false)
+  const [showPhoneVerificationModal, setShowPhoneVerificationModal] = useState(false)
+  const [pendingBankUpdate, setPendingBankUpdate] = useState<any>(null)
 
   // Security state
   const [currentPassword, setCurrentPassword] = useState("")
@@ -161,6 +168,10 @@ export default function SettingsPage() {
   }
 
   const handleBankChange = () => {
+    if (!user?.phoneVerified) {
+      setShowPhoneVerificationModal(true)
+      return
+    }
     setShowBankChangeModal(true)
     setOtpValue("")
     setOtpError(false)
@@ -210,6 +221,7 @@ export default function SettingsPage() {
       },
     })
   }
+
 
   const handleVerifyOtp = async () => {
     if (otpValue.length !== 6) {
@@ -322,7 +334,7 @@ export default function SettingsPage() {
             <div>
               <label className="block text-sm font-medium text-white mb-3">Business Logo</label>
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center overflow-hidden relative group">
+                <div className="w-20 h-20 rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center overflow-hidden relative group">
                   {businessLogo ? (
                     <img 
                       src={getImageUrl(businessLogo) || undefined} 
@@ -501,8 +513,9 @@ export default function SettingsPage() {
                       type="tel" 
                       value={phone} 
                       onChange={(e) => setPhone(e.target.value)} 
-                      disabled={user?.role === 'branch_mod'}
-                      className={`gemrails-input-icon ${user?.role === 'branch_mod' ? 'bg-gray-800/30' : ''}`} 
+                      disabled={user?.role === 'branch_mod' || !user?.phone}
+                      placeholder={!user?.phone ? "Verify phone via Bank Account setup" : "e.g. 08012345678"}
+                      className={`gemrails-input-icon ${user?.role === 'branch_mod' || !user?.phone ? 'bg-gray-800/30 cursor-not-allowed text-gray-500' : ''}`} 
                     />
                   </div>
                 </div>
@@ -839,6 +852,25 @@ export default function SettingsPage() {
           </>
         )}
       </AnimatePresence>
+        {/* Phone Verification Modal */}
+        <PhoneVerificationModal
+          isOpen={showPhoneVerificationModal}
+          onClose={() => setShowPhoneVerificationModal(false)}
+          onVerified={() => {
+            setShowPhoneVerificationModal(false);
+            refreshUser();
+            if (pendingBankUpdate) {
+              updateBankMutation.mutate(pendingBankUpdate, {
+                onSuccess: () => {
+                  setPendingBankUpdate(null);
+                  toast.success("Bank account updated successfully!");
+                }
+              });
+            }
+          }}
+          initialPhone={phone || user?.phone}
+          userHasPhone={!!user?.phone}
+        />
     </motion.div>
   )
 }
