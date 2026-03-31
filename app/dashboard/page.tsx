@@ -115,7 +115,6 @@ export default function DashboardPage() {
           isProfileComplete={dashboardData?.user?.isProfileComplete ?? !!user?.businessCategory}
           isBankAdded={dashboardData?.user?.isBankAdded ?? (isEnterprise ? true : !!user?.bankAccount?.accountNumber)}
           phoneVerified={dashboardData?.user?.phoneVerified ?? user?.phoneVerified}
-          ninVerified={dashboardData?.user?.ninVerified ?? (user as any)?.ninVerified}
           cacVerified={dashboardData?.user?.cacVerified ?? (user as any)?.cacVerified}
           tier={dashboardData?.user?.tier ?? (user as any)?.tier}
           onCtaClick={(href) => {

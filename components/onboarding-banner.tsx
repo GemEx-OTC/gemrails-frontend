@@ -10,7 +10,6 @@ interface OnboardingBannerProps {
   isBankAdded?: boolean
   userRole?: string
   phoneVerified?: boolean
-  ninVerified?: boolean
   cacVerified?: boolean
   tier?: number
   onCtaClick?: (href: string) => void
@@ -21,7 +20,6 @@ export function OnboardingBanner({
   isBankAdded = false,
   userRole = "merchant",
   phoneVerified = false,
-  ninVerified = false,
   cacVerified = false,
   tier = 1,
   onCtaClick,
@@ -29,7 +27,7 @@ export function OnboardingBanner({
   const [dismissed, setDismissed] = useState(false)
 
   // Don't show if everything is complete or dismissed or if user is a moderator
-  const isFullyVerified = phoneVerified && ninVerified && cacVerified
+  const isFullyVerified = phoneVerified && cacVerified
   if ((isProfileComplete && isBankAdded && isFullyVerified) || dismissed || userRole === "branch_mod") {
     return null
   }
@@ -51,17 +49,10 @@ export function OnboardingBanner({
         href: "/dashboard/settings",
       }
     }
-    if (!ninVerified) {
-      return {
-        title: "Verify your NIN (Tier 2)",
-        description: "Increase your transaction limit to $50,000.",
-        cta: "Verify NIN",
-        href: "/dashboard/settings",
-      }
-    }
+
     if (!cacVerified) {
       return {
-        title: "Verify your CAC (Tier 3)",
+        title: "Verify your CAC (Tier 2)",
         description: "Unlock unlimited transaction volume for your business.",
         cta: "Verify CAC",
         href: "/dashboard/settings",

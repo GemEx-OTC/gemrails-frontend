@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Building2, User, CreditCard, Bell, Shield, Save, Check, Upload, MapPin, Mail, Phone, X, Lock } from "lucide-react"
+import { Building2, User, CreditCard, Bell, Shield, Save, Check, Upload, MapPin, Mail, Phone, X, Lock, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { BUSINESS_CATEGORIES } from "@/lib/constants"
 import { OTPInput } from "@/components/otp-input"
@@ -22,6 +22,7 @@ import {
   useVerifyPhoneOtp
 } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
+import { useVerifyCac } from "@/lib/hooks/use-kyc"
 import { getImageUrl } from "@/lib/utils/image"
 import { BankSelector } from "@/components/bank-selector"
 import { PhoneVerificationModal } from "@/components/phone-verification-modal"
@@ -29,7 +30,7 @@ import { Loader2 } from "lucide-react"
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth()
-  const [activeTab, setActiveTab] = useState<"business" | "bank" | "notifications" | "security">("security")
+  const [activeTab, setActiveTab] = useState<"business" | "bank" | "notifications" | "security" | "verification">("security")
 
   useEffect(() => {
     if (user && user.role !== 'branch_mod') {
@@ -47,6 +48,8 @@ export default function SettingsPage() {
   const changePasswordMutation = useChangePassword()
   const sendPhoneOtpMutation = useSendPhoneOtp()
   const verifyPhoneOtpMutation = useVerifyPhoneOtp()
+  const verifyCacMutation = useVerifyCac()
+  const [cacValue, setCacValue] = useState("")
 
   // Business form state
   const [businessName, setBusinessName] = useState("")
@@ -292,10 +295,27 @@ export default function SettingsPage() {
   const saving = updateProfileMutation.isPending || updateSettingsMutation.isPending
   const uploadingLogo = uploadLogoMutation.isPending || deleteLogoMutation.isPending
 
+  const handleVerifyCac = () => {
+    if (!cacValue.startsWith("RC")) {
+      toast.error("Invalid RC Number. Must start with 'RC'")
+      return
+    }
+    verifyCacMutation.mutate(cacValue, {
+      onSuccess: () => {
+        toast.success("CAC Verified! You are now Tier 2.")
+        refreshUser()
+      },
+      onError: (err: ApiError) => {
+        toast.error(err.message || "Failed to verify CAC")
+      }
+    })
+  }
+
   const tabs = [
     ...(user?.role !== 'branch_mod' ? [
       { id: "business", label: "Business Profile", icon: Building2 },
-      { id: "bank", label: "Bank Account", icon: CreditCard }
+      { id: "bank", label: "Bank Account", icon: CreditCard },
+      { id: "verification", label: "Verification/KYC", icon: ShieldCheck }
     ] : []),
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "security", label: "Security", icon: Shield },
@@ -694,7 +714,72 @@ export default function SettingsPage() {
           </motion.div>
         )}
 
-        {activeTab !== "bank" && (
+        {activeTab === "verification" && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 w-[550px]">
+            <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              <div>
+                <p className="font-semibold text-emerald-100">Tier 2 Verification</p>
+                <p className="text-sm text-emerald-200/70">Complete CAC verification to unlock higher transaction limits.</p>
+              </div>
+            </div>
+
+            <div className="p-6 bg-gray-800/50 border border-gray-700 rounded-xl space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-white">CAC Verification</h3>
+                {user?.cacVerified ? (
+                  <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    Verified
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full flex items-center gap-1">
+                    Pending
+                  </span>
+                )}
+              </div>
+
+              {!user?.cacVerified ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">RC Number</label>
+                    <input
+                      type="text"
+                      value={cacValue}
+                      onChange={(e) => setCacValue(e.target.value)}
+                      placeholder="RC1234567"
+                      className="gemrails-input uppercase"
+                    />
+                  </div>
+                  <motion.button
+                    onClick={handleVerifyCac}
+                    disabled={verifyCacMutation.isPending || !cacValue}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="gemrails-button w-full flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {verifyCacMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      "Verify CAC"
+                    )}
+                  </motion.button>
+                </div>
+              ) : (
+                <div className="p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
+                  <p className="text-sm text-gray-300">
+                    Your business is fully verified. You have access to all enterprise features.
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab !== "bank" && activeTab !== "verification" && (
           <div className="mt-6 pt-6 border-t border-gray-800 flex justify-end">
             <motion.button
               onClick={handleSave}

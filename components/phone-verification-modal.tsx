@@ -34,7 +34,16 @@ export function PhoneVerificationModal({
   const handleSendOtp = async () => {
     setOtpSending(true)
     try {
-      const targetPhone = phone.startsWith("+") ? phone : `+234${phone.replace(/^0/, "")}`
+      // Normalize phone: if it already starts with + or 234, don't double-prepend
+      let targetPhone = phone.trim();
+      if (!targetPhone.startsWith('+')) {
+        if (targetPhone.startsWith('234')) {
+          targetPhone = `+${targetPhone}`;
+        } else {
+          targetPhone = `+234${targetPhone.replace(/^0/, "")}`;
+        }
+      }
+      
       await sendPhoneOtpMutation.mutateAsync(targetPhone)
       setOtpSent(true)
       toast.success("Verification code sent! 📱")
@@ -48,7 +57,15 @@ export function PhoneVerificationModal({
   const handleVerifyOtp = async () => {
     setVerifying(true)
     try {
-      const targetPhone = phone.startsWith("+") ? phone : `+234${phone.replace(/^0/, "")}`
+      let targetPhone = phone.trim();
+      if (!targetPhone.startsWith('+')) {
+        if (targetPhone.startsWith('234')) {
+          targetPhone = `+${targetPhone}`;
+        } else {
+          targetPhone = `+234${targetPhone.replace(/^0/, "")}`;
+        }
+      }
+      
       await verifyPhoneOtpMutation.mutateAsync({ phone: targetPhone, otp: otpValue })
       toast.success("Phone number verified! ✓")
       onVerified()
@@ -61,7 +78,7 @@ export function PhoneVerificationModal({
 
   const maskPhone = (p: string) => {
     if (!p) return ""
-    const cleaned = p.replace(/^\+234/, "")
+    const cleaned = p.replace(/^(\+?234|0)/, "")
     if (cleaned.length < 7) return p
     return `+234 ${cleaned.slice(0, 3)}***${cleaned.slice(-4)}`
   }
@@ -120,8 +137,8 @@ export function PhoneVerificationModal({
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">+234</span>
                       <input
                         type="tel"
-                        value={phone.replace(/^\+234/, "")}
-                        onChange={(e) => setPhone(e.target.value)}
+                        value={phone.replace(/^(\+?234|0)/, "")}
+                        onChange={(e) => setPhone(e.target.value.replace(/\s+/g, ""))}
                         placeholder="8012345678"
                         className="gemrails-input pl-14 w-full"
                       />

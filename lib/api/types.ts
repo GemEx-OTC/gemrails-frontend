@@ -40,6 +40,8 @@ export interface User {
   contactName?: string;
   phone?: string;
   rcNumber?: string;
+  cacVerified?: boolean;
+  kycStatus?: string;
   merchantStatus?: 'pending' | 'active' | 'suspended';
   accountType?: 'merchant' | 'enterprise';
   merchantId?: string;
