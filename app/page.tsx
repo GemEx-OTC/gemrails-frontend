@@ -1061,6 +1061,19 @@ export default function HomePage() {
         </div>
 
         <div className="max-w-5xl mx-auto relative">
+          {/* Section heading */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-8"
+          >
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3">
+              Fee <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Structure</span>
+            </h2>
+            <p className="text-gray-500 text-sm sm:text-base">Simple, transparent pricing — no surprises</p>
+          </motion.div>
+
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1381,10 +1394,10 @@ export default function HomePage() {
               {/* Social Links */}
               <div className="flex gap-4">
                 {[
-                  { icon: Twitter, href: "#" },
-                  { icon: Instagram, href: "#" },
-                  { icon: Linkedin, href: "#" },
-                  { icon: Mail, href: "#" },
+                  { icon: Twitter, href: "https://www.tiktok.com/@gemrails?_r=1&_t=ZN-95C9RhoxVtW" },
+                  { icon: Instagram, href: "https://www.instagram.com/gemrails?igsh=Y2NmaDJ2OWh1M2U1" },
+                  { icon: Linkedin, href: "https://www.linkedin.com/company/gem-rails/" },
+                  { icon: Mail, href: "mailto:Support@gemrails.com" },
                 ].map((social, idx) => (
                   <motion.a
                     key={idx}
