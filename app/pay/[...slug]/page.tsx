@@ -145,7 +145,7 @@ export default function PaymentPage({
     if (paymentStatusData) {
       const { status, cryptoRemaining, overpaymentAmount } = paymentStatusData as any
       
-      if (status === "Settled" || status === "CryptoReceived" || status === "Processing") {
+      if ((status === "Settled" || status === "CryptoReceived" || status === "Processing") && step !== "success" && step !== "receipt") {
         setStep("success")
       } else if (status === "AwaitingRemainder") {
         // If we were in processing, go back to payment to show remainder
@@ -279,6 +279,19 @@ export default function PaymentPage({
   const handleConfirmPayment = async () => {
     if (!transaction) return
     setIsConfirming(true)
+
+    // Demo Mode Simulation
+    if (merchant?.isDemo) {
+      setTimeout(() => {
+        setStep("processing")
+        setTimeout(() => {
+          setStep("success")
+          toast.success("Demo: Payment confirmed!")
+        }, 1500)
+      }, 500)
+      return
+    }
+
     confirmPaymentMutation.mutate(
       { transactionId: transaction.transactionId },
       {
@@ -321,6 +334,20 @@ export default function PaymentPage({
 
     setIsSendingReceipt(true)
     setReceiptStatus("sending")
+
+    // Demo Mode Simulation
+    if (merchant?.isDemo) {
+      setTimeout(() => {
+        toast.success(`Demo: Receipt sent via ${receiptType}!`)
+        setReceiptStatus("sent")
+        setTimeout(() => {
+          setStep("success")
+          setReceiptStatus("idle")
+        }, 2000)
+      }, 1500)
+      return
+    }
+
     try {
       const response = await apiClient.post('/payments/request-receipt', {
         transactionId: transaction?.transactionId,

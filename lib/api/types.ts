@@ -338,6 +338,8 @@ export interface AdminTransaction {
   status: string;
   customerRef?: string;
   payoutAccount?: BankAccount;
+  riskScore?: number;
+  isBadFunds?: boolean;
   timestamp: string;
 }
 
@@ -413,6 +415,12 @@ export interface PlatformSettings {
   platformFee: number;
   merchantIncentive: number;
   minimumPayment: number;
+  revenueWalletAddress?: string;
+  revenueWalletAddressTron?: string;
+  badFundsWalletAddressBsc?: string;
+  badFundsWalletAddressTron?: string;
+  overflowWalletAddressBsc?: string;
+  overflowWalletAddressTron?: string;
 }
 
 // Admin Dashboard Types

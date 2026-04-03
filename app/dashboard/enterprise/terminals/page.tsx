@@ -71,8 +71,8 @@ export default function TerminalsPage() {
 
   const handleAddTerminal = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || !merchantId || !selectedBranch || !bankAccount.accountNumber) {
-      toast.error("Please fill in all required fields")
+    if (!name || !selectedBranch) {
+      toast.error("Please provide a terminal name")
       return
     }
 
@@ -80,8 +80,7 @@ export default function TerminalsPage() {
       { 
         branchId: selectedBranch, 
         name, 
-        merchantId, 
-        bankAccount,
+        bankAccount: bankAccount.accountNumber ? bankAccount : undefined,
       },
       {
         onSuccess: () => {
@@ -226,7 +225,7 @@ export default function TerminalsPage() {
                 New Terminal
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-400">Branch</label>
                   <select
@@ -247,16 +246,6 @@ export default function TerminalsPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Checkout 1"
-                    className="w-full bg-gray-900/60 border border-gray-700 focus:border-emerald-500 text-white px-4 py-3 rounded-xl outline-none"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-400">Unique QR ID (Merchant ID)</label>
-                  <input
-                    type="text"
-                    value={merchantId}
-                    onChange={(e) => setMerchantId(e.target.value)}
-                    placeholder="e.g. lagos-checkout-1"
                     className="w-full bg-gray-900/60 border border-gray-700 focus:border-emerald-500 text-white px-4 py-3 rounded-xl outline-none"
                   />
                 </div>
@@ -313,7 +302,7 @@ export default function TerminalsPage() {
                         {bankAccount.accountName || "Verify account number to see name"}
                       </span>
                       {bankAccount.accountName && (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto shrink-0" />
                       )}
                     </div>
                   </div>
@@ -432,7 +421,7 @@ export default function TerminalsPage() {
                         {bankAccount.accountName || "Verify account number to see name"}
                       </span>
                       {bankAccount.accountName && (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto shrink-0" />
                       )}
                     </div>
                   </div>
@@ -518,10 +507,14 @@ export default function TerminalsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-xs">
-                        <p className="text-white font-medium">{terminal.bankAccount.accountNumber}</p>
-                        <p className="text-gray-500">{terminal.bankAccount.bankName}</p>
-                      </div>
+                      {terminal.bankAccount?.accountNumber ? (
+                        <div className="text-xs">
+                          <p className="text-white font-medium">{terminal.bankAccount.accountNumber}</p>
+                          <p className="text-gray-500">{terminal.bankAccount.bankName}</p>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-600 italic">Not set</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
