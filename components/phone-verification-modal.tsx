@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Phone, X, Check, Loader2 } from "lucide-react"
+import { Phone, X, Check, Loader2, RotateCcw } from "lucide-react"
 import { OTPInput } from "@/components/otp-input"
 import { useSendPhoneOtp, useVerifyPhoneOtp } from "@/lib/hooks/use-auth"
 import { toast } from "sonner"
@@ -14,6 +14,8 @@ interface PhoneVerificationModalProps {
   initialPhone?: string
   userHasPhone: boolean
 }
+
+const RESEND_COOLDOWN = 120 // 2 minutes in seconds
 
 export function PhoneVerificationModal({
   isOpen,
@@ -27,11 +29,30 @@ export function PhoneVerificationModal({
   const [otpValue, setOtpValue] = useState("")
   const [otpSending, setOtpSending] = useState(false)
   const [verifying, setVerifying] = useState(false)
+  const [countdown, setCountdown] = useState(0)
 
   const sendPhoneOtpMutation = useSendPhoneOtp()
   const verifyPhoneOtpMutation = useVerifyPhoneOtp()
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1)
+      }, 1000)
+    }
+    return () => clearInterval(timer)
+  }, [countdown])
+
+  const formatCountdown = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, "0")}`
+  }
+
   const handleSendOtp = async () => {
+    if (countdown > 0) return
+    
     setOtpSending(true)
     try {
       // Normalize phone: if it already starts with + or 234, don't double-prepend
@@ -46,9 +67,13 @@ export function PhoneVerificationModal({
       
       await sendPhoneOtpMutation.mutateAsync(targetPhone)
       setOtpSent(true)
+      setCountdown(RESEND_COOLDOWN) // Start 2-minute countdown
       toast.success("Verification code sent! 📱")
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to send verification code")
+      if (error.response?.data?.error?.code === 'TOO_MANY_REQUESTS') {
+        setCountdown(RESEND_COOLDOWN) // Safety sync
+      }
+      toast.error(error.response?.data?.message || error.response?.data?.error?.message || "Failed to send verification code")
     } finally {
       setOtpSending(false)
     }
@@ -182,15 +207,16 @@ export function PhoneVerificationModal({
                   disabled={verifying}
                 />
 
-                <div className="flex items-center justify-between pt-2">
-                   <button 
-                    onClick={handleSendOtp}
-                    disabled={otpSending}
-                    className="text-sm text-emerald-400 hover:text-emerald-300 font-medium disabled:opacity-50"
-                  >
-                    Resend Code
-                  </button>
-                </div>
+                  <div className="flex items-center justify-between pt-2 w-full">
+                    <button 
+                      onClick={handleSendOtp}
+                      disabled={otpSending || countdown > 0}
+                      className="text-sm text-emerald-400 hover:text-emerald-300 font-medium disabled:opacity-50 flex items-center gap-1.5"
+                    >
+                      <RotateCcw className={`w-3.5 h-3.5 ${otpSending ? 'animate-spin' : ''}`} />
+                      {countdown > 0 ? `Resend Code in ${formatCountdown(countdown)}` : 'Resend Code'}
+                    </button>
+                  </div>
 
                 <motion.button
                   onClick={handleVerifyOtp}

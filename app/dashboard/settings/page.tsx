@@ -50,6 +50,7 @@ export default function SettingsPage() {
   const verifyPhoneOtpMutation = useVerifyPhoneOtp()
   const verifyCacMutation = useVerifyCac()
   const [cacValue, setCacValue] = useState("")
+  const [cacDocument, setCacDocument] = useState<File | null>(null)
 
   // Business form state
   const [businessName, setBusinessName] = useState("")
@@ -115,7 +116,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     if (activeTab === "business") {
       updateProfileMutation.mutate(
-        { businessName, businessCategory, businessAddress, contactName, phone, rcNumber },
+        { businessName, contactName, phone },
         {
           onSuccess: () => {
             toast.success("Business profile updated!")
@@ -300,7 +301,22 @@ export default function SettingsPage() {
       toast.error("Invalid RC Number. Must start with 'RC'")
       return
     }
-    verifyCacMutation.mutate(cacValue, {
+    
+    // We can also validate businessAddress and Category here
+    if (!businessAddress || !businessCategory) {
+      toast.error("Please provide Business Address and Category for Tier 2 verification")
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('rcNumber', cacValue)
+    formData.append('businessAddress', businessAddress)
+    formData.append('businessCategory', businessCategory)
+    if (cacDocument) {
+      formData.append('document', cacDocument)
+    }
+
+    verifyCacMutation.mutate(formData, {
       onSuccess: () => {
         toast.success("CAC Verified! You are now Tier 2.")
         refreshUser()
@@ -423,7 +439,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-white mb-2">Business Name</label>
                 <div className="relative">
@@ -437,64 +453,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">Business Category</label>
-                {user?.role !== 'branch_mod' ? (
-                  <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="gemrails-select">
-                    {BUSINESS_CATEGORIES.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="gemrails-input bg-gray-800/30 flex items-center capitalize">
-                    {BUSINESS_CATEGORIES.find(c => c.value === businessCategory)?.label || businessCategory || "N/A"}
-                  </div>
-                )}
-              </div>
             </div>
-
-            {user?.role !== 'branch_mod' ? (
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">RC Number (Optional)</label>
-                <div className="relative">
-                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="text"
-                    value={rcNumber}
-                    onChange={(e) => setRcNumber(e.target.value)}
-                    placeholder="RC123456"
-                    className="gemrails-input-icon"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 bg-gray-800/30 border border-gray-800/50 rounded-xl">
-                <p className="text-sm text-gray-400">RC Number</p>
-                <p className="text-white font-medium">{rcNumber || "Not Linked"}</p>
-              </div>
-            )}
-
-            {user?.role !== 'branch_mod' ? (
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">Business Address</label>
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-4 w-5 h-5 text-gray-500" />
-                  <textarea
-                    value={businessAddress}
-                    onChange={(e) => setBusinessAddress(e.target.value)}
-                    rows={2}
-                    className="gemrails-input-icon resize-none"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 bg-gray-800/30 border border-gray-800/50 rounded-xl">
-                <p className="text-sm text-gray-400">Business Address</p>
-                <p className="text-white font-medium">{businessAddress || "N/A"}</p>
-              </div>
-            )}
 
             <div className="border-t border-gray-800 pt-6">
               <h3 className="text-lg font-medium text-white mb-4">Contact Information</h3>
@@ -739,34 +698,75 @@ export default function SettingsPage() {
                 )}
               </div>
 
-              {!user?.cacVerified ? (
-                <div className="space-y-4">
-                  <div>
+               {!user?.cacVerified ? (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="col-span-full">
                     <label className="block text-sm font-medium text-white mb-2">RC Number</label>
-                    <input
-                      type="text"
-                      value={cacValue}
-                      onChange={(e) => setCacValue(e.target.value)}
-                      placeholder="RC1234567"
-                      className="gemrails-input uppercase"
+                    <div className="relative">
+                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                      <input
+                        type="text"
+                        value={cacValue}
+                        onChange={(e) => setCacValue(e.target.value)}
+                        placeholder="RC1234567"
+                        className="gemrails-input-icon uppercase"
+                      />
+                    </div>
+                  </div>
+                  <div className="col-span-full">
+                    <label className="block text-sm font-medium text-white mb-2">CAC Document (Optional PDF/IMG Upload)</label>
+                    <div className="relative">
+                      <input 
+                        type="file" 
+                        accept=".pdf,image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setCacDocument(e.target.files[0])
+                          }
+                        }}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">Business Category</label>
+                    <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="gemrails-select">
+                      {BUSINESS_CATEGORIES.map((cat) => (
+                        <option key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">Business Address</label>
+                    <textarea
+                      value={businessAddress}
+                      onChange={(e) => setBusinessAddress(e.target.value)}
+                      rows={2}
+                      placeholder="Physical address"
+                      className="gemrails-input resize-none h-auto py-3"
                     />
                   </div>
-                  <motion.button
-                    onClick={handleVerifyCac}
-                    disabled={verifyCacMutation.isPending || !cacValue}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="gemrails-button w-full flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {verifyCacMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Verifying...
-                      </>
-                    ) : (
-                      "Verify CAC"
-                    )}
-                  </motion.button>
+
+                  <div className="col-span-full pt-4 border-t border-gray-800">
+                    <motion.button
+                      onClick={handleVerifyCac}
+                      disabled={verifyCacMutation.isPending || !cacValue}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="gemrails-button w-full flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {verifyCacMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        "Complete Tier 2 Verification"
+                      )}
+                    </motion.button>
+                  </div>
                 </div>
               ) : (
                 <div className="p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/10">

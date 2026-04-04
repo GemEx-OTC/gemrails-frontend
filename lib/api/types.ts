@@ -41,6 +41,7 @@ export interface User {
   phone?: string;
   rcNumber?: string;
   cacVerified?: boolean;
+  cacDocumentUrl?: string;
   kycStatus?: string;
   merchantStatus?: 'pending' | 'active' | 'suspended';
   accountType?: 'merchant' | 'enterprise';

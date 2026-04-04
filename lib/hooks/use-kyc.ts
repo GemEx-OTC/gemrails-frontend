@@ -6,7 +6,7 @@ import * as kycApi from '@/lib/api/kyc';
 export const useVerifyCac = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (rcNumber: string) => kycApi.verifyCac(rcNumber),
+    mutationFn: (data: FormData) => kycApi.verifyCac(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
