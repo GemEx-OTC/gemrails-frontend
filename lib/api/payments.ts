@@ -12,20 +12,10 @@ import type {
 
 const OTC_API_BASE_URL = process.env.NEXT_PUBLIC_GEMEX_OTC_API_BASE_URL || 'http://localhost:4000';
 
-// Get exchange rate from gemex-otc-api
+// Get exchange rate from gemrails-api (includes bufferAmount and minimumPayment)
 export const getExchangeRate = async (): Promise<ExchangeRate> => {
-  const response = await axios.get<ApiResponse<{
-    USDT_NGN: number;
-    USDC_NGN: number;
-    lastUpdated: string;
-  }>>(`${OTC_API_BASE_URL}/api/v1/settings/exchange-rates`);
-  
-  const data = response.data.data;
-  return {
-    USDT: data.USDT_NGN,
-    USDC: data.USDC_NGN,
-    lastUpdated: data.lastUpdated,
-  };
+  const response = await apiClient.get<ApiResponse<ExchangeRate>>('/payments/rate');
+  return response.data.data;
 };
 
 // Get merchant info

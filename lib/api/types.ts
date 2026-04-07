@@ -220,6 +220,8 @@ export interface NotificationsResponse {
 export interface ExchangeRate {
   USDT: number;
   USDC: number;
+  bufferAmount: number;
+  minimumPayment: number;
   lastUpdated: string;
 }
 

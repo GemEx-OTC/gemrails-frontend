@@ -38,6 +38,8 @@ interface Merchant {
 interface Rates {
   USDT: number
   USDC: number
+  bufferAmount: number
+  minimumPayment: number
   lastUpdated: string
 }
 
