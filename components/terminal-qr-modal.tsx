@@ -72,11 +72,24 @@ export function TerminalQRCodeModal({ terminal, onClose }: TerminalQRCodeModalPr
         </div>
         <div className="w-[90%] max-w-[600px] bg-white rounded-2xl shadow-xl p-6 mb-6 relative">
           <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold px-6 py-2 rounded-full uppercase tracking-wider shadow-lg">
-            Terminal
+            Business
           </div>
           <p className="text-2xl font-bold text-emerald-950 text-center uppercase mt-2">
-            {terminal.name}
+            {user?.businessName || "My Business"}
           </p>
+          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-center gap-4">
+            <div className="text-center">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Branch</p>
+              <p className="text-xl font-black text-emerald-900">
+                {typeof terminal.branchId === 'object' ? terminal.branchId.name : 'Main'}
+              </p>
+            </div>
+            <div className="w-px h-8 bg-gray-200" />
+            <div className="text-center">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Terminal</p>
+              <p className="text-xl font-black text-emerald-900">{terminal.name}</p>
+            </div>
+          </div>
         </div>
         <p className="text-white font-semibold text-xl mb-4">
           Scan to Pay with USDT or USDC
