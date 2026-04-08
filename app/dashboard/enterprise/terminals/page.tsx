@@ -33,7 +33,6 @@ export default function TerminalsPage() {
   const [isAdding, setIsAdding] = useState(false)
   const [editingTerminal, setEditingTerminal] = useState<Terminal | null>(null)
   const [name, setName] = useState("")
-  const [merchantId, setMerchantId] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [qrTerminal, setQrTerminal] = useState<Terminal | null>(null)
   const [bankAccount, setBankAccount] = useState({
@@ -71,8 +70,8 @@ export default function TerminalsPage() {
 
   const handleAddTerminal = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || !selectedBranch || !merchantId) {
-      toast.error("Please provide terminal name and QR ID")
+    if (!name || !selectedBranch) {
+      toast.error("Please provide terminal name")
       return
     }
 
@@ -80,14 +79,12 @@ export default function TerminalsPage() {
       { 
         branchId: selectedBranch, 
         name, 
-        merchantId, 
         bankAccount: bankAccount.accountNumber ? bankAccount : undefined,
       },
       {
         onSuccess: () => {
           toast.success("Terminal added successfully")
           setName("")
-          setMerchantId("")
           setBankAccount({ bankCode: "044", bankName: "Access Bank", accountNumber: "", accountName: "" })
           setIsAdding(false)
         },
@@ -240,7 +237,7 @@ export default function TerminalsPage() {
                     ))}
                   </select>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <label className="text-sm font-medium text-gray-400">Terminal Name</label>
                   <input
                     type="text"
@@ -248,16 +245,6 @@ export default function TerminalsPage() {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Checkout 1"
                     className="w-full bg-gray-900/60 border border-gray-700 focus:border-emerald-500 text-white px-4 py-3 rounded-xl outline-none"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-400">Terminal ID / QR ID</label>
-                  <input
-                    type="text"
-                    value={merchantId}
-                    onChange={(e) => setMerchantId(e.target.value)}
-                    placeholder="e.g. GEM-001"
-                    className="w-full bg-gray-900/60 border border-gray-700 focus:border-emerald-500 text-white px-4 py-3 rounded-xl outline-none uppercase"
                   />
                 </div>
               </div>

@@ -66,7 +66,7 @@ export const enterpriseApi = {
   createTerminal: async (data: { 
     branchId: string; 
     name: string; 
-    merchantId: string; 
+    merchantId?: string; 
     bankAccount: any;
   }) => {
     const response = await apiClient.post('/enterprise/terminals', data);
