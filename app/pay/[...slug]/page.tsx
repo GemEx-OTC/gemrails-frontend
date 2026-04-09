@@ -131,6 +131,13 @@ export default function PaymentPage({
     if (savedName || savedEmail) setSaveDetails(true)
   }, [])
 
+  // Auto-switch network if USDC is selected while TRC20 is active
+  useEffect(() => {
+    if (selectedAsset === 'USDC' && selectedNetwork === 'TRC20') {
+      setSelectedNetwork('BSC')
+    }
+  }, [selectedAsset, selectedNetwork])
+
   // Poll for Payment Status
   const { data: paymentStatusData } = usePaymentStatus(transaction?.transactionId || "", {
     enabled: !!transaction?.transactionId && step !== "success",
@@ -705,7 +712,9 @@ export default function PaymentPage({
                   Select Network
                 </h3>
                 <div className="flex gap-2">
-                  {(["BSC", "TRC20"] as const).map((network) => (
+                  {(["BSC", "TRC20"] as const)
+                    .filter(network => !(selectedAsset === 'USDC' && network === 'TRC20'))
+                    .map((network) => (
                     <motion.button
                       key={network}
                       onClick={() => setSelectedNetwork(network)}
