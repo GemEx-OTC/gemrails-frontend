@@ -106,7 +106,7 @@ export default function PaymentPage({
   const [step, setStep] = useState<PaymentStep>("amount")
   const [nairaAmount, setNairaAmount] = useState("")
   const [selectedAsset, setSelectedAsset] = useState<"USDT" | "USDC">("USDT")
-  const [selectedNetwork, setSelectedNetwork] = useState<"TRC20" | "BSC">("TRC20")
+  const [selectedNetwork, setSelectedNetwork] = useState<"BSC" | "TRC20">("BSC");
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState("")
   const [timeLeft, setTimeLeft] = useState(900)
@@ -170,8 +170,8 @@ export default function PaymentPage({
   
   // Get minimum payment from API - this is the platform's enforced minimum
   // Use a more robust check: if ratesData exists and has minimumPayment property
-  const minPayment = ratesData && typeof (ratesData as any).minimumPayment === 'number' 
-    ? (ratesData as any).minimumPayment 
+  const minPayment = ratesData && typeof (ratesData as any).minimumPayment === 'number'
+    ? (ratesData as any).minimumPayment
     : 5000 // Fallback to default only if API hasn't loaded yet
   const isMinPaymentLoaded = !!ratesData && typeof (ratesData as any).minimumPayment === 'number'
 
@@ -307,9 +307,9 @@ export default function PaymentPage({
         },
         onError: (err: any) => {
           if (err.code === 'NO_DEPOSIT_DETECTED') {
-             toast.error("No deposit detected yet. Please check your wallet or wait a few moments.")
+            toast.error("No deposit detected yet. Please check your wallet or wait a few moments.")
           } else {
-             toast.error(err.message || "Verification failed")
+            toast.error(err.message || "Verification failed")
           }
           setIsConfirming(false)
         },
@@ -387,7 +387,7 @@ export default function PaymentPage({
 
   const handleShareTx = async () => {
     if (!pageRef.current) return
-    
+
     setIsCapturing(true)
     try {
       // Lazy load dom-to-image-more
@@ -460,9 +460,9 @@ export default function PaymentPage({
               className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg ring-2 ring-white/20 overflow-hidden"
             >
               {merchant.businessLogo ? (
-                <img 
-                  src={getImageUrl(merchant.businessLogo) || undefined} 
-                  alt={merchant.businessName} 
+                <img
+                  src={getImageUrl(merchant.businessLogo) || undefined}
+                  alt={merchant.businessName}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     // Hide broken image and show fallback
@@ -705,7 +705,7 @@ export default function PaymentPage({
                   Select Network
                 </h3>
                 <div className="flex gap-2">
-                  {(["TRC20", "BSC"] as const).map((network) => (
+                  {(["BSC", "TRC20"] as const).map((network) => (
                     <motion.button
                       key={network}
                       onClick={() => setSelectedNetwork(network)}
@@ -726,10 +726,11 @@ export default function PaymentPage({
                           <Check className="w-4 h-4 text-emerald-400" />
                         )}
                       </div>
-                      <p className={`text-xs mt-1 ${network === "TRC20" ? "text-emerald-400" : "text-blue-400"
-                        }`}>
-                        {network === "TRC20" ? "Recommended" : "Low fees"}
-                      </p>
+                      {network === "BSC" && (
+                        <p className="text-xs mt-1 text-emerald-400">
+                          Recommended • Low fees
+                        </p>
+                      )}
                     </motion.button>
                   ))}
                 </div>
@@ -808,7 +809,7 @@ export default function PaymentPage({
                         : (transaction?.cryptoAmount || cryptoAmount).toFixed(2)}
                     </p>
                   </div>
-                  
+
                   {(paymentStatusData as any)?.status === 'AwaitingRemainder' && (
                     <div className="mt-2 text-amber-400 text-sm font-medium">
                       Received: {(paymentStatusData as any).cryptoReceived?.toFixed(2)} {selectedAsset}
@@ -1145,7 +1146,7 @@ export default function PaymentPage({
               <div className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-6 shadow-2xl shadow-black/30">
                 <h3 className="text-white font-semibold mb-2 text-center text-xl">Get Your Receipt</h3>
                 <p className="text-gray-400 text-sm mb-6 text-center">Enter your details to receive a professional PDF receipt.</p>
-                
+
                 <div className="space-y-4">
                   {/* Delivery Mode Toggle */}
                   <div className="flex bg-gray-800/50 p-1 rounded-xl border border-gray-700/50">
@@ -1154,11 +1155,10 @@ export default function PaymentPage({
                         setReceiptType("email")
                         setReceiptContact("")
                       }}
-                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                        receiptType === "email" 
-                          ? "bg-emerald-500 text-white shadow-lg" 
-                          : "text-gray-400 hover:text-gray-200"
-                      }`}
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${receiptType === "email"
+                        ? "bg-emerald-500 text-white shadow-lg"
+                        : "text-gray-400 hover:text-gray-200"
+                        }`}
                     >
                       Email
                     </button>
@@ -1167,11 +1167,10 @@ export default function PaymentPage({
                         setReceiptType("whatsapp")
                         setReceiptContact("+234")
                       }}
-                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                        receiptType === "whatsapp" 
-                          ? "bg-emerald-500 text-white shadow-lg" 
-                          : "text-gray-400 hover:text-gray-200"
-                      }`}
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${receiptType === "whatsapp"
+                        ? "bg-emerald-500 text-white shadow-lg"
+                        : "text-gray-400 hover:text-gray-200"
+                        }`}
                     >
                       WhatsApp
                     </button>
@@ -1213,11 +1212,10 @@ export default function PaymentPage({
                         onChange={(e) => setSaveDetails(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                        saveDetails 
-                          ? 'bg-emerald-500 border-emerald-500' 
-                          : 'border-gray-600 group-hover:border-gray-500'
-                      }`}>
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${saveDetails
+                        ? 'bg-emerald-500 border-emerald-500'
+                        : 'border-gray-600 group-hover:border-gray-500'
+                        }`}>
                         {saveDetails && <Check className="w-3 h-3 text-white" />}
                       </div>
                     </div>
