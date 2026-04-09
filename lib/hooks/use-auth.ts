@@ -206,6 +206,24 @@ export const useSendBankOtp = () => {
   });
 };
 
+// Send phone verification OTP
+export const useSendPhoneOtp = () => {
+  return useMutation({
+    mutationFn: (phone: string) => authApi.sendPhoneOtp(phone),
+  });
+};
+
+// Verify phone with OTP
+export const useVerifyPhoneOtp = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { phone: string; otp: string }) => authApi.verifyPhoneOtp(data.phone, data.otp),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+};
+
 // Logout mutation
 export const useLogout = () => {
   const router = useRouter();

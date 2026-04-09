@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner"
 import { PAYMENT_STATUS, FEE_CONFIG } from "@/lib/constants"
 import { OnboardingBanner } from "@/components/onboarding-banner"
+import { PhoneVerificationModal } from "@/components/phone-verification-modal"
 import { useAuth } from "@/context/auth-context"
 import { useDashboard } from "@/lib/hooks/use-dashboard"
 
@@ -35,9 +36,10 @@ const formatTime = (date: Date | string) => {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const { data, isLoading, error } = useDashboard()
   const [timeRange, setTimeRange] = useState<"today" | "week" | "month">("today")
+  const [showPhoneModal, setShowPhoneModal] = useState(false)
 
   useEffect(() => {
     if (error) {
@@ -112,6 +114,16 @@ export default function DashboardPage() {
         <OnboardingBanner
           isProfileComplete={dashboardData?.user?.isProfileComplete ?? !!user?.businessCategory}
           isBankAdded={dashboardData?.user?.isBankAdded ?? (isEnterprise ? true : !!user?.bankAccount?.accountNumber)}
+          phoneVerified={dashboardData?.user?.phoneVerified ?? user?.phoneVerified}
+          cacVerified={dashboardData?.user?.cacVerified ?? (user as any)?.cacVerified}
+          tier={dashboardData?.user?.tier ?? (user as any)?.tier}
+          onCtaClick={(href) => {
+            if (href === "/dashboard/settings" && !(dashboardData?.user?.phoneVerified ?? user?.phoneVerified)) {
+              setShowPhoneModal(true);
+            } else {
+              window.location.href = href;
+            }
+          }}
         />
       )}
 
@@ -218,7 +230,7 @@ export default function DashboardPage() {
               </motion.div>
             </Link>
           </div>
-          <div className="mt-6 p-4 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-xl">
+          <div className="mt-6 p-4 bg-linear-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-xl">
             <p className="text-emerald-400 font-medium mb-1">💰 Merchant Incentive</p>
             <p className="text-sm text-gray-400">
               You earn <span className="text-white font-semibold">₦{FEE_CONFIG.merchantIncentive}</span> bonus on every
@@ -294,6 +306,17 @@ export default function DashboardPage() {
           </div>
         </motion.div>
       </div>
+
+      <PhoneVerificationModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onVerified={() => {
+          setShowPhoneModal(false);
+          refreshUser();
+        }}
+        initialPhone={user?.phone}
+        userHasPhone={!!user?.phone}
+      />
     </motion.div>
   )
 }

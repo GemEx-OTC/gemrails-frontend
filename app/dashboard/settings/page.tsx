@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Building2, User, CreditCard, Bell, Shield, Save, Check, Upload, MapPin, Mail, Phone, X, Lock } from "lucide-react"
+import { Building2, User, CreditCard, Bell, Shield, Save, Check, Upload, MapPin, Mail, Phone, X, Lock, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { BUSINESS_CATEGORIES } from "@/lib/constants"
 import { OTPInput } from "@/components/otp-input"
@@ -17,16 +17,20 @@ import {
   useBanks, 
   useVerifyBankAccount,
   useSendBankOtp,
-  useChangePassword
+  useChangePassword,
+  useSendPhoneOtp,
+  useVerifyPhoneOtp
 } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
+import { useVerifyCac } from "@/lib/hooks/use-kyc"
 import { getImageUrl } from "@/lib/utils/image"
 import { BankSelector } from "@/components/bank-selector"
+import { PhoneVerificationModal } from "@/components/phone-verification-modal"
 import { Loader2 } from "lucide-react"
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth()
-  const [activeTab, setActiveTab] = useState<"business" | "bank" | "notifications" | "security">("security")
+  const [activeTab, setActiveTab] = useState<"business" | "bank" | "notifications" | "security" | "verification">("security")
 
   useEffect(() => {
     if (user && user.role !== 'branch_mod') {
@@ -42,6 +46,11 @@ export default function SettingsPage() {
   const deleteLogoMutation = useDeleteLogo()
   const sendOtpMutation = useSendBankOtp()
   const changePasswordMutation = useChangePassword()
+  const sendPhoneOtpMutation = useSendPhoneOtp()
+  const verifyPhoneOtpMutation = useVerifyPhoneOtp()
+  const verifyCacMutation = useVerifyCac()
+  const [cacValue, setCacValue] = useState("")
+  const [cacDocument, setCacDocument] = useState<File | null>(null)
 
   // Business form state
   const [businessName, setBusinessName] = useState("")
@@ -63,6 +72,8 @@ export default function SettingsPage() {
   const [otpSending, setOtpSending] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [verifying, setVerifying] = useState(false)
+  const [showPhoneVerificationModal, setShowPhoneVerificationModal] = useState(false)
+  const [pendingBankUpdate, setPendingBankUpdate] = useState<any>(null)
 
   // Security state
   const [currentPassword, setCurrentPassword] = useState("")
@@ -105,7 +116,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     if (activeTab === "business") {
       updateProfileMutation.mutate(
-        { businessName, businessCategory, businessAddress, contactName, phone, rcNumber },
+        { businessName, contactName, phone },
         {
           onSuccess: () => {
             toast.success("Business profile updated!")
@@ -161,6 +172,10 @@ export default function SettingsPage() {
   }
 
   const handleBankChange = () => {
+    if (!user?.phoneVerified) {
+      setShowPhoneVerificationModal(true)
+      return
+    }
     setShowBankChangeModal(true)
     setOtpValue("")
     setOtpError(false)
@@ -210,6 +225,7 @@ export default function SettingsPage() {
       },
     })
   }
+
 
   const handleVerifyOtp = async () => {
     if (otpValue.length !== 6) {
@@ -280,10 +296,42 @@ export default function SettingsPage() {
   const saving = updateProfileMutation.isPending || updateSettingsMutation.isPending
   const uploadingLogo = uploadLogoMutation.isPending || deleteLogoMutation.isPending
 
+  const handleVerifyCac = () => {
+    if (!cacValue.startsWith("RC")) {
+      toast.error("Invalid RC Number. Must start with 'RC'")
+      return
+    }
+    
+    // We can also validate businessAddress and Category here
+    if (!businessAddress || !businessCategory) {
+      toast.error("Please provide Business Address and Category for Tier 2 verification")
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('rcNumber', cacValue)
+    formData.append('businessAddress', businessAddress)
+    formData.append('businessCategory', businessCategory)
+    if (cacDocument) {
+      formData.append('document', cacDocument)
+    }
+
+    verifyCacMutation.mutate(formData, {
+      onSuccess: () => {
+        toast.success("CAC Verified! You are now Tier 2.")
+        refreshUser()
+      },
+      onError: (err: ApiError) => {
+        toast.error(err.message || "Failed to verify CAC")
+      }
+    })
+  }
+
   const tabs = [
     ...(user?.role !== 'branch_mod' ? [
       { id: "business", label: "Business Profile", icon: Building2 },
-      { id: "bank", label: "Bank Account", icon: CreditCard }
+      { id: "bank", label: "Bank Account", icon: CreditCard },
+      { id: "verification", label: "Verification/KYC", icon: ShieldCheck }
     ] : []),
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "security", label: "Security", icon: Shield },
@@ -322,7 +370,7 @@ export default function SettingsPage() {
             <div>
               <label className="block text-sm font-medium text-white mb-3">Business Logo</label>
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center overflow-hidden relative group">
+                <div className="w-20 h-20 rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center overflow-hidden relative group">
                   {businessLogo ? (
                     <img 
                       src={getImageUrl(businessLogo) || undefined} 
@@ -391,7 +439,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-white mb-2">Business Name</label>
                 <div className="relative">
@@ -405,64 +453,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">Business Category</label>
-                {user?.role !== 'branch_mod' ? (
-                  <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="gemrails-select">
-                    {BUSINESS_CATEGORIES.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="gemrails-input bg-gray-800/30 flex items-center capitalize">
-                    {BUSINESS_CATEGORIES.find(c => c.value === businessCategory)?.label || businessCategory || "N/A"}
-                  </div>
-                )}
-              </div>
             </div>
-
-            {user?.role !== 'branch_mod' ? (
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">RC Number (Optional)</label>
-                <div className="relative">
-                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="text"
-                    value={rcNumber}
-                    onChange={(e) => setRcNumber(e.target.value)}
-                    placeholder="RC123456"
-                    className="gemrails-input-icon"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 bg-gray-800/30 border border-gray-800/50 rounded-xl">
-                <p className="text-sm text-gray-400">RC Number</p>
-                <p className="text-white font-medium">{rcNumber || "Not Linked"}</p>
-              </div>
-            )}
-
-            {user?.role !== 'branch_mod' ? (
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">Business Address</label>
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-4 w-5 h-5 text-gray-500" />
-                  <textarea
-                    value={businessAddress}
-                    onChange={(e) => setBusinessAddress(e.target.value)}
-                    rows={2}
-                    className="gemrails-input-icon resize-none"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 bg-gray-800/30 border border-gray-800/50 rounded-xl">
-                <p className="text-sm text-gray-400">Business Address</p>
-                <p className="text-white font-medium">{businessAddress || "N/A"}</p>
-              </div>
-            )}
 
             <div className="border-t border-gray-800 pt-6">
               <h3 className="text-lg font-medium text-white mb-4">Contact Information</h3>
@@ -501,8 +492,9 @@ export default function SettingsPage() {
                       type="tel" 
                       value={phone} 
                       onChange={(e) => setPhone(e.target.value)} 
-                      disabled={user?.role === 'branch_mod'}
-                      className={`gemrails-input-icon ${user?.role === 'branch_mod' ? 'bg-gray-800/30' : ''}`} 
+                      disabled={user?.role === 'branch_mod' || !user?.phone}
+                      placeholder={!user?.phone ? "Verify phone via Bank Account setup" : "e.g. 08012345678"}
+                      className={`gemrails-input-icon ${user?.role === 'branch_mod' || !user?.phone ? 'bg-gray-800/30 cursor-not-allowed text-gray-500' : ''}`} 
                     />
                   </div>
                 </div>
@@ -681,7 +673,113 @@ export default function SettingsPage() {
           </motion.div>
         )}
 
-        {activeTab !== "bank" && (
+        {activeTab === "verification" && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 w-[550px]">
+            <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              <div>
+                <p className="font-semibold text-emerald-100">Tier 2 Verification</p>
+                <p className="text-sm text-emerald-200/70">Complete CAC verification to unlock higher transaction limits.</p>
+              </div>
+            </div>
+
+            <div className="p-6 bg-gray-800/50 border border-gray-700 rounded-xl space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-white">CAC Verification</h3>
+                {user?.cacVerified ? (
+                  <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    Verified
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full flex items-center gap-1">
+                    Pending
+                  </span>
+                )}
+              </div>
+
+               {!user?.cacVerified ? (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="col-span-full">
+                    <label className="block text-sm font-medium text-white mb-2">RC Number</label>
+                    <div className="relative">
+                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                      <input
+                        type="text"
+                        value={cacValue}
+                        onChange={(e) => setCacValue(e.target.value)}
+                        placeholder="RC1234567"
+                        className="gemrails-input-icon uppercase"
+                      />
+                    </div>
+                  </div>
+                  <div className="col-span-full">
+                    <label className="block text-sm font-medium text-white mb-2">CAC Document (Optional PDF/IMG Upload)</label>
+                    <div className="relative">
+                      <input 
+                        type="file" 
+                        accept=".pdf,image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setCacDocument(e.target.files[0])
+                          }
+                        }}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">Business Category</label>
+                    <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="gemrails-select">
+                      {BUSINESS_CATEGORIES.map((cat) => (
+                        <option key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">Business Address</label>
+                    <textarea
+                      value={businessAddress}
+                      onChange={(e) => setBusinessAddress(e.target.value)}
+                      rows={2}
+                      placeholder="Physical address"
+                      className="gemrails-input resize-none h-auto py-3"
+                    />
+                  </div>
+
+                  <div className="col-span-full pt-4 border-t border-gray-800">
+                    <motion.button
+                      onClick={handleVerifyCac}
+                      disabled={verifyCacMutation.isPending || !cacValue}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="gemrails-button w-full flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {verifyCacMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        "Complete Tier 2 Verification"
+                      )}
+                    </motion.button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
+                  <p className="text-sm text-gray-300">
+                    Your business is fully verified. You have access to all enterprise features.
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab !== "bank" && activeTab !== "verification" && (
           <div className="mt-6 pt-6 border-t border-gray-800 flex justify-end">
             <motion.button
               onClick={handleSave}
@@ -839,6 +937,25 @@ export default function SettingsPage() {
           </>
         )}
       </AnimatePresence>
+        {/* Phone Verification Modal */}
+        <PhoneVerificationModal
+          isOpen={showPhoneVerificationModal}
+          onClose={() => setShowPhoneVerificationModal(false)}
+          onVerified={() => {
+            setShowPhoneVerificationModal(false);
+            refreshUser();
+            if (pendingBankUpdate) {
+              updateBankMutation.mutate(pendingBankUpdate, {
+                onSuccess: () => {
+                  setPendingBankUpdate(null);
+                  toast.success("Bank account updated successfully!");
+                }
+              });
+            }
+          }}
+          initialPhone={phone || user?.phone}
+          userHasPhone={!!user?.phone}
+        />
     </motion.div>
   )
 }

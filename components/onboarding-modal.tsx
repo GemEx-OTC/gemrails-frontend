@@ -22,7 +22,7 @@ export function OnboardingModal() {
   useEffect(() => {
     // Show modal if user is logged in but missing essential profile info
     // Exempt admins and branch moderators from this flow
-    if (user && user.role !== 'admin' && user.role !== 'branch_mod' && (!user.contactName || !user.rcNumber)) {
+    if (user && user.role !== 'admin' && user.role !== 'branch_mod' && (!user.contactName || !user.phone)) {
       setIsOpen(true)
     }
   }, [user])
@@ -30,7 +30,7 @@ export function OnboardingModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!contactName || !rcNumber || !phone) {
+    if (!contactName || !phone) {
       toast.error("Please fill in all required fields to proceed")
       return
     }
@@ -38,10 +38,7 @@ export function OnboardingModal() {
     updateProfileMutation.mutate(
       {
         contactName,
-        phone,
-        businessCategory,
-        businessAddress,
-        rcNumber
+        phone
       },
       {
         onSuccess: () => {
@@ -114,54 +111,6 @@ export function OnboardingModal() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300 ml-1">RC Number / CAC</label>
-                  <div className="relative group">
-                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-emerald-500 transition-colors" />
-                    <input
-                      type="text"
-                      required
-                      value={rcNumber}
-                      onChange={(e) => setRcNumber(e.target.value)}
-                      placeholder="RC-1234567"
-                      className="w-full bg-gray-900/50 border border-gray-800 focus:border-emerald-500/50 text-white pl-12 pr-4 py-3.5 rounded-xl outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300 ml-1">Business Category</label>
-                  <div className="relative group">
-                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-emerald-500 transition-colors" />
-                    <select
-                      value={businessCategory}
-                      onChange={(e) => setBusinessCategory(e.target.value)}
-                      className="w-full bg-gray-900/50 border border-gray-800 focus:border-emerald-500/50 text-white pl-12 pr-4 py-3.5 rounded-xl outline-none transition-all appearance-none"
-                    >
-                      <option value="">Select Category</option>
-                      <option value="retail">Retail</option>
-                      <option value="ecommerce">E-commerce</option>
-                      <option value="services">Services</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">Business Address</label>
-                <div className="relative group">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-emerald-500 transition-colors" />
-                  <input
-                    type="text"
-                    value={businessAddress}
-                    onChange={(e) => setBusinessAddress(e.target.value)}
-                    placeholder="Physical address"
-                    className="w-full bg-gray-900/50 border border-gray-800 focus:border-emerald-500/50 text-white pl-12 pr-4 py-3.5 rounded-xl outline-none transition-all"
-                  />
-                </div>
-              </div>
 
               <div className="pt-4">
                 <button

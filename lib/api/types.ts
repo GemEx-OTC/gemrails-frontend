@@ -31,6 +31,7 @@ export interface User {
   id: string;
   email: string;
   emailVerified?: boolean;
+  phoneVerified?: boolean;
   role?: 'merchant' | 'admin' | 'branch_mod';
   businessName?: string;
   businessCategory?: string;
@@ -39,6 +40,9 @@ export interface User {
   contactName?: string;
   phone?: string;
   rcNumber?: string;
+  cacVerified?: boolean;
+  cacDocumentUrl?: string;
+  kycStatus?: string;
   merchantStatus?: 'pending' | 'active' | 'suspended';
   accountType?: 'merchant' | 'enterprise';
   merchantId?: string;
@@ -216,6 +220,8 @@ export interface NotificationsResponse {
 export interface ExchangeRate {
   USDT: number;
   USDC: number;
+  bufferAmount: number;
+  minimumPayment: number;
   lastUpdated: string;
 }
 
@@ -335,6 +341,8 @@ export interface AdminTransaction {
   status: string;
   customerRef?: string;
   payoutAccount?: BankAccount;
+  riskScore?: number;
+  isBadFunds?: boolean;
   timestamp: string;
 }
 
@@ -410,6 +418,12 @@ export interface PlatformSettings {
   platformFee: number;
   merchantIncentive: number;
   minimumPayment: number;
+  revenueWalletAddress?: string;
+  revenueWalletAddressTron?: string;
+  badFundsWalletAddressBsc?: string;
+  badFundsWalletAddressTron?: string;
+  overflowWalletAddressBsc?: string;
+  overflowWalletAddressTron?: string;
 }
 
 // Admin Dashboard Types

@@ -146,6 +146,7 @@ export default function TransactionsPage() {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Merchant</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Amount</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Crypto</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Risk Score</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Status</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Time</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Actions</th>
@@ -171,6 +172,16 @@ export default function TransactionsPage() {
                       <td className="px-6 py-4">
                         <div className="text-white">{tx.cryptoAmount} {tx.cryptoAsset}</div>
                         <div className="text-gray-500 text-sm">{tx.network}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {tx.riskScore !== undefined ? (
+                          <div className={`font-medium ${(tx.riskScore || 0) > 0.6 ? "text-red-400" : (tx.riskScore || 0) > 0.3 ? "text-amber-400" : "text-emerald-400"}`}>
+                            {(tx.riskScore * 100).toFixed(1)}%
+                            {tx.isBadFunds && <span className="ml-2 text-[10px] bg-red-500/20 px-1.5 py-0.5 rounded border border-red-500/30 uppercase tracking-tighter">Flagged</span>}
+                          </div>
+                        ) : (
+                          <span className="text-gray-600">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadge(tx.status)}`}>
@@ -282,6 +293,18 @@ export default function TransactionsPage() {
                   <span className="text-gray-400">Time</span>
                   <span className="text-white">{formatDate(selectedTx.timestamp)}</span>
                 </div>
+                
+                {selectedTx.riskScore !== undefined && (
+                   <div className={`flex items-center justify-between p-4 rounded-xl border ${selectedTx.isBadFunds ? "bg-red-500/10 border-red-500/30" : "bg-gray-800/50 border-transparent"}`}>
+                    <span className="text-gray-400">AML Risk Score</span>
+                    <div className="text-right">
+                      <span className={`font-bold ${(selectedTx.riskScore || 0) > 0.6 ? "text-red-400" : (selectedTx.riskScore || 0) > 0.3 ? "text-amber-400" : "text-emerald-400"}`}>
+                        {(selectedTx.riskScore * 100).toFixed(1)}%
+                      </span>
+                      {selectedTx.isBadFunds && <p className="text-[10px] text-red-500 font-bold uppercase mt-1">⚠️ High Risk / Bad Funds</p>}
+                    </div>
+                  </div>
+                )}
                 
                 {selectedTx.status === "Settled" && selectedTx.payoutAccount && (
                   <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2">

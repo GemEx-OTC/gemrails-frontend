@@ -22,6 +22,7 @@ import { SUPPORTED_ASSETS } from "@/lib/constants"
 import { copyToClipboard } from "@/lib/clipboard"
 import { useMerchantInfo, useExchangeRate, useInitiatePayment, usePaymentStatus, useConfirmPayment } from "@/lib/hooks/use-payments"
 import { getImageUrl } from "@/lib/utils/image"
+import apiClient from "@/lib/api/client"
 
 type PaymentStep = "amount" | "crypto" | "payment" | "processing" | "success" | "receipt"
 
@@ -37,6 +38,8 @@ interface Merchant {
 interface Rates {
   USDT: number
   USDC: number
+  bufferAmount: number
+  minimumPayment: number
   lastUpdated: string
 }
 
@@ -70,7 +73,7 @@ const ProgressBar = ({ currentStep }: { currentStep: PaymentStep }) => {
     <div className="mb-6">
       <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
         <motion.div
-          className="h-full bg-gradient-to-r from-emerald-500 to-teal-500"
+          className="h-full bg-linear-to-r from-emerald-500 to-teal-500"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
@@ -116,6 +119,7 @@ export default function PaymentPage({
   const [receiptType, setReceiptType] = useState<"email" | "whatsapp">("email")
   const [receiptContact, setReceiptContact] = useState("")
   const [isSendingReceipt, setIsSendingReceipt] = useState(false)
+  const [receiptStatus, setReceiptStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
   const pageRef = useRef<HTMLDivElement>(null)
 
   // Load saved customer details from localStorage on mount
@@ -142,8 +146,8 @@ export default function PaymentPage({
   useEffect(() => {
     if (paymentStatusData) {
       const { status, cryptoRemaining, overpaymentAmount } = paymentStatusData as any
-
-      if (status === "Settled" || status === "CryptoReceived" || status === "Processing") {
+      
+      if ((status === "Settled" || status === "CryptoReceived" || status === "Processing") && step !== "success" && step !== "receipt") {
         setStep("success")
       } else if (status === "AwaitingRemainder") {
         // If we were in processing, go back to payment to show remainder
@@ -161,8 +165,9 @@ export default function PaymentPage({
   // Parse amount from formatted string (remove commas)
   const amount = parseFloat(nairaAmount.replace(/,/g, '')) || 0
   const exchangeRate = rates ? (rates as any)[selectedAsset] : 0
-  const cryptoAmount = exchangeRate > 0 ? amount / exchangeRate : 0
-
+  const bufferAmount = rates ? (rates as any).bufferAmount || 0 : 0
+  const cryptoAmount = exchangeRate > 0 ? (amount / exchangeRate) + bufferAmount : 0
+  
   // Get minimum payment from API - this is the platform's enforced minimum
   // Use a more robust check: if ratesData exists and has minimumPayment property
   const minPayment = ratesData && typeof (ratesData as any).minimumPayment === 'number'
@@ -276,6 +281,19 @@ export default function PaymentPage({
   const handleConfirmPayment = async () => {
     if (!transaction) return
     setIsConfirming(true)
+
+    // Demo Mode Simulation
+    if (merchant?.isDemo) {
+      setTimeout(() => {
+        setStep("processing")
+        setTimeout(() => {
+          setStep("success")
+          toast.success("Demo: Payment confirmed!")
+        }, 1500)
+      }, 500)
+      return
+    }
+
     confirmPaymentMutation.mutate(
       { transactionId: transaction.transactionId },
       {
@@ -317,27 +335,50 @@ export default function PaymentPage({
     }
 
     setIsSendingReceipt(true)
+    setReceiptStatus("sending")
+
+    // Demo Mode Simulation
+    if (merchant?.isDemo) {
+      setTimeout(() => {
+        toast.success(`Demo: Receipt sent via ${receiptType}!`)
+        setReceiptStatus("sent")
+        setTimeout(() => {
+          setStep("success")
+          setReceiptStatus("idle")
+        }, 2000)
+      }, 1500)
+      return
+    }
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_GEMRAILS_BASE_URL}/payments/request-receipt`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transactionId: transaction?.transactionId,
-          type: receiptType,
-          contact: receiptContact,
-          customerName: customerName.trim(),
-          customerAddress: customerAddress.trim(),
-        }),
+      const response = await apiClient.post('/payments/request-receipt', {
+        transactionId: transaction?.transactionId,
+        type: receiptType,
+        contact: receiptContact,
+        customerName: customerName,
+        customerAddress: customerAddress,
       })
 
-      const result = await response.json()
+      const result = response.data
       if (result.success) {
         toast.success(`Receipt sent via ${receiptType}!`)
-        setStep("success")
+        setReceiptStatus("sent")
+        // Save details if requested
+        if (saveDetails) {
+          localStorage.setItem('gemrails_customer_name', customerName)
+          localStorage.setItem('gemrails_customer_email', receiptType === 'email' ? receiptContact : customerEmail)
+        }
+        // Redirect back to success screen after delay
+        setTimeout(() => {
+          setStep("success")
+          setReceiptStatus("idle")
+        }, 2000)
       } else {
+        setReceiptStatus("error")
         toast.error(result.message || "Failed to send receipt")
       }
     } catch (err) {
+      setReceiptStatus("error")
       toast.error("An error occurred while sending the receipt")
     } finally {
       setIsSendingReceipt(false)
@@ -410,7 +451,7 @@ export default function PaymentPage({
       </div>
 
       {/* Header */}
-      <header className="relative z-10 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-2xl shadow-emerald-500/20">
+      <header className="relative z-10 bg-linear-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-2xl shadow-emerald-500/20">
         <div className="max-w-lg mx-auto px-4 py-5">
           <div className="flex items-center gap-4">
             <motion.div
@@ -448,7 +489,7 @@ export default function PaymentPage({
               <div className="w-5 h-5 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden">
                 <img src="/logo/logo_icon.png" alt="GemRails" className="w-4 h-4" />
               </div>
-              <span className="text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">GemRails</span>
+              <span className="text-xs font-bold bg-linear-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">GemRails</span>
             </div>
           </div>
         </div>
@@ -521,7 +562,7 @@ export default function PaymentPage({
                       whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.95 }}
                       className={`py-3 px-3 rounded-xl text-sm font-semibold transition-all ${amount === amt
-                        ? "bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/40"
+                        ? "bg-linear-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/40"
                         : "bg-gray-800/60 border border-gray-700/80 text-gray-300 hover:border-emerald-500/50 hover:text-white hover:bg-gray-800"
                         }`}
                     >
@@ -540,7 +581,7 @@ export default function PaymentPage({
                     exit={{ opacity: 0, y: -10, height: 0 }}
                     className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-2xl backdrop-blur-xl"
                   >
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <AlertCircle className="w-5 h-5 shrink-0" />
                     <span className="text-sm font-medium">{error}</span>
                   </motion.div>
                 )}
@@ -571,7 +612,7 @@ export default function PaymentPage({
                 disabled={ratesLoading || (isMinPaymentLoaded && amount < minPayment)}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-2xl font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 flex items-center justify-center gap-2"
               >
                 {ratesLoading ? "Loading..." : "Continue"}
                 <ArrowRight className="w-5 h-5" />
@@ -606,7 +647,7 @@ export default function PaymentPage({
               </motion.button>
 
               {/* Amount Summary Card */}
-              <div className="bg-gradient-to-br from-emerald-500/20 via-emerald-500/10 to-teal-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-3xl p-6 text-center shadow-2xl shadow-emerald-500/10 relative overflow-hidden">
+              <div className="bg-linear-to-br from-emerald-500/20 via-emerald-500/10 to-teal-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-3xl p-6 text-center shadow-2xl shadow-emerald-500/10 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.15),transparent_50%)]" />
                 <div className="relative">
                   <p className="text-gray-300 text-sm mb-2 font-medium">You're paying</p>
@@ -701,7 +742,7 @@ export default function PaymentPage({
                 disabled={isLoading}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-2xl font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
               >
                 <Wallet className="w-5 h-5" />
                 Get Payment Address
@@ -755,7 +796,7 @@ export default function PaymentPage({
               </motion.div>
 
               {/* Amount to Send Card */}
-              <div className="bg-gradient-to-br from-emerald-500/20 via-emerald-500/10 to-teal-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-3xl p-8 text-center shadow-2xl shadow-emerald-500/10 relative overflow-hidden">
+              <div className="bg-linear-to-br from-emerald-500/20 via-emerald-500/10 to-teal-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-3xl p-8 text-center shadow-2xl shadow-emerald-500/10 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.2),transparent_50%)]" />
                 <div className="relative">
                   <p className="text-gray-300 text-sm mb-2 font-medium">
@@ -763,9 +804,9 @@ export default function PaymentPage({
                   </p>
                   <div className="flex items-center justify-center gap-2">
                     <p className="text-5xl font-bold text-white">
-                      {(paymentStatusData as any)?.status === 'AwaitingRemainder'
-                        ? (paymentStatusData as any).cryptoRemaining?.toFixed(2)
-                        : cryptoAmount.toFixed(2)}
+                      {(paymentStatusData as any)?.status === 'AwaitingRemainder' 
+                        ? (paymentStatusData as any).cryptoRemaining?.toFixed(2) 
+                        : (transaction?.cryptoAmount || cryptoAmount).toFixed(2)}
                     </p>
                   </div>
 
@@ -835,7 +876,7 @@ export default function PaymentPage({
               {/* Warning Card */}
               <div className="bg-amber-500/10 backdrop-blur-xl border border-amber-500/30 rounded-2xl p-5 shadow-xl shadow-amber-500/10">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
                     <AlertCircle className="w-5 h-5 text-amber-400" />
                   </div>
                   <div>
@@ -864,7 +905,7 @@ export default function PaymentPage({
                 disabled={isConfirming || timeLeft === 0}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-2xl font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
               >
                 <Check className="w-5 h-5" />
                 I've Sent the Payment
@@ -955,7 +996,7 @@ export default function PaymentPage({
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", damping: 12, stiffness: 200 }}
-                    className="w-28 h-28 mx-auto bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-2xl shadow-emerald-500/40 mb-6 relative"
+                    className="w-28 h-28 mx-auto bg-linear-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-2xl shadow-emerald-500/40 mb-6 relative"
                   >
                     <Check className="w-14 h-14 text-white relative z-10" />
                   </motion.div>
@@ -1050,12 +1091,12 @@ export default function PaymentPage({
                   <motion.button
                     onClick={() => {
                       if (transaction?.transactionId) {
-                        window.open(`${process.env.NEXT_PUBLIC_GEMRAILS_BASE_URL}/payments/receipt/${transaction.transactionId}/download`, '_blank');
+                        window.open(`${process.env.NEXT_PUBLIC_GEMRAILS_API_BASE_URL}/api/v1/payments/receipt/${transaction.transactionId}/download`, '_blank');
                       }
                     }}
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
-                    className="py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
+                    className="py-4 rounded-2xl font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
                   >
                     <Download className="w-5 h-5" />
                     Download
@@ -1187,24 +1228,30 @@ export default function PaymentPage({
 
               {/* Submit Button */}
               <motion.button
-                onClick={handleReceiptRequest}
-                disabled={isSendingReceipt || !receiptContact}
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isSendingReceipt ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-5 h-5" />
-                    Send My Receipt
-                  </>
-                )}
-              </motion.button>
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={handleReceiptRequest}
+                  disabled={isSendingReceipt || !receiptContact || receiptStatus === "sent"}
+                  className={`w-full py-4 rounded-2xl font-bold text-white shadow-xl transition-all flex items-center justify-center gap-2 ${
+                    receiptStatus === "sent" 
+                      ? "bg-gray-700 cursor-default" 
+                      : "bg-linear-to-r from-emerald-500 to-teal-500 shadow-emerald-500/25 hover:shadow-emerald-500/40"
+                  }`}
+                >
+                  {isSendingReceipt ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Sending...
+                    </>
+                  ) : receiptStatus === "sent" ? (
+                    <>
+                      <Check className="w-5 h-5" />
+                      Receipt Sent!
+                    </>
+                  ) : (
+                    "Send Receipt"
+                  )}
+                </motion.button>
 
               <div className="flex items-center justify-center gap-4">
                 <button
