@@ -1419,7 +1419,9 @@ export default function HomePage() {
                 {[
                   { name: "Contact Us", href: "/contact" },
                   { name: "Terms & Conditions", href: "/terms" },
-                  { name: "Privacy Policy", href: "/privacy" }
+                  { name: "Privacy Policy", href: "/privacy" },
+                  { name: "AML Policy", href: "/anti-money" },
+                  { name: "Merchant Agreement", href: "/merchant-agreement" }
                 ].map((link, idx) => (
                   <li key={idx}>
                     <Link href={link.href} className="text-gray-400 hover:text-emerald-400 transition-colors relative group">
@@ -1459,8 +1461,11 @@ export default function HomePage() {
             </p>
             <div className="flex items-center gap-6 text-sm text-gray-500">
               <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
+              <Link href="/anti-money" className="hover:text-emerald-400 transition-colors">AML Policy</Link>
+              <Link href="/merchant-agreement" className="hover:text-emerald-400 transition-colors">Merchant Agreement</Link>
               <Link href="/terms" className="hover:text-emerald-400 transition-colors">Terms & Conditions</Link>
               <Link href="/contact" className="hover:text-emerald-400 transition-colors">Contact Us</Link>
+              
             </div>
           </div>
         </div>
