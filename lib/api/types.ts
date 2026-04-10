@@ -343,6 +343,7 @@ export interface AdminTransaction {
   payoutAccount?: BankAccount;
   riskScore?: number;
   isBadFunds?: boolean;
+  amlReportUrl?: string;
   timestamp: string;
 }
 

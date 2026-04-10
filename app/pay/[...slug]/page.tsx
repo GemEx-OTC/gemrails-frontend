@@ -196,11 +196,29 @@ export default function PaymentPage({
   }
 
   useEffect(() => {
-    if (step === "payment" && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
-      return () => clearTimeout(timer)
+    if (step === "payment" && transaction?.expiresAt) {
+      // Calculate initial time immediately
+      const calculateTimeLeft = () => {
+        const expiryTime = new Date(transaction.expiresAt).getTime()
+        const now = Date.now()
+        const diff = Math.floor((expiryTime - now) / 1000)
+        return diff > 0 ? diff : 0
+      }
+
+      setTimeLeft(calculateTimeLeft())
+
+      const timer = setInterval(() => {
+        const remaining = calculateTimeLeft()
+        setTimeLeft(remaining)
+        
+        if (remaining <= 0) {
+          clearInterval(timer)
+        }
+      }, 1000)
+
+      return () => clearInterval(timer)
     }
-  }, [step, timeLeft])
+  }, [step, transaction?.expiresAt])
 
   const formatTime = (seconds: number) =>
     `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`
