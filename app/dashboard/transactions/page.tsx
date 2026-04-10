@@ -119,9 +119,10 @@ export default function TransactionsPage() {
       </div>
 
       <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden">
-        <div className="hidden md:grid grid-cols-4 gap-4 p-4 bg-gray-800/50 border-b border-gray-800 text-sm font-medium text-gray-400">
+        <div className="hidden md:grid grid-cols-5 gap-4 p-4 bg-gray-800/50 border-b border-gray-800 text-sm font-medium text-gray-400">
           <div>TX Reference</div>
           <div>Amount</div>
+          <div>Settlement Bank</div>
           <div>Status</div>
           <div>Date</div>
         </div>
@@ -156,12 +157,24 @@ export default function TransactionsPage() {
                       <span className="text-gray-500">{formatDate(tx.timestamp)}</span>
                     </div>
                   </div>
-                  <div className="hidden md:grid grid-cols-4 gap-4 items-center">
-                    <div className="text-white font-mono text-sm">{tx.transactionId || tx.id}</div>
+                  <div className="hidden md:grid grid-cols-5 gap-4 items-center">
+                    <div className="text-white font-mono text-sm group-hover:text-emerald-400 transition-colors">
+                      {tx.transactionId || tx.id}
+                    </div>
                     <div>
                       <p className="text-white font-medium">
                         {formatCurrency(tx.status === "Settled" ? tx.amount + (tx.incentive || 100) : tx.amount)}
                       </p>
+                    </div>
+                    <div>
+                      {tx.payoutAccount ? (
+                        <div className="text-sm">
+                          <p className="text-white text-xs truncate">{tx.payoutAccount.bankName}</p>
+                          <p className="text-gray-500 text-[10px] font-mono">{tx.payoutAccount.accountNumber}</p>
+                        </div>
+                      ) : (
+                        <span className="text-gray-600 text-sm">—</span>
+                      )}
                     </div>
                     <div>
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusColor}`}>
@@ -281,6 +294,23 @@ export default function TransactionsPage() {
                         </div>
                       )}
                     </div>
+                    {(selectedTxDetails as any).payoutAccount && (
+                      <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2">
+                        <p className="text-[10px] uppercase font-bold tracking-widest text-emerald-500/60">Settlement Destination</p>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-400">Bank Name</span>
+                          <span className="text-white font-medium">{(selectedTxDetails as any).payoutAccount.bankName}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-400">Account Number</span>
+                          <span className="text-white font-mono font-medium">{(selectedTxDetails as any).payoutAccount.accountNumber}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-400">Account Name</span>
+                          <span className="text-white font-medium text-right truncate max-w-[150px]">{(selectedTxDetails as any).payoutAccount.accountName}</span>
+                        </div>
+                      </div>
+                    )}
 
                     {(selectedTxDetails as any).status === "Settled" && (
                       <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">

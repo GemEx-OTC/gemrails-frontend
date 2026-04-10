@@ -160,6 +160,7 @@ export interface Transaction {
   reference?: string;
   walletAddress?: string;
   txHash?: string;
+  payoutAccount?: BankAccount;
   createdAt: string;
   updatedAt: string;
 }
@@ -230,6 +231,9 @@ export interface MerchantInfo {
   businessName: string;
   businessLogo?: string;
   isActive: boolean;
+  type?: 'merchant' | 'terminal';
+  branchName?: string;
+  terminalName?: string;
 }
 
 export interface InitiatePaymentInput {
@@ -323,6 +327,9 @@ export interface AdminMerchantDetails extends AdminMerchant {
     merchantId: string;
     isActive: boolean;
     bankAccount?: BankAccount;
+    type?: 'merchant' | 'terminal';
+    branchName?: string;
+    terminalName?: string;
     createdAt: string;
   }[];
   updatedAt: string;

@@ -148,6 +148,7 @@ export default function TransactionsPage() {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Amount</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Crypto</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Risk Score</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Bank Account</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Status</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Time</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Actions</th>
@@ -182,6 +183,16 @@ export default function TransactionsPage() {
                           </div>
                         ) : (
                           <span className="text-gray-600">—</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {tx.payoutAccount ? (
+                          <div className="text-sm">
+                            <div className="text-white font-medium">{tx.payoutAccount.bankName}</div>
+                            <div className="text-gray-500 font-mono text-[10px]">{tx.payoutAccount.accountNumber}</div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-600 text-sm">—</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -342,7 +353,7 @@ export default function TransactionsPage() {
                   </a>
                 )}
 
-                {selectedTx.status === "Settled" && selectedTx.payoutAccount && (
+                {selectedTx.payoutAccount && (
                   <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2">
                     <p className="text-[10px] uppercase font-bold tracking-widest text-emerald-500/60">Settlement Destination</p>
                     <div className="flex items-center justify-between">

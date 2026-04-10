@@ -33,6 +33,9 @@ interface Merchant {
   merchantId: string
   verified: boolean
   isDemo?: boolean
+  type?: 'merchant' | 'terminal'
+  branchName?: string
+  terminalName?: string
 }
 
 interface Rates {
@@ -507,7 +510,9 @@ export default function PaymentPage({
                 {merchant.verified && (
                   <Shield className="w-4 h-4 text-white" />
                 )}
-                <span className="font-medium">Verified Merchant</span>
+                <span className="font-medium">
+                  {merchant.type === 'terminal' ? 'Verified Enterprise' : 'Verified Merchant'}
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-full border border-gray-200 shadow-lg shadow-black/10">
@@ -1074,11 +1079,25 @@ export default function PaymentPage({
                       <span className="text-white font-semibold">{selectedNetwork}</span>
                     </div>
                     <div className="flex justify-between text-sm py-2 border-b border-gray-800">
-                      <span className="text-gray-400">Merchant</span>
+                      <span className="text-gray-400">
+                        {merchant.type === 'terminal' ? 'Enterprise' : 'Merchant'}
+                      </span>
                       <span className="text-white font-semibold">
                         {merchant.businessName}
                       </span>
                     </div>
+                    {merchant.branchName && (
+                      <div className="flex justify-between text-sm py-2 border-b border-gray-800">
+                        <span className="text-gray-400">Branch</span>
+                        <span className="text-white font-semibold">{merchant.branchName}</span>
+                      </div>
+                    )}
+                    {merchant.terminalName && (
+                      <div className="flex justify-between text-sm py-2 border-b border-gray-800">
+                        <span className="text-gray-400">Terminal</span>
+                        <span className="text-white font-semibold">{merchant.terminalName}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center pt-2">
                       <span className="text-gray-400">Reference</span>
                       <span className="text-emerald-400 font-mono font-bold bg-emerald-500/10 px-3 py-1 rounded-lg">
