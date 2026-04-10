@@ -2,8 +2,8 @@
 
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
 import Link from "next/link"
-import { 
-  ArrowLeft, Mail, MapPin, Phone, Send, MessageSquare, 
+import {
+  ArrowLeft, Mail, MapPin, Phone, Send, MessageSquare,
   Clock, Globe, Zap, CheckCircle, Twitter, Linkedin,
   Instagram, Facebook, ArrowRight, Sparkles, Users,
   HeadphonesIcon, Building2
@@ -31,10 +31,10 @@ const FloatingContactCard = ({ icon: Icon, title, value, delay }: any) => {
   const ref = useRef<HTMLDivElement>(null)
   const x = useMotionValue(0)
   const y = useMotionValue(0)
-  
+
   const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [5, -5]))
   const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-5, 5]))
-  
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!ref.current) return
     const rect = ref.current.getBoundingClientRect()
@@ -43,12 +43,12 @@ const FloatingContactCard = ({ icon: Icon, title, value, delay }: any) => {
     x.set((e.clientX - centerX) / rect.width)
     y.set((e.clientY - centerY) / rect.height)
   }
-  
+
   const handleMouseLeave = () => {
     x.set(0)
     y.set(0)
   }
-  
+
   return (
     <motion.div
       ref={ref}
@@ -94,13 +94,13 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
+
     // Simulate form submission
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     setIsSubmitting(false)
     setSubmitted(true)
-    
+
     // Reset form after 3 seconds
     setTimeout(() => {
       setSubmitted(false)
@@ -139,16 +139,16 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <motion.img 
-                src="/logo/logo_icon.png" 
-                alt="GemRails" 
+              <motion.img
+                src="/logo/logo_icon.png"
+                alt="GemRails"
                 className="w-10 h-10 rounded-xl"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               />
               <span className="text-xl font-bold text-white">GemRails</span>
             </Link>
-            
+
             <Link
               href="/"
               className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
@@ -182,11 +182,11 @@ export default function ContactPage() {
               <MessageSquare className="w-4 h-4" />
               We're Here to Help
             </motion.div>
-            
+
             <h1 className="text-5xl sm:text-6xl font-bold text-white mb-6">
-              Get in <motion.span 
+              Get in <motion.span
                 className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent inline-block"
-                animate={{ 
+                animate={{
                   backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
                 }}
                 transition={{ duration: 5, repeat: Infinity }}
@@ -195,7 +195,7 @@ export default function ContactPage() {
                 Touch
               </motion.span>
             </h1>
-            
+
             <p className="text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto">
               Have questions about our platform? Want to become a merchant? Our team is ready to help you get started with stablecoin payments.
             </p>
@@ -219,7 +219,7 @@ export default function ContactPage() {
               Starting in Nigeria, expanding across the continent
             </p>
           </motion.div>
-          
+
           <InteractiveMap />
         </div>
       </section>
@@ -267,7 +267,7 @@ export default function ContactPage() {
               viewport={{ once: true }}
             >
               <h3 className="text-2xl font-bold text-white mb-6">Send us a Message</h3>
-              
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">
@@ -282,7 +282,7 @@ export default function ContactPage() {
                     placeholder="LAGBAJA"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">
                     Email Address
@@ -296,7 +296,7 @@ export default function ContactPage() {
                     placeholder="lagbaja@example.com"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">
                     Subject
@@ -310,7 +310,7 @@ export default function ContactPage() {
                     placeholder="How can we help?"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">
                     Message
@@ -324,7 +324,7 @@ export default function ContactPage() {
                     placeholder="Tell us more about your inquiry..."
                   />
                 </div>
-                
+
                 <motion.button
                   type="submit"
                   disabled={isSubmitting || submitted}
@@ -445,8 +445,10 @@ export default function ContactPage() {
             </p>
             <div className="flex items-center gap-6 text-sm text-gray-500">
               <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
+              <Link href="/anti-money" className="hover:text-emerald-400 transition-colors">AML Policy</Link>
+              <Link href="/merchant-agreement" className="hover:text-emerald-400 transition-colors">Merchant Agreement</Link>
               <Link href="/terms" className="hover:text-emerald-400 transition-colors">Terms & Conditions</Link>
-              <Link href="/contact" className="hover:text-emerald-400 transition-colors">Contact Us</Link>
+              <Link href="/contact" className="text-emerald-400 font-mediums">Contact Us</Link>
             </div>
           </div>
         </div>
