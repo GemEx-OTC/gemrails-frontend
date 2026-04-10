@@ -306,6 +306,19 @@ export default function TransactionsPage() {
                     </div>
                   </div>
                 )}
+
+                {selectedTx.amlStatus && (
+                  <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
+                    <span className="text-gray-400">Verification Status</span>
+                    <span className={`font-bold capitalize ${
+                      selectedTx.amlStatus === "success" ? "text-emerald-400" : 
+                      selectedTx.amlStatus === "pending" ? "text-amber-400" : 
+                      "text-red-400"
+                    }`}>
+                      {selectedTx.amlStatus}
+                    </span>
+                  </div>
+                )}
                 
                 {selectedTx.amlReportUrl && (
                   <a 

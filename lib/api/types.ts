@@ -344,6 +344,7 @@ export interface AdminTransaction {
   riskScore?: number;
   isBadFunds?: boolean;
   amlReportUrl?: string;
+  amlStatus?: string;
   timestamp: string;
 }
 
