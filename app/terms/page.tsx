@@ -2,8 +2,8 @@
 
 import { motion, useScroll, useTransform } from "framer-motion"
 import Link from "next/link"
-import { 
-  ArrowLeft, FileText, Shield, Scale, AlertCircle, 
+import {
+  ArrowLeft, FileText, Shield, Scale, AlertCircle,
   CheckCircle, Building2, Globe, Lock, Mail, Eye, Download,
   Clock, Users, Zap, BookOpen, ChevronRight, Sparkles
 } from "lucide-react"
@@ -80,8 +80,8 @@ const TableOfContents = ({ sections, activeSection }: { sections: string[]; acti
       <motion.div
         className="bg-gray-900/80 backdrop-blur-xl border border-gray-800 rounded-2xl p-6 shadow-2xl"
         animate={{
-          boxShadow: isSticky 
-            ? "0 20px 60px rgba(16, 185, 129, 0.15)" 
+          boxShadow: isSticky
+            ? "0 20px 60px rgba(16, 185, 129, 0.15)"
             : "0 10px 30px rgba(0, 0, 0, 0.3)"
         }}
       >
@@ -98,7 +98,7 @@ const TableOfContents = ({ sections, activeSection }: { sections: string[]; acti
             <p className="text-xs text-gray-500">Jump to section</p>
           </div>
         </div>
-        
+
         <nav className="space-y-1">
           {sections.map((section, idx) => {
             const isActive = activeSection === `section-${idx + 1}`
@@ -106,11 +106,10 @@ const TableOfContents = ({ sections, activeSection }: { sections: string[]; acti
               <motion.a
                 key={idx}
                 href={`#section-${idx + 1}`}
-                className={`group block text-sm py-2.5 px-3 rounded-xl transition-all relative overflow-hidden ${
-                  isActive
+                className={`group block text-sm py-2.5 px-3 rounded-xl transition-all relative overflow-hidden ${isActive
                     ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 font-semibold"
                     : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-                }`}
+                  }`}
                 whileHover={{ x: 5 }}
                 transition={{ duration: 0.2 }}
               >
@@ -156,17 +155,17 @@ const TableOfContents = ({ sections, activeSection }: { sections: string[]; acti
 }
 
 // Enhanced Section Component with animations
-const Section = ({ 
-  id, 
-  number, 
-  title, 
-  children, 
+const Section = ({
+  id,
+  number,
+  title,
+  children,
   icon: Icon,
   highlight = false
-}: { 
-  id: string; 
-  number: number; 
-  title: string; 
+}: {
+  id: string;
+  number: number;
+  title: string;
   children: React.ReactNode;
   icon?: any;
   highlight?: boolean;
@@ -243,11 +242,11 @@ const Section = ({
 }
 
 // Enhanced Alert Box Component
-const AlertBox = ({ 
-  type = "info", 
-  title, 
-  children 
-}: { 
+const AlertBox = ({
+  type = "info",
+  title,
+  children
+}: {
   type?: "info" | "warning" | "critical" | "success";
   title: string;
   children: React.ReactNode;
@@ -306,7 +305,7 @@ const AlertBox = ({
         }}
         transition={{ duration: 5, repeat: Infinity }}
       />
-      
+
       <motion.div
         animate={{ rotate: [0, 5, -5, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
@@ -372,22 +371,22 @@ export default function TermsPage() {
   // Download PDF function - Simple and reliable approach
   const handleDownloadPDF = () => {
     if (isGeneratingPDF) return
-    
+
     setIsGeneratingPDF(true)
-    
+
     try {
       // Create a new window with just the terms content
       const printWindow = window.open('', '_blank')
-      
+
       if (!printWindow) {
         alert('Please allow pop-ups to download the PDF')
         setIsGeneratingPDF(false)
         return
       }
-      
+
       // Get the terms content
       const termsContent = contentRef.current?.innerHTML || ''
-      
+
       // Create a clean HTML document for printing
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -601,9 +600,9 @@ export default function TermsPage() {
           </body>
         </html>
       `)
-      
+
       printWindow.document.close()
-      
+
     } catch (error) {
       console.error('Error generating PDF:', error)
       alert('Failed to generate PDF. Error: ' + (error as Error).message)
@@ -622,10 +621,10 @@ export default function TermsPage() {
   // Track active section on scroll
   useEffect(() => {
     const handleScroll = () => {
-      const sectionElements = sections.map((_, idx) => 
+      const sectionElements = sections.map((_, idx) =>
         document.getElementById(`section-${idx + 1}`)
       )
-      
+
       const currentSection = sectionElements.findIndex(el => {
         if (!el) return false
         const rect = el.getBoundingClientRect()
@@ -720,16 +719,16 @@ export default function TermsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <motion.img 
-                src="/logo/logo_icon.png" 
-                alt="GemRails" 
+              <motion.img
+                src="/logo/logo_icon.png"
+                alt="GemRails"
                 className="w-10 h-10 rounded-xl"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               />
               <span className="text-xl font-bold text-white">GemRails</span>
             </Link>
-            
+
             <Link
               href="/"
               className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
@@ -772,7 +771,7 @@ export default function TermsPage() {
             </motion.div>
 
             {/* Main Title with Gradient Animation */}
-            <motion.h1 
+            <motion.h1
               className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -873,7 +872,7 @@ export default function TermsPage() {
             {/* Main Content */}
             <div className="lg:col-span-3">
               <div ref={contentRef} className="bg-gray-900/30 border border-gray-800/50 rounded-2xl p-8 sm:p-12 print-content">
-                
+
                 {/* Section 1: Overview */}
                 <Section id="section-1" number={1} title="Overview" icon={FileText}>
                   <p>
@@ -1029,7 +1028,7 @@ export default function TermsPage() {
                   <p>
                     To access certain features of the Gemrails platform, merchants may be required to create and maintain a merchant account. During the onboarding process, merchants agree to provide accurate, current, and complete information.
                   </p>
-                  
+
                   <h3 className="text-lg font-semibold text-white mb-3 mt-6">Account Security</h3>
                   <p>
                     Merchants are responsible for maintaining the confidentiality and security of their account credentials, including login details, API keys, and any other authentication mechanisms.
@@ -1037,7 +1036,7 @@ export default function TermsPage() {
                   <p>
                     Merchants agree to promptly notify Gemrails of any unauthorized access, suspected compromise, or security breach involving their account.
                   </p>
-                  
+
                   <h3 className="text-lg font-semibold text-white mb-3 mt-6">Acceptable Account Use</h3>
                   <p className="font-semibold text-white">Merchants agree not to use the platform for activities involving:</p>
                   <ul className="list-disc list-inside space-y-2 ml-4">
@@ -1047,7 +1046,7 @@ export default function TermsPage() {
                     <li>The sale or distribution of illegal goods or services</li>
                     <li>Any activity that violates applicable financial, commercial, or regulatory laws</li>
                   </ul>
-                  
+
                   <h3 className="text-lg font-semibold text-white mb-3 mt-6">Suspension and Termination</h3>
                   <p>
                     Gemrails reserves the right to suspend or terminate merchant accounts where suspicious activity is detected, Terms are violated, or regulatory obligations require such action.
@@ -1066,12 +1065,12 @@ export default function TermsPage() {
                   <p>
                     Gemrails is not a party to transactions between merchants and their customers and does not assume responsibility for product delivery, refunds, chargebacks, or customer complaints.
                   </p>
-                  
+
                   <h3 className="text-lg font-semibold text-white mb-3 mt-6">Good Faith Resolution</h3>
                   <p>
                     In the event of any dispute between a merchant and Gemrails, both parties agree to first attempt to resolve the matter through good faith negotiations.
                   </p>
-                  
+
                   <h3 className="text-lg font-semibold text-white mb-3 mt-6">Governing Law and Jurisdiction</h3>
                   <p>
                     These Terms shall be governed by and interpreted in accordance with the laws of the Federal Republic of Nigeria.
@@ -1090,28 +1089,28 @@ export default function TermsPage() {
                         Gemrails reserves the right to modify or update these Terms at any time. Continued use of the platform after updates constitutes acceptance of the revised Terms.
                       </p>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-2">Force Majeure</h3>
                       <p>
                         Gemrails shall not be liable for delays or failures resulting from events beyond its reasonable control, including natural disasters, government actions, network outages, or cyberattacks.
                       </p>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-2">Independent Parties</h3>
                       <p>
                         Nothing in these Terms creates any partnership, joint venture, employment, or agency relationship between Gemrails and any merchant.
                       </p>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-2">Severability</h3>
                       <p>
                         If any provision is determined to be invalid or unenforceable, the remaining provisions shall remain in full force and effect.
                       </p>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-2">Entire Agreement</h3>
                       <p>
@@ -1127,17 +1126,17 @@ export default function TermsPage() {
                   <p>
                     Gemrails provides digital asset payment infrastructure services to businesses operating within Africa.
                   </p>
-                  
+
                   <h3 className="text-lg font-semibold text-white mb-3 mt-6">Initial Operating Jurisdiction</h3>
                   <p>
                     Gemrails currently launches and operates its services primarily within the Federal Republic of Nigeria. Services are provided in accordance with applicable Nigerian laws and regulations.
                   </p>
-                  
+
                   <h3 className="text-lg font-semibold text-white mb-3 mt-6">Expansion Across Africa</h3>
                   <p>
                     Gemrails intends to expand services to additional African jurisdictions over time, subject to regulatory approval, banking partnerships, and operational readiness.
                   </p>
-                  
+
                   <h3 className="text-lg font-semibold text-white mb-3 mt-6">Compliance with Local Laws</h3>
                   <p>
                     Merchants are responsible for ensuring their use of the services complies with all applicable laws in the jurisdictions where they operate.
@@ -1150,12 +1149,12 @@ export default function TermsPage() {
                   <p>
                     By creating a merchant account or agreeing to these Terms, you consent to receive agreements, disclosures, and notices from Gemrails electronically through the platform, email, or website postings.
                   </p>
-                  
+
                   <h3 className="text-lg font-semibold text-white mb-3 mt-6">Electronic Signatures</h3>
                   <p>
                     Electronic signatures provided through the Gemrails platform have the same legal effect as handwritten signatures. By clicking "accept" or "agree," you acknowledge this constitutes a legally binding electronic signature.
                   </p>
-                  
+
                   <h3 className="text-lg font-semibold text-white mb-3 mt-6">Record Retention</h3>
                   <p>
                     Merchants are responsible for retaining copies of electronic communications and agreements. Gemrails may also maintain records in accordance with applicable laws.
@@ -1198,7 +1197,9 @@ export default function TermsPage() {
             </p>
             <div className="flex items-center gap-6 text-sm text-gray-500">
               <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-emerald-400 transition-colors">Terms & Conditions</Link>
+              <Link href="/anti-money" className="hover:text-emerald-400 transition-colors">AML Policy</Link>
+              <Link href="/merchant-agreement" className="hover:text-emerald-400 transition-colors">Merchant Agreement</Link>
+              <Link href="/terms" className="text-emerald-400 font-mediums">Terms & Conditions</Link>
               <Link href="/contact" className="hover:text-emerald-400 transition-colors">Contact Us</Link>
             </div>
           </div>
