@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { PAYMENT_STATUS, FEE_CONFIG } from "@/lib/constants"
-import { OnboardingBanner } from "@/components/onboarding-banner"
+import { SetupGuideWidget } from "@/components/setup-guide-widget"
 import { PhoneVerificationModal } from "@/components/phone-verification-modal"
 import { useAuth } from "@/context/auth-context"
 import { useDashboard } from "@/lib/hooks/use-dashboard"
@@ -109,21 +109,15 @@ export default function DashboardPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-      {/* Onboarding Banner */}
+      {/* Setup Guide Widget */}
       {!isBranchMod && (
-        <OnboardingBanner
-          isProfileComplete={dashboardData?.user?.isProfileComplete ?? !!user?.businessCategory}
-          isBankAdded={dashboardData?.user?.isBankAdded ?? (isEnterprise ? true : !!user?.bankAccount?.accountNumber)}
+        <SetupGuideWidget
+          userRole={user?.role}
+          accountType={user?.accountType}
           phoneVerified={dashboardData?.user?.phoneVerified ?? user?.phoneVerified}
+          bankAdded={dashboardData?.user?.isBankAdded ?? (isEnterprise ? true : !!user?.bankAccount?.accountNumber)}
           cacVerified={dashboardData?.user?.cacVerified ?? (user as any)?.cacVerified}
           tier={dashboardData?.user?.tier ?? (user as any)?.tier}
-          onCtaClick={(href) => {
-            if (href === "/dashboard/settings" && !(dashboardData?.user?.phoneVerified ?? user?.phoneVerified)) {
-              setShowPhoneModal(true);
-            } else {
-              window.location.href = href;
-            }
-          }}
         />
       )}
 

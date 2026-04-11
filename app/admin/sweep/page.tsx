@@ -93,7 +93,7 @@ export default function SweepPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-8 rounded-[2rem] bg-gradient-to-br from-emerald-500/20 to-teal-500/5 border border-emerald-500/20 shadow-2xl shadow-emerald-500/5 relative overflow-hidden group"
+              className="p-8 md:p-12 rounded-4xl bg-linear-to-br from-emerald-500/10 via-teal-500/5 to-gray-900 border border-emerald-500/20 relative overflow-hidden group"
             >
               <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Database className="w-24 h-24" />
