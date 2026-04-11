@@ -159,6 +159,88 @@ export default function SweepPage() {
             </motion.div>
           </div>
 
+          {stats?.wallets && stats.wallets.length > 0 && (
+            <div className="bg-gray-900 border border-gray-800 rounded-[2.5rem] overflow-hidden shadow-2xl mb-8">
+              <div className="px-10 py-8 border-b border-gray-800 flex items-center justify-between bg-gray-950/20">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                    <Database className="w-6 h-6 text-emerald-500" />
+                  </div>
+                  <h2 className="text-2xl font-black text-white tracking-tight">Wallets Awaiting Sweep</h2>
+                </div>
+                <div className="px-4 py-2 rounded-xl bg-gray-800/50 border border-gray-700">
+                  <span className="text-xs font-bold text-gray-400">
+                    <span className="text-emerald-500">{stats.wallets.length}</span> WALLETS
+                  </span>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-gray-950/40">
+                      <th className="px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Merchant / Type</th>
+                      <th className="px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Asset Network</th>
+                      <th className="px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Hot Wallet</th>
+                      <th className="px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 text-right">Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800/50">
+                    {stats.wallets.map((wallet: any, idx: number) => (
+                      <motion.tr
+                        key={wallet.transactionId}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.02 }}
+                        className="hover:bg-gray-800/20 transition-all group"
+                      >
+                        <td className="px-10 py-6">
+                          <div className="flex flex-col">
+                            <span className="font-black text-white text-base">{wallet.merchantName}</span>
+                            <span className={`text-[10px] font-black uppercase ${wallet.accountType === 'enterprise' ? 'text-amber-500' : 'text-blue-500'}`}>
+                              {wallet.accountType || 'Merchant'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-10 py-6">
+                           <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center font-black text-xs text-white group-hover:border-emerald-500/30 transition-colors">
+                              {wallet.asset.substring(0, 3)}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-black text-white text-sm">{wallet.asset}</span>
+                              <span className={`text-[10px] font-black uppercase ${wallet.network === 'BSC' ? 'text-yellow-500' : 'text-red-500'}`}>{wallet.network}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-10 py-6">
+                           <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-lg bg-gray-800/50 border border-gray-700">
+                              <Database className="w-3 h-3 text-gray-400" />
+                            </div>
+                            <span className="text-xs font-mono text-emerald-400/80 truncate max-w-[200px]">
+                              {wallet.hotWallet}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-10 py-6 text-right">
+                          <div className="flex flex-col items-end">
+                            <span className="text-sm font-black text-white mb-1">
+                              {wallet.amount.toFixed(6)}
+                            </span>
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">
+                              {formatDistanceToNow(new Date(wallet.createdAt), { addSuffix: true })}
+                            </span>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           <div className="bg-gray-900 border border-gray-800 rounded-[2.5rem] overflow-hidden shadow-2xl">
             <div className="px-10 py-8 border-b border-gray-800 flex items-center justify-between bg-gray-950/20">
               <div className="flex items-center gap-4">
