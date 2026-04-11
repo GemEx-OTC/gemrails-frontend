@@ -6,6 +6,9 @@ import { Search, Download, CheckCircle, Clock, AlertCircle, XCircle, X, ChevronL
 import { toast } from "sonner"
 import { PAYMENT_STATUS } from "@/lib/constants"
 import { useTransactions, useTransaction } from "@/lib/hooks/use-dashboard"
+import { DateFilter } from "@/components/date-filter"
+import { downloadCSV, formatTransactionsForExport } from "@/lib/utils/export"
+import { ChevronDown, Filter } from "lucide-react"
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(amount)
@@ -33,6 +36,9 @@ export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
 
@@ -41,6 +47,8 @@ export default function TransactionsPage() {
     limit: 20,
     status: statusFilter,
     search: debouncedSearch,
+    startDate,
+    endDate,
   })
 
   const { data: selectedTxDetails, isLoading: detailsLoading } = useTransaction(selectedTxId || "")
@@ -57,8 +65,18 @@ export default function TransactionsPage() {
   }, [searchQuery])
 
   const transactions = (data as any)?.transactions || []
-  const stats = (data as any)?.stats || { totalSettled: 0, totalIncentives: 0, totalTransactions: 0, successRate: 0 }
+  const stats = (data as any)?.stats || { totalSettled: 0, totalIncentives: 0, totalTransactions: 0, settledCount: 0 }
   const pagination = (data as any)?.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 }
+
+  const handleExportCSV = () => {
+    if (transactions.length === 0) {
+      toast.error("No transactions to export")
+      return
+    }
+    const exportData = formatTransactionsForExport(transactions)
+    downloadCSV(exportData, `transactions_${new Date().toISOString().split('T')[0]}`)
+    toast.success("CSV export started")
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -67,7 +85,12 @@ export default function TransactionsPage() {
           <h1 className="text-2xl md:text-3xl font-bold text-white">Transactions</h1>
           <p className="text-gray-400 mt-1">View and manage your payment history</p>
         </div>
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="gemrails-button-outline flex items-center gap-2">
+        <motion.button 
+          whileHover={{ scale: 1.02 }} 
+          whileTap={{ scale: 0.98 }} 
+          onClick={handleExportCSV}
+          className="gemrails-button-outline flex items-center gap-2"
+        >
           <Download className="w-5 h-5" /> Export CSV
         </motion.button>
       </div>
@@ -86,8 +109,8 @@ export default function TransactionsPage() {
           <p className="text-xl font-bold text-white">{stats.totalTransactions}</p>
         </div>
         <div className="p-4 bg-gray-900/50 border border-gray-800 rounded-xl">
-          <p className="text-sm text-gray-400 mb-1">Success Rate</p>
-          <p className="text-xl font-bold text-white">{Math.round(stats.successRate)}%</p>
+          <p className="text-sm text-gray-400 mb-1">Settlements</p>
+          <p className="text-xl font-bold text-white">{stats.settledCount}</p>
         </div>
       </div>
 
@@ -102,21 +125,54 @@ export default function TransactionsPage() {
             className="gemrails-input-icon"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value)
-            setPage(1)
-          }}
-          className="gemrails-select w-full sm:w-auto"
-        >
-          <option value="all">All Status</option>
-          <option value="Settled">Settled</option>
-          <option value="Processing">Processing</option>
-          <option value="AwaitingCrypto">Awaiting Crypto</option>
-          <option value="Failed">Failed</option>
-        </select>
+        
+        <DateFilter 
+          startDate={startDate}
+          endDate={endDate}
+          onStartChange={(d) => { setStartDate(d); setPage(1) }}
+          onEndChange={(d) => { setEndDate(d); setPage(1) }}
+          onClear={() => { setStartDate(""); setEndDate(""); setPage(1) }}
+        />
+
+        <div className="relative">
+          <button
+            onClick={() => setFilterOpen(!filterOpen)}
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all w-full sm:w-auto ${
+              statusFilter !== "all"
+                ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
+                : "bg-gray-900 border-gray-800 text-gray-400 hover:text-white"
+            }`}
+          >
+            <Filter className="w-4 h-4" />
+            {statusFilter === "all" ? "All Status" : statusFilter}
+            <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen ? "rotate-180" : ""}`} />
+          </button>
+          
+          <AnimatePresence>
+            {filterOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute right-0 top-full mt-2 w-48 bg-gray-900 border border-gray-800 rounded-xl shadow-xl z-20 overflow-hidden"
+              >
+                {["all", "Settled", "Processing", "AwaitingCrypto"].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => { setStatusFilter(status); setFilterOpen(false); setPage(1) }}
+                    className={`w-full px-4 py-3 text-left text-sm transition-all ${
+                      statusFilter === status ? "bg-emerald-500/20 text-emerald-400" : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                    }`}
+                  >
+                    {status === "all" ? "All Status" : status}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
+      {filterOpen && <div className="fixed inset-0 z-10" onClick={() => setFilterOpen(false)} />}
 
       <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden">
         <div className="hidden md:grid grid-cols-5 gap-4 p-4 bg-gray-800/50 border-b border-gray-800 text-sm font-medium text-gray-400">
@@ -236,7 +292,7 @@ export default function TransactionsPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-2xl bg-gray-900 border border-gray-800 rounded-3xl overflow-hidden max-h-[90vh] overflow-y-auto"
             >
               {detailsLoading || !selectedTxDetails ? (
                 <div className="p-12 flex justify-center">
@@ -244,100 +300,97 @@ export default function TransactionsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between p-4 border-b border-gray-800">
-                    <h3 className="text-lg font-semibold text-white">Transaction Details</h3>
-                    <button onClick={() => setSelectedTxId(null)} className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg">
+                  <div className="flex items-center justify-between p-6 border-b border-gray-800 bg-gray-800/20">
+                    <div>
+                      <h3 className="text-xl font-bold text-white tracking-tight">Transaction Details</h3>
+                      <p className="text-gray-500 text-xs mt-1">Confirmed settlement summary</p>
+                    </div>
+                    <button onClick={() => setSelectedTxId(null)} className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-all">
                       <X className="w-5 h-5" />
                     </button>
                   </div>
-                  <div className="p-4 space-y-4">
-                    <div className="flex items-center justify-center">
-                      {(() => {
+                  
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2 flex flex-col items-center justify-center py-6 bg-linear-to-b from-gray-800/50 to-transparent rounded-2xl border border-gray-800/50 mb-2">
+                       {(() => {
                         const txDetails = selectedTxDetails as any
                         const StatusIcon = statusIcons[txDetails.status as keyof typeof statusIcons] || statusIcons.Initiated
                         const statusColor = statusColors[txDetails.status as keyof typeof statusColors] || statusColors.Initiated
                         return (
-                          <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${statusColor}`}>
-                            <StatusIcon className="w-5 h-5" />
+                          <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-current/20 mb-4 ${statusColor}`}>
+                            <StatusIcon className="w-4 h-4" />
                             {PAYMENT_STATUS[txDetails.status as keyof typeof PAYMENT_STATUS]?.label || txDetails.status}
                           </span>
                         )
                       })()}
-                    </div>
-                    <div className="text-center py-4">
-                      <p className="text-3xl font-bold text-white">{formatCurrency((selectedTxDetails as any).amount)}</p>
+                      <p className="text-4xl font-black text-white">{formatCurrency((selectedTxDetails as any).amount)}</p>
                       {(selectedTxDetails as any).status === "Settled" && (
-                        <p className="text-emerald-400 mt-1">+₦{(selectedTxDetails as any).incentive} incentive bonus</p>
+                        <p className="text-emerald-400 text-sm font-bold mt-2 flex items-center gap-1.5">
+                          <CheckCircle className="w-4 h-4" /> +₦{(selectedTxDetails as any).incentive} settlement bonus
+                        </p>
                       )}
                     </div>
-                    <div className="space-y-3 p-4 bg-gray-800/50 rounded-xl">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">TX Reference</span>
-                        <span className="text-white font-mono">{(selectedTxDetails as any).transactionId || (selectedTxDetails as any).id}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Initiated</span>
-                        <span className="text-white">
-                          {formatDate((selectedTxDetails as any).createdAt || (selectedTxDetails as any).timestamp)}
-                        </span>
-                      </div>
-                      {(selectedTxDetails as any).settledAt && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Settled</span>
-                          <span className="text-white">{formatDate((selectedTxDetails as any).settledAt)}</span>
-                        </div>
-                      )}
-                      {(selectedTxDetails as any).failReason && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Failure Reason</span>
-                          <span className="text-red-400">{(selectedTxDetails as any).failReason}</span>
-                        </div>
-                      )}
+
+                    <div className="p-4 bg-gray-800/40 border border-gray-800/50 rounded-2xl">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">TX Reference</p>
+                      <p className="text-white font-mono font-bold text-sm tracking-tighter">{(selectedTxDetails as any).transactionId || (selectedTxDetails as any).id}</p>
                     </div>
+
+                    <div className="p-4 bg-gray-800/40 border border-gray-800/50 rounded-2xl">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">Initiated Date</p>
+                      <p className="text-white font-bold text-sm">
+                        {formatDate((selectedTxDetails as any).createdAt || (selectedTxDetails as any).timestamp)}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-gray-800/40 border border-gray-800/50 rounded-2xl">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/60 mb-2">Transfer Amount</p>
+                      <p className="text-white font-bold">{formatCurrency((selectedTxDetails as any).amount)}</p>
+                    </div>
+
+                    <div className="p-4 bg-gray-800/40 border border-gray-800/50 rounded-2xl">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/60 mb-2">Merchant Incentive</p>
+                      <p className="text-emerald-400 font-bold">{formatCurrency((selectedTxDetails as any).merchantIncentive || (selectedTxDetails as any).incentive || 0)}</p>
+                    </div>
+
                     {(selectedTxDetails as any).payoutAccount && (
-                      <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2">
-                        <p className="text-[10px] uppercase font-bold tracking-widest text-emerald-500/60">Settlement Destination</p>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400">Bank Name</span>
-                          <span className="text-white font-medium">{(selectedTxDetails as any).payoutAccount.bankName}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400">Account Number</span>
-                          <span className="text-white font-mono font-medium">{(selectedTxDetails as any).payoutAccount.accountNumber}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400">Account Name</span>
-                          <span className="text-white font-medium text-right truncate max-w-[150px]">{(selectedTxDetails as any).payoutAccount.accountName}</span>
+                      <div className="md:col-span-2 p-5 bg-linear-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 rounded-2xl mt-2">
+                        <p className="text-[10px] uppercase font-black tracking-widest text-emerald-500/60 mb-4">Payout Account Details</p>
+                        <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+                          <div>
+                            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Bank</p>
+                            <p className="text-white font-bold text-sm">{(selectedTxDetails as any).payoutAccount.bankName}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Account Number</p>
+                            <p className="text-white font-mono font-bold text-sm">{(selectedTxDetails as any).payoutAccount.accountNumber}</p>
+                          </div>
+                          <div className="col-span-2 border-t border-emerald-500/10 pt-3">
+                            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Recipient Name</p>
+                            <p className="text-white font-bold text-sm truncate">{(selectedTxDetails as any).payoutAccount.accountName}</p>
+                          </div>
                         </div>
                       </div>
                     )}
 
-                    {(selectedTxDetails as any).status === "Settled" && (
-                      <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                        <p className="text-emerald-400 font-medium mb-2">Settlement Breakdown</p>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Original Amount</span>
-                            <span className="text-white">{formatCurrency((selectedTxDetails as any).amount)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Merchant Incentive</span>
-                            <span className="text-emerald-400">
-                              +{formatCurrency((selectedTxDetails as any).merchantIncentive || (selectedTxDetails as any).incentive)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between pt-2 border-t border-emerald-500/20">
-                            <span className="text-white font-medium">Total Received</span>
-                            <span className="text-white font-bold">
-                              {formatCurrency(
-                                (selectedTxDetails as any).amount +
-                                  ((selectedTxDetails as any).merchantIncentive || (selectedTxDetails as any).incentive)
-                              )}
-                            </span>
-                          </div>
+                    {(selectedTxDetails as any).failReason && (
+                      <div className="md:col-span-2 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3 mt-2">
+                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-red-500 font-bold text-xs uppercase tracking-wider">Decline Reason</p>
+                          <p className="text-red-400/90 text-sm mt-1">{(selectedTxDetails as any).failReason}</p>
                         </div>
                       </div>
                     )}
+                  </div>
+                  
+                  <div className="p-6 pt-0">
+                    <button
+                      onClick={() => setSelectedTxId(null)}
+                      className="w-full py-3 rounded-xl font-bold text-gray-400 hover:text-white bg-gray-800/50 hover:bg-gray-800 border border-gray-800 transition-all uppercase tracking-widest text-xs"
+                    >
+                      Close Summary
+                    </button>
                   </div>
                 </>
               )}

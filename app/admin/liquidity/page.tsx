@@ -172,7 +172,7 @@ export default function LiquidityPage() {
                 <span className="text-sm font-medium text-purple-400">OTC Payouts</span>
               </div>
               <p className="text-3xl font-bold text-white">{stats ? formatCurrency(stats.totalDisbursedOTC) : "—"}</p>
-              <p className="text-sm text-purple-400/70 mt-1">From GemEx OTC</p>
+              <p className="text-sm text-purple-400/70 mt-1">From GemOTC</p>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/30">
@@ -181,7 +181,7 @@ export default function LiquidityPage() {
                 <span className="text-sm font-medium text-blue-400">Rails Payouts</span>
               </div>
               <p className="text-3xl font-bold text-white">{stats ? formatCurrency(stats.totalDisbursedRails) : "—"}</p>
-              <p className="text-sm text-blue-400/70 mt-1">From GemEx Rails</p>
+              <p className="text-sm text-blue-400/70 mt-1">From GemRails</p>
             </motion.div>
           </div>
 

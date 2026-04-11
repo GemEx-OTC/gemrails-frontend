@@ -111,8 +111,9 @@ export default function PaymentPage({
   const [selectedAsset, setSelectedAsset] = useState<"USDT" | "USDC">("USDT")
   const [selectedNetwork, setSelectedNetwork] = useState<"BSC" | "TRC20">("BSC");
   const [copied, setCopied] = useState(false)
+  const [amountCopied, setAmountCopied] = useState(false)
   const [error, setError] = useState("")
-  const [timeLeft, setTimeLeft] = useState(900)
+  const [timeLeft, setTimeLeft] = useState(600)
   const [isConfirming, setIsConfirming] = useState(false)
   const [isCapturing, setIsCapturing] = useState(false)
   const [customerName, setCustomerName] = useState("")
@@ -163,7 +164,7 @@ export default function PaymentPage({
         // If we were in processing, go back to payment to show remainder
         if (step === "processing") {
           setStep("payment")
-          toast.warning(`Underpayment detected. Please send the remaining ${cryptoRemaining} ${selectedAsset}`)
+          toast.warning(`Partial payment received. We're still expecting ${cryptoRemaining} ${selectedAsset} to complete your transaction.`)
         }
       }
     }
@@ -306,6 +307,19 @@ export default function PaymentPage({
     }
   }
 
+  const handleCopyAmount = async () => {
+    const displayAmount = (paymentStatusData as any)?.status === 'AwaitingRemainder' 
+      ? (paymentStatusData as any).cryptoRemaining?.toFixed(2) 
+      : (transaction?.cryptoAmount || cryptoAmount).toFixed(2);
+      
+    const success = await copyToClipboard(displayAmount)
+    if (success) {
+      setAmountCopied(true)
+      toast.success("Amount copied!")
+      setTimeout(() => setAmountCopied(false), 2000)
+    }
+  }
+
   const handleConfirmPayment = async () => {
     if (!transaction) return
     setIsConfirming(true)
@@ -327,17 +341,20 @@ export default function PaymentPage({
       {
         onSuccess: (data: any) => {
           if (data.status === 'AwaitingRemainder') {
-            toast.warning(`Underpayment detected. Still need ${data.cryptoRemaining} ${selectedAsset}`)
+            toast.warning(`Partial payment received. An additional ${data.cryptoRemaining} ${selectedAsset} is required to complete your transaction.`)
             setIsConfirming(false)
           } else {
+            toast.success("Payment detected! Finalizing your transaction...")
             setStep("processing")
           }
         },
         onError: (err: any) => {
           if (err.code === 'NO_DEPOSIT_DETECTED') {
-            toast.error("No deposit detected yet. Please check your wallet or wait a few moments.")
+            toast.error("We haven't seen your deposit on the blockchain yet. It usually takes a few minutes to appear. Please try again shortly.")
+          } else if (err.message?.includes('status')) {
+            toast.info("Your payment is already being processed. You should see the success screen in a few moments!")
           } else {
-            toast.error(err.message || "Verification failed")
+            toast.error("We couldn't verify your payment just yet. This might be due to network delays. Please wait a moment and try again.")
           }
           setIsConfirming(false)
         },
@@ -506,13 +523,27 @@ export default function PaymentPage({
               <h1 className="text-white font-bold text-xl tracking-tight">
                 {merchant.businessName}
               </h1>
-              <div className="flex items-center gap-1.5 text-emerald-100 text-sm mt-0.5">
+              <div className="flex items-start gap-2 text-emerald-100 mt-0.5">
                 {merchant.verified && (
-                  <Shield className="w-4 h-4 text-white" />
+                  <Shield className="w-4 h-4 text-white shrink-0 mt-0.5" />
                 )}
-                <span className="font-medium">
-                  {merchant.type === 'terminal' ? 'Verified Enterprise' : 'Verified Merchant'}
-                </span>
+                <div className="flex flex-col leading-tight">
+                  <span className="font-semibold text-sm">
+                    {merchant.type === "terminal"
+                      ? "Verified Enterprise"
+                      : "Verified Merchant"}
+                  </span>
+                  {merchant.type === "terminal" &&
+                    (merchant.branchName || merchant.terminalName) && (
+                      <span className="text-[10px] text-white/80 font-bold uppercase tracking-wider mt-0.5">
+                        {merchant.branchName}{" "}
+                        {merchant.branchName && merchant.terminalName
+                          ? "•"
+                          : ""}{" "}
+                        {merchant.terminalName}
+                      </span>
+                    )}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-full border border-gray-200 shadow-lg shadow-black/10">
@@ -834,12 +865,26 @@ export default function PaymentPage({
                   <p className="text-gray-300 text-sm mb-2 font-medium">
                     {(paymentStatusData as any)?.status === 'AwaitingRemainder' ? "Remaining amount to send" : "Send exactly"}
                   </p>
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-3">
                     <p className="text-5xl font-bold text-white">
                       {(paymentStatusData as any)?.status === 'AwaitingRemainder' 
                         ? (paymentStatusData as any).cryptoRemaining?.toFixed(2) 
                         : (transaction?.cryptoAmount || cryptoAmount).toFixed(2)}
                     </p>
+                    <motion.button
+                      onClick={handleCopyAmount}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={`p-2 rounded-lg transition-all ${amountCopied 
+                        ? "bg-emerald-500/20 text-emerald-400" 
+                        : "text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10"}`}
+                    >
+                      {amountCopied ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </motion.button>
                   </div>
 
                   {(paymentStatusData as any)?.status === 'AwaitingRemainder' && (

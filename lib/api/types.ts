@@ -170,6 +170,8 @@ export interface TransactionsParams {
   limit?: number;
   status?: string;
   search?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface TransactionsResponse {
