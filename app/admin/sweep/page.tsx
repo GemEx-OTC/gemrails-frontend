@@ -25,7 +25,7 @@ export default function SweepPage() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [sweeping, setSweeping] = useState(false)
+  const [sweeping, setSweeping] = useState<string | null>(null)
 
   const fetchData = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true)
@@ -53,16 +53,16 @@ export default function SweepPage() {
     fetchData()
   }, [fetchData])
 
-  const handleTriggerSweep = async () => {
-    setSweeping(true)
+  const handleTriggerSweep = async (network: string) => {
+    setSweeping(network)
     try {
-      await triggerSweep()
-      toast.success("Sweep process initiated")
+      await triggerSweep(network)
+      toast.success(`${network} sweep process initiated`)
       fetchData(true)
     } catch (error: any) {
-      toast.error(error.message || "Failed to trigger sweep")
+      toast.error(error.message || `Failed to trigger ${network} sweep`)
     } finally {
-      setSweeping(false)
+      setSweeping(null)
     }
   }
 
@@ -121,18 +121,33 @@ export default function SweepPage() {
                   <h3 className="font-bold text-lg text-white">Pending Assets</h3>
                 </div>
                 
-                <button
-                  onClick={handleTriggerSweep}
-                  disabled={sweeping || !stats || stats.unsweptCount === 0}
-                  className="px-8 py-3 rounded-2xl bg-emerald-500 text-black font-black text-sm shadow-xl shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
-                >
-                  {sweeping ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Zap className="w-4 h-4 fill-current" />
-                  )}
-                  Run Batch Sweep
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleTriggerSweep('BSC')}
+                    disabled={!!sweeping || !stats}
+                    className="px-6 py-2.5 rounded-xl bg-amber-500 text-black font-black text-xs shadow-xl shadow-amber-500/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
+                  >
+                    {sweeping === 'BSC' ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Zap className="w-3 h-3 fill-current" />
+                    )}
+                    Sweep BSC
+                  </button>
+
+                  <button
+                    onClick={() => handleTriggerSweep('TRC20')}
+                    disabled={!!sweeping || !stats}
+                    className="px-6 py-2.5 rounded-xl bg-red-500 text-white font-black text-xs shadow-xl shadow-red-500/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
+                  >
+                    {sweeping === 'TRC20' ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Zap className="w-3 h-3 fill-current" />
+                    )}
+                    Sweep Tron
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

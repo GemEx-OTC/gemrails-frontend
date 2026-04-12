@@ -163,8 +163,8 @@ export const getSweepStats = async (): Promise<any> => {
   return response.data.data;
 };
 
-export const triggerSweep = async (): Promise<any> => {
-  const response = await apiClient.post<ApiResponse<any>>('/admin/sweep/trigger', {});
+export const triggerSweep = async (network?: string): Promise<any> => {
+  const response = await apiClient.post<ApiResponse<any>>('/admin/sweep/trigger', { network });
   return response.data.data;
 };
 
