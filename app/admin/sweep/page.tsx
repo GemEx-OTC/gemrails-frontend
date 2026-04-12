@@ -213,7 +213,7 @@ export default function SweepPage() {
                           <div className="flex flex-col">
                             <span className="font-black text-white text-base">{wallet.merchantName}</span>
                             <span className={`text-[10px] font-black uppercase ${wallet.accountType === 'enterprise' ? 'text-amber-500' : 'text-blue-500'}`}>
-                              {wallet.accountType || 'Merchant'}
+                              {wallet.accountType || 'Merchant'} • {wallet.transactionCount} TX
                             </span>
                           </div>
                         </td>
@@ -223,7 +223,7 @@ export default function SweepPage() {
                               {wallet.asset.substring(0, 3)}
                             </div>
                             <div className="flex flex-col">
-                              <span className="font-black text-white text-sm">{wallet.asset}</span>
+                              <span className="font-black text-white text-xs whitespace-nowrap">{wallet.asset}</span>
                               <span className={`text-[10px] font-black uppercase ${wallet.network === 'BSC' ? 'text-yellow-500' : 'text-red-500'}`}>{wallet.network}</span>
                             </div>
                           </div>
