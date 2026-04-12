@@ -49,8 +49,13 @@ export default function DashboardPage() {
 
   const isEnterprise = user?.accountType === 'enterprise';
   const isBranchMod = user?.role === 'branch_mod';
-
-  const stats = (data as any)?.stats || {};
+  const dashboardData = data;
+  const stats = dashboardData?.stats || {
+    totalReceived: 0,
+    totalIncentives: 0,
+    totalTransactions: 0,
+    pendingPayments: 0,
+  };
 
   const statCards = [
     {
@@ -63,13 +68,13 @@ export default function DashboardPage() {
       {
         title: "Total Branches",
         value: data ? (stats.branchCount || 0).toString() : "-",
-        subtitle: "Active locations",
+        subtitle: "Active Branch locations",
         icon: Building2,
       },
       {
         title: "Total Terminals",
         value: data ? (stats.terminalCount || 0).toString() : "-",
-        subtitle: "Across all branches",
+        subtitle: "Active Terminals",
         icon: MonitorDot,
       }
     ] : []),
@@ -105,8 +110,6 @@ export default function DashboardPage() {
     )
   }
 
-  const dashboardData = data as any
-
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       {/* Setup Guide Widget */}
@@ -118,6 +121,8 @@ export default function DashboardPage() {
           bankAdded={dashboardData?.user?.isBankAdded ?? (isEnterprise ? true : !!user?.bankAccount?.accountNumber)}
           cacVerified={dashboardData?.user?.cacVerified ?? (user as any)?.cacVerified}
           tier={dashboardData?.user?.tier ?? (user as any)?.tier}
+          settledVolume={dashboardData?.user?.settledVolume}
+          tierLimit={dashboardData?.user?.tierLimit}
         />
       )}
 
@@ -128,6 +133,11 @@ export default function DashboardPage() {
           </h1>
           <p className="text-gray-400 mt-1">
             Welcome back, <span className="text-white font-medium">{user?.businessName || (isBranchMod ? "Moderator" : "Merchant")}</span>
+            {!isBranchMod && (
+              <span className="ml-2 px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider rounded-full border border-emerald-500/20">
+                Tier {dashboardData?.user?.tier ?? (user as any)?.tier}
+              </span>
+            )}
           </p>
         </div>
         <Link href={isEnterprise ? "/dashboard/enterprise/branches" : "/dashboard/qr-code"}>
@@ -188,6 +198,38 @@ export default function DashboardPage() {
             </motion.div>
           )
         })}
+
+        {/* Volume Limit Indicator for Tier 1 */}
+        {dashboardData?.user?.tier === 1 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-5 bg-linear-to-br from-amber-500/10 to-transparent border border-amber-500/20 rounded-xl lg:col-span-1 relative overflow-hidden"
+          >
+            <div className="relative z-10">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Settlement Limit</span>
+                <span className="text-xs font-mono text-gray-400">
+                  {Math.round(((dashboardData.user.settledVolume || 0) / (dashboardData.user.tierLimit || 500000)) * 100)}%
+                </span>
+              </div>
+              <p className="text-xl font-bold text-white mb-2">
+                {formatCurrency(dashboardData.user.settledVolume || 0)}
+                <span className="text-gray-500 text-sm font-normal"> / {formatCurrency(dashboardData.user.tierLimit || 500000)}</span>
+              </p>
+              <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, ((dashboardData.user.settledVolume || 0) / (dashboardData.user.tierLimit || 500000)) * 100)}%` }}
+                  className={`h-full ${((dashboardData.user.settledVolume || 0) / (dashboardData.user.tierLimit || 500000)) > 0.8 ? 'bg-red-500' : 'bg-amber-500'}`}
+                />
+              </div>
+              <Link href="/dashboard/verification" className="inline-flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 mt-3 font-semibold uppercase tracking-wider">
+                Upgrade for unlimited <ArrowUpRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

@@ -984,8 +984,17 @@ export default function PaymentPage({
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-4 rounded-2xl font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
               >
-                <Check className="w-5 h-5" />
-                I've Sent the Payment
+                {isConfirming ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Verifying Payment...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-5 h-5" />
+                    I've Sent the Payment
+                  </>
+                )}
               </motion.button>
             </motion.div>
           )}

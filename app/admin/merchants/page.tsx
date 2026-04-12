@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import {
   Store, Search, Filter, Eye, UserX, UserCheck, X, Shield,
   Mail, Calendar, TrendingUp, BanknoteIcon, Loader2, ChevronDown,
-  CheckCircle, Clock, AlertCircle, Building2, Landmark,
+  CheckCircle, Clock, AlertCircle, Building2, Landmark, FileText, ExternalLink,
 } from "lucide-react"
 import {
   useAdminMerchants,
@@ -537,6 +537,34 @@ function AdminMerchantDetailsModal({
                         <InfoItem label="Merchant ID" value={merchant.merchantId} icon={Shield} />
                         <InfoItem label="RC Number" value={merchant.rcNumber} icon={CheckCircle} />
                         <InfoItem label="Address" value={merchant.businessAddress} icon={Building2} />
+                      </div>
+                      <div className="md:col-span-2 space-y-4">
+                        <SectionHeader title="KYC Documents" icon={Shield} />
+                        {merchant.cacDocumentUrl ? (
+                          <div className="flex items-center justify-between p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+                                <FileText className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <div className="text-white font-bold text-sm">CAC Registration Document</div>
+                                <div className="text-gray-500 text-[10px] mt-0.5">Uploaded via Merchant Dashboard</div>
+                              </div>
+                            </div>
+                            <a 
+                              href={`${process.env.NEXT_PUBLIC_API_URL}${merchant.cacDocumentUrl}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded-lg text-xs font-bold transition-all"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" /> View Document
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="p-4 bg-gray-800/20 border border-dashed border-gray-700 rounded-xl text-center text-gray-500 text-sm">
+                            No CAC document uploaded yet
+                          </div>
+                        )}
                       </div>
                       {merchant.accountType !== 'enterprise' && (
                         <div className="md:col-span-2 space-y-4">

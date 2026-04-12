@@ -10,10 +10,16 @@ import { BUSINESS_CATEGORIES } from "@/lib/constants"
 import { toast } from "sonner"
 import type { ApiError } from "@/lib/api/types"
 import { BankSelector } from "@/components/bank-selector"
-import { useUpdateBankAccount, useVerifyBankAccount } from "@/lib/hooks/use-auth"
+import { useUpdateBankAccount, useVerifyBankAccount, useBanks } from "@/lib/hooks/use-auth"
+import { useDashboard } from "@/lib/hooks/use-dashboard"
+import { BusinessVerificationModal } from "@/components/business-verification-modal"
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(amount)
 
 export default function VerificationHubPage() {
   const { user, refreshUser } = useAuth()
+  const { data: dashboardData } = useDashboard()
   const [showPhoneModal, setShowPhoneModal] = useState(false)
 
   // Bank State (for Tier 1)
@@ -24,23 +30,19 @@ export default function VerificationHubPage() {
   const [verifyingAccount, setVerifyingAccount] = useState(false)
   const verifyBankMutation = useVerifyBankAccount()
   const updateBankMutation = useUpdateBankAccount()
+  const { data: banksData } = useBanks()
 
   // CAC State (for Tier 2)
-  const [showCacSetup, setShowCacSetup] = useState(false)
-  const verifyCacMutation = useVerifyCac()
-  const [cacValue, setCacValue] = useState("")
-  const [cacDocument, setCacDocument] = useState<File | null>(null)
-  const [businessCategory, setBusinessCategory] = useState("")
-  const [businessAddress, setBusinessAddress] = useState("")
+  const [showBusinessModal, setShowBusinessModal] = useState(false)
 
   const accountType = user?.accountType || "merchant"
   const isBranchMod = user?.role === "branch_mod"
 
   const phoneVerified = user?.phoneVerified || false
   const bankAdded = !!user?.bankAccount?.accountNumber
-  const cacVerified = (user as any)?.cacVerified || false
+  const cacVerified = user?.cacVerified || false
 
-  const tier = (user as any)?.tier ?? 0
+  const tier = user?.tier ?? 0
 
   if (isBranchMod) {
     return (
@@ -80,9 +82,9 @@ export default function VerificationHubPage() {
       toast.error("Please fill in and verify all bank details.")
       return
     }
-    const bankName = "Selected Bank" 
+    const bank = banksData?.find(b => b.code === bankCode)
     updateBankMutation.mutate(
-      { bankCode, bankName, accountNumber, accountName },
+      { bankCode, bankName: bank?.name || "Selected Bank", accountNumber, accountName },
       {
         onSuccess: () => {
           toast.success("Bank account added! Tier 1 completed.")
@@ -96,35 +98,6 @@ export default function VerificationHubPage() {
     )
   }
 
-  const handleVerifyCac = () => {
-    if (!cacValue.startsWith("RC") && !cacValue.startsWith("BN")) {
-      toast.error("Invalid Business Number. Must start with 'RC' or 'BN'")
-      return
-    }
-    if (!businessAddress || !businessCategory) {
-      toast.error("Please provide Business Address and Category for Tier 2 verification")
-      return
-    }
-
-    const formData = new FormData()
-    formData.append("rcNumber", cacValue)
-    formData.append("businessAddress", businessAddress)
-    formData.append("businessCategory", businessCategory)
-    if (cacDocument) {
-      formData.append("document", cacDocument)
-    }
-
-    verifyCacMutation.mutate(formData, {
-      onSuccess: () => {
-        toast.success("CAC Verified! You are now Tier 2.")
-        refreshUser()
-        setShowCacSetup(false)
-      },
-      onError: (err: ApiError) => {
-        toast.error(err.message || "Failed to verify CAC")
-      },
-    })
-  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -140,6 +113,7 @@ export default function VerificationHubPage() {
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Tier 0</span>
               <h3 className="text-xl font-bold text-white mt-1">Email Verified</h3>
+              <p className="text-emerald-400/80 text-sm font-semibold mt-1">No Payouts Allowed</p>
             </div>
             {tier >= 0 && <CheckCircle2 className="w-6 h-6 text-emerald-400" />}
           </div>
@@ -162,6 +136,7 @@ export default function VerificationHubPage() {
             <div>
               <span className={`text-xs font-bold uppercase tracking-wider ${tier >= 1 ? 'text-emerald-400' : 'text-amber-400'}`}>Tier 1</span>
               <h3 className="text-xl font-bold text-white mt-1">Business Setup</h3>
+              <p className={`text-sm font-semibold mt-1 ${tier >= 1 ? 'text-emerald-400/80' : 'text-amber-400/80'}`}>₦500k Settlement Limit</p>
             </div>
             {tier >= 1 ? <CheckCircle2 className="w-6 h-6 text-emerald-400" /> : <Lock className="w-5 h-5 text-gray-600" />}
           </div>
@@ -176,6 +151,31 @@ export default function VerificationHubPage() {
               <Check className="w-4 h-4 text-emerald-500" /> Enable API Keys
             </li> */}
           </ul>
+
+          {/* Volume Progress for Tier 1 */}
+          {tier === 1 && (
+            <div className="mb-6 p-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Settlement Progress</span>
+                <span className="text-[10px] font-mono text-gray-400">
+                  {Math.round(((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || 500000)) * 100)}%
+                </span>
+              </div>
+              <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, ((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || 500000)) * 100)}%` }}
+                  className={`h-full ${((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || 500000)) > 0.8 ? 'bg-red-500' : 'bg-amber-500'}`}
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-3">
+                <span className="text-white font-medium">{formatCurrency(dashboardData?.user?.settledVolume || 0)}</span> settled of {formatCurrency(dashboardData?.user?.tierLimit || 500000)}
+              </p>
+              <p className="text-[10px] text-amber-500/60 mt-2 italic font-medium">
+                * Settlements will pause once limit is reached.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-3 border-t border-gray-800 pt-4">
             {/* Phone Verification Link */}
@@ -195,25 +195,25 @@ export default function VerificationHubPage() {
             {accountType === 'merchant' && (
               <button 
                 onClick={() => setShowBankSetup(!showBankSetup)} 
-                disabled={bankAdded || !phoneVerified}
+                disabled={bankAdded}
                 className={`w-full flex items-center justify-between p-3 rounded-xl border transition-colors ${bankAdded ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'}`}
               >
                 <div className="flex items-center gap-3">
                   <CreditCard className={`w-4 h-4 ${bankAdded ? 'text-emerald-400' : 'text-gray-400'}`} />
-                  <span className={`text-sm font-medium ${bankAdded ? 'text-emerald-400' : (!phoneVerified ? 'text-gray-600' : 'text-gray-300')}`}>
+                  <span className={`text-sm font-medium ${bankAdded ? 'text-emerald-400' : 'text-gray-300'}`}>
                     Add Settlement Bank
                   </span>
                 </div>
-                {bankAdded ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <ChevronRight className={`w-4 h-4 ${!phoneVerified ? 'text-gray-700' : 'text-gray-500'}`} />}
+                {bankAdded ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
               </button>
             )}
 
             {/* Inline Bank Setup Form */}
-            {showBankSetup && !bankAdded && phoneVerified && (
+            {showBankSetup && !bankAdded && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-2 space-y-4 p-4 bg-gray-900/50 rounded-xl border border-emerald-500/30">
                 <div>
                   <label className="block text-xs font-medium text-gray-400 mb-1">Select Bank</label>
-                  <BankSelector value={bankCode} onChange={setBankCode} />
+                  <BankSelector value={bankCode} onChange={setBankCode} banks={banksData || []} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-400 mb-1">Account Number</label>
@@ -256,6 +256,7 @@ export default function VerificationHubPage() {
             <div>
               <span className={`text-xs font-bold uppercase tracking-wider ${tier >= 2 ? 'text-emerald-400' : 'text-purple-400'}`}>Tier 2</span>
               <h3 className="text-xl font-bold text-white mt-1">Full KYC</h3>
+              <p className={`text-sm font-semibold mt-1 ${tier >= 2 ? 'text-emerald-400/80' : 'text-purple-400/80'}`}>Unlimited Volume</p>
             </div>
             {tier >= 2 ? <CheckCircle2 className="w-6 h-6 text-emerald-400" /> : <Lock className="w-5 h-5 text-gray-600" />}
           </div>
@@ -270,7 +271,7 @@ export default function VerificationHubPage() {
 
           <div className="space-y-3 border-t border-gray-800 pt-4">
              <button 
-              onClick={() => setShowCacSetup(!showCacSetup)} 
+              onClick={() => setShowBusinessModal(true)} 
               disabled={cacVerified || tier < 1}
               className={`w-full flex items-center justify-between p-3 rounded-xl border transition-colors ${cacVerified ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'}`}
             >
@@ -280,57 +281,6 @@ export default function VerificationHubPage() {
               </div>
               {cacVerified ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <ChevronRight className={`w-4 h-4 ${tier < 1 ? 'text-gray-700' : 'text-gray-500'}`} />}
             </button>
-
-            {/* Inline CAC Setup Form */}
-            {showCacSetup && !cacVerified && tier >= 1 && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-2 space-y-4 p-4 bg-gray-900/50 rounded-xl border border-purple-500/30">
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">RC Number</label>
-                  <input
-                    type="text"
-                    value={cacValue}
-                    onChange={(e) => setCacValue(e.target.value)}
-                    placeholder="RC1234567"
-                    className="gemrails-input py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Business Category</label>
-                  <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="gemrails-select py-2">
-                    <option value="" disabled>Select category</option>
-                    {BUSINESS_CATEGORIES.map((cat) => (
-                      <option key={cat.value} value={cat.value}>{cat.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Registered Address</label>
-                  <textarea
-                    value={businessAddress}
-                    onChange={(e) => setBusinessAddress(e.target.value)}
-                    rows={2}
-                    placeholder="E.g. 14 Admiralty Way"
-                    className="gemrails-input resize-none py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">CAC Document (Optional PDF/PNG)</label>
-                  <input 
-                    type="file" 
-                    accept=".pdf,image/*"
-                    onChange={(e) => setCacDocument(e.target.files?.[0] || null)}
-                    className="block w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-purple-500/10 file:text-purple-400 hover:file:bg-purple-500/20"
-                  />
-                </div>
-                <button
-                  onClick={handleVerifyCac}
-                  disabled={!cacValue || !businessCategory || verifyCacMutation.isPending}
-                  className="w-full gemrails-button text-sm py-2 bg-purple-500 hover:bg-purple-600 text-white shadow-none"
-                >
-                  {verifyCacMutation.isPending ? "Submitting..." : "Verify CAC"}
-                </button>
-              </motion.div>
-            )}
           </div>
         </div>
 
@@ -345,6 +295,15 @@ export default function VerificationHubPage() {
         }}
         initialPhone={user?.phone}
         userHasPhone={!!user?.phone}
+      />
+
+      <BusinessVerificationModal
+        isOpen={showBusinessModal}
+        onClose={() => setShowBusinessModal(false)}
+        onVerified={() => {
+          refreshUser();
+          setShowBusinessModal(false);
+        }}
       />
     </div>
   )

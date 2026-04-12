@@ -11,6 +11,8 @@ interface SetupGuideWidgetProps {
   bankAdded?: boolean
   cacVerified?: boolean
   tier?: number
+  settledVolume?: number
+  tierLimit?: number
 }
 
 export function SetupGuideWidget({
@@ -20,6 +22,8 @@ export function SetupGuideWidget({
   bankAdded = false,
   cacVerified = false,
   tier = 0,
+  settledVolume = 0,
+  tierLimit = 500000,
 }: SetupGuideWidgetProps) {
   // Hide for moderators
   if (userRole === "branch_mod") return null;

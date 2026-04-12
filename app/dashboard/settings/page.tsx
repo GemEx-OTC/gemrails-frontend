@@ -170,10 +170,31 @@ export default function SettingsPage() {
   }
 
   const handleBankChange = () => {
-    if (!user?.phoneVerified) {
+    const hasBank = !!user?.bankAccount?.accountNumber
+    
+    // If it's the first time, save directly
+    if (!hasBank) {
+      const bank = banksData?.find((b) => b.code === bankCode)
+      updateBankMutation.mutate(
+        { bankCode, bankName: bank?.name || "", accountNumber, accountName },
+        {
+          onSuccess: () => {
+            toast.success("Bank account set successfully!")
+            refreshUser()
+          },
+          onError: (err: ApiError) => {
+               toast.error(err.message || "Failed to set bank account")
+          }
+        }
+      )
+      return
+    }
+
+    if (hasBank && !user?.phoneVerified) {
       setShowPhoneVerificationModal(true)
       return
     }
+
     setShowBankChangeModal(true)
     setOtpValue("")
     setOtpError(false)
@@ -212,10 +233,10 @@ export default function SettingsPage() {
   const handleSendOtp = () => {
     setOtpSending(true)
     sendOtpMutation.mutate(undefined, {
-      onSuccess: () => {
+      onSuccess: (data: any) => {
         setOtpSending(false)
         setOtpSent(true)
-        toast.success("OTP sent to your email!")
+        toast.success(data.message || "OTP sent successfully!")
       },
       onError: (err: ApiError) => {
         setOtpSending(false)
@@ -299,7 +320,7 @@ export default function SettingsPage() {
   const tabs = [
     ...(user?.role !== 'branch_mod' ? [
       { id: "business", label: "Business Profile", icon: Building2 },
-      { id: "bank", label: "Bank Account", icon: CreditCard }
+      ...(user?.accountType !== 'enterprise' ? [{ id: "bank", label: "Bank Account", icon: CreditCard }] : [])
     ] : []),
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "security", label: "Security", icon: Shield },
@@ -394,11 +415,13 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Merchant ID</label>
-                <div className="font-mono text-white">{user?.merchantId || "N/A"}</div>
-              </div>
+            <div className={`grid ${user?.accountType === 'enterprise' ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700`}>
+              {user?.accountType !== 'enterprise' && (
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Merchant ID</label>
+                  <div className="font-mono text-white">{user?.merchantId || "N/A"}</div>
+                </div>
+              )}
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Status</label>
                 <div className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 capitalize">
@@ -471,7 +494,7 @@ export default function SettingsPage() {
           </motion.div>
         )}
 
-        {activeTab === "bank" && (
+        {activeTab === "bank" && user?.accountType !== 'enterprise' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 w-[550px]">
             <InlineAlert
               type="warning"
@@ -696,7 +719,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold text-white">Verify Bank Change</h2>
-                      <p className="text-sm text-gray-400">Enter the OTP sent to your email</p>
+                      <p className="text-sm text-gray-400">Enter the OTP sent to your {user?.phoneVerified ? 'phone' : 'email'}</p>
                     </div>
                   </div>
                   <button onClick={() => setShowBankChangeModal(false)} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
@@ -710,10 +733,11 @@ export default function SettingsPage() {
                   <>
                     <div className="text-center">
                       <p className="text-gray-400 mb-4">
-                        We'll send a 6-digit verification code to your registered email address{" "}
-                        <span className="text-white font-medium">
-                          {user?.email ? `${user.email.charAt(0)}***${user.email.split('@')[0].slice(-1)}@${user.email.split('@')[1]}` : "your email"}
-                        </span>
+                        {user?.phoneVerified ? (
+                          <>We'll send a 6-digit verification code to your registered phone number <span className="text-white font-medium">{user.phone}</span></>
+                        ) : (
+                          <>We'll send a 6-digit verification code to your registered email address <span className="text-white font-medium">{user?.email ? `${user.email.charAt(0)}***${user.email.split('@')[0].slice(-1)}@${user.email.split('@')[1]}` : "your email"}</span></>
+                        )}
                       </p>
                     </div>
                     <motion.button
@@ -734,7 +758,7 @@ export default function SettingsPage() {
                         </>
                       ) : (
                         <>
-                          <Mail className="w-5 h-5" />
+                          {user?.phoneVerified ? <Phone className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
                           Send OTP
                         </>
                       )}
@@ -744,9 +768,7 @@ export default function SettingsPage() {
                   <>
                     <div className="text-center mb-6">
                       <p className="text-gray-400">
-                        Enter the 6-digit code sent to <span className="text-white font-medium">
-                          {user?.email ? `${user.email.charAt(0)}***${user.email.split('@')[0].slice(-1)}@${user.email.split('@')[1]}` : "your email"}
-                        </span>
+                        Enter the 6-digit code sent to <span className="text-white font-medium">{user?.phoneVerified ? user.phone : user?.email}</span>
                       </p>
                     </div>
 

@@ -50,6 +50,10 @@ export interface User {
   enterpriseId?: string;
   bankAccount?: BankAccount;
   settings?: UserSettings;
+  tier?: number;
+  isBankAdded?: boolean;
+  settledVolume?: number;
+  tierLimit?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -139,11 +143,18 @@ export interface ChangePasswordInput {
 }
 
 // Dashboard Types
-export interface DashboardStats {
-  totalTransactions: number;
-  totalVolume: number;
-  pendingTransactions: number;
-  completedTransactions: number;
+export interface DashboardData {
+  user: User;
+  stats: {
+    totalReceived: number;
+    totalIncentives: number;
+    totalTransactions: number;
+    pendingPayments: number;
+    branchCount?: number;
+    terminalCount?: number;
+  };
+  recentTransactions: Transaction[];
+  unreadNotifications: number;
 }
 
 export interface Transaction {
@@ -307,6 +318,7 @@ export interface AdminMerchantDetails extends AdminMerchant {
   businessAddress?: string;
   contactName?: string;
   rcNumber?: string;
+  cacDocumentUrl?: string;
   merchantId?: string;
   settings?: UserSettings;
   recentTransactions: AdminTransaction[];
