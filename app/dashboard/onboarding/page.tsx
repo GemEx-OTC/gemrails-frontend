@@ -9,6 +9,7 @@ import { BUSINESS_CATEGORIES, NIGERIAN_BANKS } from "@/lib/constants"
 import { useAuth } from "@/context/auth-context"
 import { useUpdateProfile, useUpdateBankAccount } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
+import { CategorySelector } from "@/components/category-selector"
 
 type OnboardingStep = "business" | "bank" | "complete"
 
@@ -191,14 +192,11 @@ export default function OnboardingPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Business Category</label>
-                    <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="gemrails-select">
-                      <option value="">Select category</option>
-                      {BUSINESS_CATEGORIES.map((cat) => (
-                        <option key={cat.value} value={cat.value}>
-                          {cat.label}
-                        </option>
-                      ))}
-                    </select>
+                    <CategorySelector
+                      value={businessCategory}
+                      onChange={setBusinessCategory}
+                      categories={BUSINESS_CATEGORIES}
+                    />
                   </div>
 
                   <div>
