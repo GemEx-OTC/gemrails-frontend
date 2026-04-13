@@ -12,11 +12,42 @@ import {
   Database,
   ArrowRight,
   ShieldCheck,
-  LayoutGrid
+  LayoutGrid,
+  Copy
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { getSweepStats, getSweepHistory, triggerSweep } from "@/lib/api/admin"
 import { toast } from "sonner"
+
+const CopyButton = ({ text }: { text: string }) => {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      toast.success("Copied to clipboard")
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      toast.error("Failed to copy")
+    }
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="p-1 rounded-md bg-gray-800/50 border border-gray-700 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group shrink-0"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+      ) : (
+        <Copy className="w-3 h-3 text-gray-400 group-hover:text-emerald-500" />
+      )}
+    </button>
+  )
+}
 
 export default function SweepPage() {
   const [stats, setStats] = useState<any>(null)
@@ -236,6 +267,7 @@ export default function SweepPage() {
                             <span className="text-xs font-mono text-emerald-400/80 truncate max-w-[200px]">
                               {wallet.hotWallet}
                             </span>
+                            <CopyButton text={wallet.hotWallet} />
                           </div>
                         </td>
                         <td className="px-10 py-6 text-right">
@@ -312,6 +344,7 @@ export default function SweepPage() {
                             <span className="font-black text-gray-200 text-lg mb-1">{item.amount.toFixed(6)}</span>
                             <div className="flex items-center gap-2 text-[10px] font-mono text-gray-500">
                               <span className="truncate max-w-[150px]">{item.address}</span>
+                              <CopyButton text={item.address} />
                               <ArrowRight className="w-3 h-3 text-emerald-500" />
                             </div>
                           </div>
@@ -324,6 +357,7 @@ export default function SweepPage() {
                             <span className="text-xs font-mono text-gray-400 hover:text-white transition-colors cursor-pointer truncate max-w-[200px]">
                               {item.txId}
                             </span>
+                            <CopyButton text={item.txId} />
                           </div>
                         </td>
                         <td className="px-10 py-6 text-right">
