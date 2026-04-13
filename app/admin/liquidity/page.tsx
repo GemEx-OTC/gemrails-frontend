@@ -148,7 +148,7 @@ export default function LiquidityPage() {
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 rounded-2xl bg-linear-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30">
               <div className="flex items-center gap-2 mb-3">
                 <Droplets className="w-5 h-5 text-emerald-400" />
                 <span className="text-sm font-medium text-emerald-400">Available Balance</span>
@@ -157,7 +157,7 @@ export default function LiquidityPage() {
               <p className="text-sm text-emerald-400/70 mt-1">Ready for payouts</p>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-6 rounded-2xl bg-linear-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30">
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="w-5 h-5 text-amber-400" />
                 <span className="text-sm font-medium text-amber-400">Pending Payouts</span>
@@ -166,7 +166,7 @@ export default function LiquidityPage() {
               <p className="text-sm text-amber-400/70 mt-1">{stats?.pendingCount || 0} awaiting payout</p>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border border-purple-500/30">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-6 rounded-2xl bg-linear-to-br from-purple-500/20 to-violet-500/10 border border-purple-500/30">
               <div className="flex items-center gap-2 mb-3">
                 <ArrowUpRight className="w-5 h-5 text-purple-400" />
                 <span className="text-sm font-medium text-purple-400">OTC Payouts</span>
@@ -175,7 +175,7 @@ export default function LiquidityPage() {
               <p className="text-sm text-purple-400/70 mt-1">From GemOTC</p>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/30">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="p-6 rounded-2xl bg-linear-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/30">
               <div className="flex items-center gap-2 mb-3">
                 <ArrowDownRight className="w-5 h-5 text-blue-400" />
                 <span className="text-sm font-medium text-blue-400">Rails Payouts</span>

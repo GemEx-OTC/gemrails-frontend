@@ -447,6 +447,9 @@ export interface PlatformSettings {
   badFundsWalletAddressTron?: string;
   overflowWalletAddressBsc?: string;
   overflowWalletAddressTron?: string;
+  usdtNgnRate: number;
+  usdcNgnRate: number;
+  sweepThresholdUsd: number;
 }
 
 // Admin Dashboard Types

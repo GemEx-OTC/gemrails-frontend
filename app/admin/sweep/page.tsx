@@ -142,7 +142,7 @@ export default function SweepPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="p-8 rounded-[2rem] bg-gray-900 border border-gray-800 shadow-2xl md:col-span-1 lg:col-span-2 flex flex-col justify-between"
+              className="p-8 rounded-4xl bg-gray-900 border border-gray-800 shadow-2xl md:col-span-1 lg:col-span-2 flex flex-col justify-between"
             >
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">

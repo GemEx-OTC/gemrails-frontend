@@ -78,7 +78,7 @@ export function DateFilter({ startDate, endDate, onStartChange, onEndChange, onC
             )}
           >
             <CalendarIcon className={cn(
-              "w-4 h-4 transition-colors flex-shrink-0",
+              "w-4 h-4 transition-colors shrink-0",
               hasFilter ? "text-emerald-400" : "text-gray-500 group-hover:text-gray-300"
             )} />
             <span className="text-[13px] font-medium tracking-tight whitespace-nowrap">
