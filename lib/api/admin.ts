@@ -168,6 +168,11 @@ export const triggerSweep = async (network?: string): Promise<any> => {
   return response.data.data;
 };
 
+export const syncSweepStats = async (): Promise<any> => {
+  const response = await apiClient.post<ApiResponse<any>>('/admin/sweep/sync');
+  return response.data.data;
+};
+
 export const getSweepHistory = async (params?: {
   page?: number;
   limit?: number;

@@ -16,7 +16,7 @@ import {
   Copy
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
-import { getSweepStats, getSweepHistory, triggerSweep } from "@/lib/api/admin"
+import { getSweepStats, getSweepHistory, triggerSweep, syncSweepStats } from "@/lib/api/admin"
 import { toast } from "sonner"
 
 const CopyButton = ({ text }: { text: string }) => {
@@ -57,6 +57,7 @@ export default function SweepPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [sweeping, setSweeping] = useState<string | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   const fetchData = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true)
@@ -94,6 +95,19 @@ export default function SweepPage() {
       toast.error(error.message || `Failed to trigger ${network} sweep`)
     } finally {
       setSweeping(null)
+    }
+  }
+
+  const handleSync = async () => {
+    setIsSyncing(true)
+    try {
+      const result = await syncSweepStats()
+      toast.success(`Sync complete: Audited ${result.audited} wallets, reconciled ${result.reconciled} records.`)
+      fetchData(true)
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sync with blockchain")
+    } finally {
+      setIsSyncing(false)
     }
   }
 
@@ -153,6 +167,15 @@ export default function SweepPage() {
                 </div>
                 
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSync}
+                    disabled={isSyncing || !stats}
+                    className="px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white font-bold text-xs hover:border-emerald-500/50 transition-all disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                    Sync
+                  </button>
+
                   <button
                     onClick={() => handleTriggerSweep('BSC')}
                     disabled={!!sweeping || !stats}
