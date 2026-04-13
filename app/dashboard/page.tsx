@@ -16,7 +16,7 @@ import {
   MonitorDot
 } from "lucide-react"
 import { toast } from "sonner"
-import { PAYMENT_STATUS, FEE_CONFIG } from "@/lib/constants"
+import { PAYMENT_STATUS, FEE_CONFIG, TIER_LIMITS } from "@/lib/constants"
 import { SetupGuideWidget } from "@/components/setup-guide-widget"
 import { PhoneVerificationModal } from "@/components/phone-verification-modal"
 import { useAuth } from "@/context/auth-context"
@@ -199,33 +199,33 @@ export default function DashboardPage() {
           )
         })}
 
-        {/* Volume Limit Indicator for Tier 1 */}
-        {dashboardData?.user?.tier === 1 && (
+        {/* Volume Limit Indicator for Tier 0 and Tier 1 */}
+        {(dashboardData?.user?.tier === 0 || dashboardData?.user?.tier === 1) && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-5 bg-linear-to-br from-amber-500/10 to-transparent border border-amber-500/20 rounded-xl lg:col-span-1 relative overflow-hidden"
+            className={`p-5 bg-linear-to-br ${dashboardData.user.tier === 0 ? 'from-emerald-500/10' : 'from-amber-500/10'} to-transparent border ${dashboardData.user.tier === 0 ? 'border-emerald-500/20' : 'border-amber-500/20'} rounded-xl lg:col-span-1 relative overflow-hidden`}
           >
             <div className="relative z-10">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Settlement Limit</span>
+                <span className={`text-xs font-bold ${dashboardData.user.tier === 0 ? 'text-emerald-400' : 'text-amber-400'} uppercase tracking-wider`}>Settlement Limit</span>
                 <span className="text-xs font-mono text-gray-400">
-                  {Math.round(((dashboardData.user.settledVolume || 0) / (dashboardData.user.tierLimit || 500000)) * 100)}%
+                  {Math.round(((dashboardData.user.settledVolume || 0) / (dashboardData.user.tierLimit || TIER_LIMITS[dashboardData.user.tier as keyof typeof TIER_LIMITS] || 200000)) * 100)}%
                 </span>
               </div>
               <p className="text-xl font-bold text-white mb-2">
                 {formatCurrency(dashboardData.user.settledVolume || 0)}
-                <span className="text-gray-500 text-sm font-normal"> / {formatCurrency(dashboardData.user.tierLimit || 500000)}</span>
+                <span className="text-gray-500 text-sm font-normal"> / {formatCurrency(dashboardData.user.tierLimit || TIER_LIMITS[dashboardData.user.tier as keyof typeof TIER_LIMITS] || 200000)}</span>
               </p>
               <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
                 <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(100, ((dashboardData.user.settledVolume || 0) / (dashboardData.user.tierLimit || 500000)) * 100)}%` }}
-                  className={`h-full ${((dashboardData.user.settledVolume || 0) / (dashboardData.user.tierLimit || 500000)) > 0.8 ? 'bg-red-500' : 'bg-amber-500'}`}
+                   initial={{ width: 0 }}
+                   animate={{ width: `${Math.min(100, ((dashboardData.user.settledVolume || 0) / (dashboardData.user.tierLimit || TIER_LIMITS[dashboardData.user.tier as keyof typeof TIER_LIMITS] || 200000)) * 100)}%` }}
+                   className={`h-full ${((dashboardData.user.settledVolume || 0) / (dashboardData.user.tierLimit || TIER_LIMITS[dashboardData.user.tier as keyof typeof TIER_LIMITS] || 200000)) > 0.8 ? 'bg-red-500' : (dashboardData.user.tier === 0 ? 'bg-emerald-500' : 'bg-amber-500')}`}
                 />
               </div>
-              <Link href="/dashboard/verification" className="inline-flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 mt-3 font-semibold uppercase tracking-wider">
-                Upgrade for unlimited <ArrowUpRight className="w-3 h-3" />
+              <Link href="/dashboard/verification" className={`inline-flex items-center gap-1 text-[10px] ${dashboardData.user.tier === 0 ? 'text-emerald-400 hover:text-emerald-300' : 'text-amber-400 hover:text-amber-300'} mt-3 font-semibold uppercase tracking-wider`}>
+                Upgrade for higher limit <ArrowUpRight className="w-3 h-3" />
               </Link>
             </div>
           </motion.div>

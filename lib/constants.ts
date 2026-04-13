@@ -81,15 +81,15 @@ export const FEE_CONFIG = {
 } as const
 
 export const TIER_LIMITS = {
-  0: 0,
+  0: 200000,
   1: 500000,
   2: Infinity,
 } as const
 
 export const TIER_DESCRIPTIONS = {
-  0: "Email Verified",
-  1: "Settlement Limit",
-  2: "Unlimited",
+  0: "₦200k Limit (Email Verified)",
+  1: "₦500k Limit (Phone Verified)",
+  2: "Unlimited (CAC Verified)",
 } as const
 
 export const SUPPORTED_ASSETS = ["USDT", "USDC"] as const

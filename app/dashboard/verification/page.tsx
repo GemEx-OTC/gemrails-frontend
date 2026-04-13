@@ -6,7 +6,7 @@ import { ShieldCheck, CheckCircle2, ChevronRight, Phone, CreditCard, Building2, 
 import { useAuth } from "@/context/auth-context"
 import { PhoneVerificationModal } from "@/components/phone-verification-modal"
 import { useVerifyCac } from "@/lib/hooks/use-kyc"
-import { BUSINESS_CATEGORIES } from "@/lib/constants"
+import { BUSINESS_CATEGORIES, TIER_LIMITS } from "@/lib/constants"
 import { toast } from "sonner"
 import type { ApiError } from "@/lib/api/types"
 import { BankSelector } from "@/components/bank-selector"
@@ -113,7 +113,7 @@ export default function VerificationHubPage() {
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Tier 0</span>
               <h3 className="text-xl font-bold text-white mt-1">Email Verified</h3>
-              <p className="text-emerald-400/80 text-sm font-semibold mt-1">No Payouts Allowed</p>
+              <p className="text-emerald-400/80 text-sm font-semibold mt-1">{formatCurrency(TIER_LIMITS[0])} Settlement Limit</p>
             </div>
             {tier >= 0 && <CheckCircle2 className="w-6 h-6 text-emerald-400" />}
           </div>
@@ -121,13 +121,32 @@ export default function VerificationHubPage() {
             <li className="flex items-center gap-2 text-sm text-gray-300">
               <Check className="w-4 h-4 text-emerald-500" /> Dashboard Access
             </li>
-            <li className="flex items-center gap-2 text-sm text-gray-500">
-              <Lock className="w-4 h-4 text-gray-500" /> Payments Disabled
+            <li className="flex items-center gap-2 text-sm text-gray-300">
+              <Check className="w-4 h-4 text-emerald-500" /> Basic Payouts Enabled
             </li>
-            {/* <li className="flex items-center gap-2 text-sm text-gray-500">
-              <Lock className="w-4 h-4 text-gray-500" /> API Access Disabled
-            </li> */}
           </ul>
+
+          {/* Volume Progress for Tier 0 */}
+          {tier === 0 && (
+            <div className="mb-6 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Settlement Progress</span>
+                <span className="text-[10px] font-mono text-gray-400">
+                  {Math.round(((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || TIER_LIMITS[0])) * 100)}%
+                </span>
+              </div>
+              <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, ((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || TIER_LIMITS[0])) * 100)}%` }}
+                  className={`h-full ${((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || TIER_LIMITS[0])) > 0.8 ? 'bg-red-500' : 'bg-emerald-500'}`}
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-3">
+                <span className="text-white font-medium">{formatCurrency(dashboardData?.user?.settledVolume || 0)}</span> settled of {formatCurrency(dashboardData?.user?.tierLimit || TIER_LIMITS[0])}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Tier 1 Card */}
@@ -136,7 +155,7 @@ export default function VerificationHubPage() {
             <div>
               <span className={`text-xs font-bold uppercase tracking-wider ${tier >= 1 ? 'text-emerald-400' : 'text-amber-400'}`}>Tier 1</span>
               <h3 className="text-xl font-bold text-white mt-1">Business Setup</h3>
-              <p className={`text-sm font-semibold mt-1 ${tier >= 1 ? 'text-emerald-400/80' : 'text-amber-400/80'}`}>₦500k Settlement Limit</p>
+              <p className={`text-sm font-semibold mt-1 ${tier >= 1 ? 'text-emerald-400/80' : 'text-amber-400/80'}`}>{formatCurrency(TIER_LIMITS[1])} Settlement Limit</p>
             </div>
             {tier >= 1 ? <CheckCircle2 className="w-6 h-6 text-emerald-400" /> : <Lock className="w-5 h-5 text-gray-600" />}
           </div>
@@ -145,11 +164,8 @@ export default function VerificationHubPage() {
               <Check className="w-4 h-4 text-emerald-500" /> Enable Terminals
             </li>
             <li className="flex items-center gap-2 text-sm text-emerald-500">
-              <Check className="w-4 h-4 text-emerald-500" /> Enable Payments
+              <Check className="w-4 h-4 text-emerald-500" /> Extended Payouts
             </li>
-            {/* <li className="flex items-center gap-2 text-sm text-emerald-500">
-              <Check className="w-4 h-4 text-emerald-500" /> Enable API Keys
-            </li> */}
           </ul>
 
           {/* Volume Progress for Tier 1 */}
@@ -158,21 +174,18 @@ export default function VerificationHubPage() {
               <div className="flex justify-between items-center mb-2">
                 <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Settlement Progress</span>
                 <span className="text-[10px] font-mono text-gray-400">
-                  {Math.round(((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || 500000)) * 100)}%
+                  {Math.round(((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || TIER_LIMITS[1])) * 100)}%
                 </span>
               </div>
               <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(100, ((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || 500000)) * 100)}%` }}
-                  className={`h-full ${((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || 500000)) > 0.8 ? 'bg-red-500' : 'bg-amber-500'}`}
+                  animate={{ width: `${Math.min(100, ((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || TIER_LIMITS[1])) * 100)}%` }}
+                  className={`h-full ${((dashboardData?.user?.settledVolume || 0) / (dashboardData?.user?.tierLimit || TIER_LIMITS[1])) > 0.8 ? 'bg-red-500' : 'bg-amber-500'}`}
                 />
               </div>
               <p className="text-xs text-gray-400 mt-3">
-                <span className="text-white font-medium">{formatCurrency(dashboardData?.user?.settledVolume || 0)}</span> settled of {formatCurrency(dashboardData?.user?.tierLimit || 500000)}
-              </p>
-              <p className="text-[10px] text-amber-500/60 mt-2 italic font-medium">
-                * Settlements will pause once limit is reached.
+                <span className="text-white font-medium">{formatCurrency(dashboardData?.user?.settledVolume || 0)}</span> settled of {formatCurrency(dashboardData?.user?.tierLimit || TIER_LIMITS[1])}
               </p>
             </div>
           )}

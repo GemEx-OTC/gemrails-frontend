@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ShieldCheck, ArrowRight } from "lucide-react"
+import { BUSINESS_CATEGORIES, TIER_LIMITS } from "@/lib/constants"
 
 interface SetupGuideWidgetProps {
   userRole?: string
@@ -23,8 +24,9 @@ export function SetupGuideWidget({
   cacVerified = false,
   tier = 0,
   settledVolume = 0,
-  tierLimit = 500000,
+  tierLimit = 0,
 }: SetupGuideWidgetProps) {
+  const finalTierLimit = tierLimit || TIER_LIMITS[tier as keyof typeof TIER_LIMITS] || 200000;
   // Hide for moderators
   if (userRole === "branch_mod") return null;
 
