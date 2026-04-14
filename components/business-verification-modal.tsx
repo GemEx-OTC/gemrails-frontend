@@ -76,133 +76,154 @@ export function BusinessVerificationModal({
     }, 3000)
   }
 
-  const handleVerifyCac = () => {
-    if (!rcNumber.startsWith("RC") && !rcNumber.startsWith("BN")) {
-      toast.error("Invalid Business Number. Must start with 'RC' or 'BN'")
-      return
-    }
-    if (!businessAddress || !businessCategory) {
-      toast.error("Please provide Business Address and Category for Tier 2 verification")
-      return
-    }
+    const SMILE_ID_REGEX = /^0{7}$|^(?![0]+$)[A-Z0-9]{1,8}$/i;
 
-    setIsSubmitting(true)
-    const formData = new FormData()
-    formData.append("rcNumber", rcNumber)
-    formData.append("businessAddress", businessAddress)
-    formData.append("businessCategory", businessCategory)
-    if (cacDocument) {
-      formData.append("document", cacDocument)
-    }
+    const handleVerifyCac = () => {
+        // Validation logic
+        const normalizedInput = rcNumber.trim().toUpperCase();
+        const numericPart = normalizedInput.replace(/^(RC|BN)/, "");
 
-    verifyCacMutation.mutate(formData, {
-      onSuccess: (data) => {
-        if (data.status === "success") {
-          toast.success("Business verified successfully! ✓")
-          onVerified()
-          onClose()
-        } else {
-          // It's pending, start polling
-          startPolling(data.jobId)
+        if (!normalizedInput.startsWith("RC") && !normalizedInput.startsWith("BN")) {
+            toast.error("Invalid Business Number. Must start with 'RC' or 'BN'");
+            return;
         }
-      },
-      onError: (err: ApiError) => {
-        toast.error(err.message || "Failed to submit verification")
-        setIsSubmitting(false)
-      }
-    })
-  }
 
-  if (!isOpen) return null
+        if (!SMILE_ID_REGEX.test(numericPart)) {
+            toast.error("Unsupported ID number format. Please ensure you are using a valid RC or BN number.");
+            return;
+        }
 
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <motion.div
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           exit={{ opacity: 0 }}
-           onClick={!isSubmitting ? onClose : undefined}
-           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="relative w-full max-w-lg bg-[#12161c] border border-gray-800 rounded-2xl shadow-2xl overflow-hidden"
-        >
-          {isPolling ? (
-            <div className="p-12 flex flex-col items-center justify-center text-center space-y-6">
-                <div className="relative">
-                    <motion.div 
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                        className="w-24 h-24 rounded-full border-t-2 border-r-2 border-purple-500"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Building2 className="w-8 h-8 text-purple-400" />
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <h3 className="text-xl font-semibold text-white">Verifying Business</h3>
-                    <p className="text-gray-400 text-sm max-w-[280px]">{pollMessage}</p>
-                </div>
-                <div className="pt-4 flex items-center gap-2 text-xs text-gray-500">
-                    <Clock className="w-3 h-3" />
-                    <span>Average time: 15-30 seconds</span>
-                </div>
-            </div>
-          ) : (
-            <>
-                <div className="p-6 border-b border-gray-800">
-                    <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                        <Building2 className="w-5 h-5 text-purple-400" />
-                        </div>
-                        <div>
-                        <h2 className="text-lg font-semibold text-white">Business Verification</h2>
-                        <p className="text-sm text-gray-400">Tier 2 Verification (CAC)</p>
-                        </div>
-                    </div>
-                    {!isSubmitting && (
-                        <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
-                            <X className="w-5 h-5 text-gray-400" />
-                        </button>
-                    )}
-                    </div>
-                </div>
+        if (!businessAddress || !businessCategory) {
+            toast.error("Please provide Business Address and Category for Tier 2 verification");
+            return;
+        }
 
-                <div className="p-6 space-y-5">
-                    <div className="p-3 bg-purple-500/5 border border-purple-500/10 rounded-xl flex gap-3">
-                        <Info className="w-5 h-5 text-purple-400 shrink-0" />
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                        Enter your business details exactly as they appear on your CAC documents. Verification usually takes 24-48 hours.
-                        </p>
-                    </div>
+        setIsSubmitting(true);
+        const formData = new FormData();
+        formData.append("rcNumber", normalizedInput);
+        formData.append("businessAddress", businessAddress);
+        formData.append("businessCategory", businessCategory);
+        if (cacDocument) {
+            formData.append("document", cacDocument);
+        }
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-1">
-                            <label className="block text-xs font-medium text-gray-400 mb-2">RC / BN Number</label>
-                            <input
-                                type="text"
-                                value={rcNumber}
-                                disabled={isSubmitting}
-                                onChange={(e) => setRcNumber(e.target.value.toUpperCase())}
-                                placeholder="RC1234567"
-                                className="gemrails-input w-full"
-                            />
+        verifyCacMutation.mutate(formData, {
+            onSuccess: (data) => {
+                if (data.status === "success") {
+                    toast.success("Business verified successfully! ✓");
+                    onVerified();
+                    onClose();
+                } else {
+                    // It's pending, start polling
+                    startPolling(data.jobId);
+                }
+            },
+            onError: (err: ApiError) => {
+                toast.error(err.message || "Failed to submit verification");
+                setIsSubmitting(false);
+            }
+        });
+    };
+
+    if (!isOpen) return null;
+
+    const handleInputChange = (val: string) => {
+        let formatted = val.toUpperCase();
+        // Auto-prepend RC if user starts with a number
+        if (/^\d/.test(formatted)) {
+            formatted = "RC" + formatted;
+        }
+        setRcNumber(formatted);
+    };
+
+    return (
+        <AnimatePresence>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={!isSubmitting ? onClose : undefined}
+                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                />
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="relative w-full max-w-lg bg-[#12161c] border border-gray-800 rounded-2xl shadow-2xl overflow-hidden"
+                >
+                    {isPolling ? (
+                        <div className="p-12 flex flex-col items-center justify-center text-center space-y-6">
+                            <div className="relative">
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                    className="w-24 h-24 rounded-full border-t-2 border-r-2 border-purple-500"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <Building2 className="w-8 h-8 text-purple-400" />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-semibold text-white">Verifying Business</h3>
+                                <p className="text-gray-400 text-sm max-w-[280px]">{pollMessage}</p>
+                            </div>
+                            <div className="pt-4 flex items-center gap-2 text-xs text-gray-500">
+                                <Clock className="w-3 h-3" />
+                                <span>Average time: 15-30 seconds</span>
+                            </div>
                         </div>
-                        <div className="col-span-1">
-                            <label className="block text-xs font-medium text-gray-400 mb-2">Business Category</label>
-                            <CategorySelector
-                                value={businessCategory}
-                                onChange={setBusinessCategory}
-                                categories={BUSINESS_CATEGORIES}
-                                disabled={isSubmitting}
-                            />
-                        </div>
-                    </div>
+                    ) : (
+                        <>
+                            <div className="p-6 border-b border-gray-800">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                                            <Building2 className="w-5 h-5 text-purple-400" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-semibold text-white">Business Verification</h2>
+                                            <p className="text-sm text-gray-400">Tier 2 Verification (CAC)</p>
+                                        </div>
+                                    </div>
+                                    {!isSubmitting && (
+                                        <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+                                            <X className="w-5 h-5 text-gray-400" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="p-6 space-y-5">
+                                <div className="p-3 bg-purple-500/5 border border-purple-500/10 rounded-xl flex gap-3">
+                                    <Info className="w-5 h-5 text-purple-400 shrink-0" />
+                                    <p className="text-xs text-gray-400 leading-relaxed">
+                                        Enter your business details exactly as they appear on your CAC documents. Verification usually takes 15-60 seconds.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="col-span-1">
+                                        <label className="block text-xs font-medium text-gray-400 mb-2">RC / BN Number</label>
+                                        <input
+                                            type="text"
+                                            value={rcNumber}
+                                            disabled={isSubmitting}
+                                            onChange={(e) => handleInputChange(e.target.value)}
+                                            placeholder="RC1234567"
+                                            className="gemrails-input w-full"
+                                        />
+                                    </div>
+                                    <div className="col-span-1">
+                                        <label className="block text-xs font-medium text-gray-400 mb-2">Business Category</label>
+                                        <CategorySelector
+                                            value={businessCategory}
+                                            onChange={setBusinessCategory}
+                                            categories={BUSINESS_CATEGORIES}
+                                            disabled={isSubmitting}
+                                        />
+                                    </div>
+                                </div>
 
                     <div>
                     <label className="block text-xs font-medium text-gray-400 mb-2">Registered Business Address</label>

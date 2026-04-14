@@ -552,7 +552,7 @@ function AdminMerchantDetailsModal({
                               </div>
                             </div>
                             <a 
-                              href={`${process.env.NEXT_PUBLIC_API_URL}${merchant.cacDocumentUrl}`} 
+                              href={`${process.env.NEXT_PUBLIC_GEMRAILS_API_BASE_URL}${merchant.cacDocumentUrl}`} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded-lg text-xs font-bold transition-all"
