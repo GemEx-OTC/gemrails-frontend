@@ -802,13 +802,17 @@ export default function PaymentPage({
               {/* Continue Button */}
               <motion.button
                 onClick={handleInitiatePayment}
-                disabled={isLoading}
+                disabled={isLoading || initiatePaymentMutation.isPending}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-4 rounded-2xl font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-2xl font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <Wallet className="w-5 h-5" />
-                Get Payment Address
+                {initiatePaymentMutation.isPending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Wallet className="w-5 h-5" />
+                )}
+                {initiatePaymentMutation.isPending ? "Generating Address..." : "Get Payment Address"}
               </motion.button>
             </motion.div>
           )}
