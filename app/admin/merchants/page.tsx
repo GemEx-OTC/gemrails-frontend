@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import {
-  Store, Search, Filter, Eye, UserX, UserCheck, X, Shield,
+  Store, Search, Filter, Eye, UserX, UserCheck, X, Shield, Users,
   Mail, Calendar, TrendingUp, BanknoteIcon, Loader2, ChevronDown,
   CheckCircle, Clock, AlertCircle, Building2, Landmark, FileText, ExternalLink,
 } from "lucide-react"
@@ -15,6 +15,7 @@ import {
   useSuspendMerchant,
   useReactivateMerchant,
   useToggleTerminalStatus,
+  useUpdateReferralStatus,
 } from "@/lib/hooks/use-admin"
 import type { AdminMerchant, AdminMerchantDetails } from "@/lib/api/types"
 
@@ -426,7 +427,8 @@ function AdminMerchantDetailsModal({
 }) {
   const { data: merchant, isLoading } = useAdminMerchantDetails(merchantId);
   const toggleTerminalStatus = useToggleTerminalStatus();
-  const [activeTab, setActiveTab] = useState<"info" | "branches" | "terminals" | "transactions">("info");
+  const updateReferralStatus = useUpdateReferralStatus();
+  const [activeTab, setActiveTab] = useState<"info" | "branches" | "terminals" | "transactions" | "referrals">("info");
 
   return (
     <AnimatePresence>
@@ -486,6 +488,7 @@ function AdminMerchantDetailsModal({
                 { id: "info", label: "Business Info", icon: Landmark },
                 { id: "branches", label: "Branches", icon: Building2, count: merchant?.branches?.length },
                 { id: "terminals", label: "Terminals", icon: Landmark, count: merchant?.terminals?.length },
+                { id: "referrals", label: "Referrals", icon: Users },
                 { id: "transactions", label: "Recent Activity", icon: TrendingUp },
               ].map((tab) => (
                 <button
@@ -594,6 +597,33 @@ function AdminMerchantDetailsModal({
                           )}
                         </div>
                       )}
+                      
+                      <div className="md:col-span-2 space-y-4">
+                        <SectionHeader title="Referrals Status" icon={Users} />
+                        <div className="p-4 bg-gray-800/20 border border-gray-700 rounded-xl flex items-center justify-between">
+                          <div>
+                            <div className="text-white font-bold">Referral Status</div>
+                            <div className="text-gray-500 text-sm mt-1">
+                              {merchant.referralStatus === 'suspended' ? 'Suspended by Admin' : 'Active and earning'}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => updateReferralStatus.mutate({ 
+                              merchantId: merchant.id, 
+                              status: merchant.referralStatus === 'suspended' ? 'active' : 'suspended' 
+                            })}
+                            disabled={updateReferralStatus.isPending}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
+                              merchant.referralStatus === 'suspended'
+                                ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                                : "bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                            }`}
+                          >
+                            {updateReferralStatus.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 
+                             merchant.referralStatus === 'suspended' ? "Activate Referrals" : "Suspend Referrals"}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -693,6 +723,28 @@ function AdminMerchantDetailsModal({
                           <p>No terminals created yet</p>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {activeTab === "referrals" && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="p-4 bg-gray-800/40 border border-gray-800 rounded-xl">
+                          <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Referral Code</p>
+                          <p className="text-xl font-mono font-bold text-white">{merchant.referralCode || "N/A"}</p>
+                        </div>
+                        <div className="p-4 bg-gray-800/40 border border-gray-800 rounded-xl">
+                          <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Referral Balance</p>
+                          <p className="text-xl font-bold text-emerald-400">{formatCurrency(merchant.referralBalance || 0)}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <SectionHeader title="Referred Merchants" icon={Users} />
+                        <div className="p-4 bg-gray-800/20 border border-dashed border-gray-700 rounded-xl text-center text-gray-500 text-sm italic">
+                          Referral tracking list coming soon in v2 update (individual referee data)
+                        </div>
+                      </div>
                     </div>
                   )}
 

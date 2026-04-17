@@ -63,6 +63,11 @@ export const reactivateMerchant = async (merchantId: string): Promise<{ message:
   return response.data.data;
 };
 
+export const updateReferralStatus = async (merchantId: string, status: 'active' | 'suspended'): Promise<{ message: string }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string }>>(`/admin/merchants/${merchantId}/referral-status`, { status });
+  return response.data.data;
+};
+
 // Transactions
 export const getTransactions = async (params?: {
   status?: string;

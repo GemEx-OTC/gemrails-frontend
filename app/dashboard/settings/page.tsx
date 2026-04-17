@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { OTPInput } from "@/components/otp-input"
 import { InlineAlert } from "@/components/alert"
 import { useAuth } from "@/context/auth-context"
+import { useQueryClient } from "@tanstack/react-query"
 import { 
   useUpdateProfile, 
   useUpdateSettings, 
@@ -29,6 +30,7 @@ import { Loader2 } from "lucide-react"
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth()
+  const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<"business" | "bank" | "notifications" | "security">("security")
 
   useEffect(() => {
@@ -118,6 +120,7 @@ export default function SettingsPage() {
           onSuccess: () => {
             toast.success("Business profile updated!")
             refreshUser()
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] })
           },
           onError: (err: ApiError) => {
             toast.error(err.message || "Failed to update profile")
@@ -180,6 +183,7 @@ export default function SettingsPage() {
           onSuccess: () => {
             toast.success("Bank account set successfully!")
             refreshUser()
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] })
           },
           onError: (err: ApiError) => {
                toast.error(err.message || "Failed to set bank account")
@@ -261,6 +265,7 @@ export default function SettingsPage() {
           toast.success("Bank account updated successfully!")
           setShowBankChangeModal(false)
           refreshUser()
+          queryClient.invalidateQueries({ queryKey: ["dashboard"] })
           setVerifying(false)
         },
         onError: (err: ApiError) => {

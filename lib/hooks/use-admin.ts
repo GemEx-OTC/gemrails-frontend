@@ -65,6 +65,18 @@ export const useReactivateMerchant = () => {
   });
 };
 
+export const useUpdateReferralStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ merchantId, status }: { merchantId: string; status: 'active' | 'suspended' }) =>
+      adminApi.updateReferralStatus(merchantId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-merchant'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-merchants'] });
+    },
+  });
+};
+
 // Transactions
 export const useAdminTransactions = (params?: {
   status?: string;

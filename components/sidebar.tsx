@@ -51,6 +51,7 @@ const menuGroups: MenuGroup[] = [
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { name: "QR Code", href: "/dashboard/qr-code", icon: QrCode },
       { name: "Transactions", href: "/dashboard/transactions", icon: History },
+      { name: "Referrals", href: "/dashboard/referrals", icon: Users },
     ]
   },
 ]

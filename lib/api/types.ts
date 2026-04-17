@@ -54,6 +54,9 @@ export interface User {
   isBankAdded?: boolean;
   settledVolume?: number;
   tierLimit?: number;
+  referralCode?: string;
+  referralBalance?: number;
+  referralStatus?: 'active' | 'suspended';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -85,6 +88,7 @@ export interface RegisterInput {
   businessCategory?: string;
   businessAddress?: string;
   rcNumber?: string;
+  referralCode?: string;
 }
 
 export interface RegisterResponse {
@@ -300,6 +304,9 @@ export interface AdminMerchant {
   totalTransactions: number;
   totalVolume: number;
   bankAccount?: BankAccount;
+  referralCode?: string;
+  referralBalance?: number;
+  referralStatus?: 'active' | 'suspended';
   createdAt: string;
 }
 

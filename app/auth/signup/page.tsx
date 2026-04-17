@@ -5,7 +5,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Building2, Mail, Lock, Eye, EyeOff, ArrowRight, Check, Loader2, Store, Landmark, ChevronLeft } from "lucide-react"
+import { Building2, Mail, Lock, Eye, EyeOff, ArrowRight, Check, Loader2, Store, Landmark, ChevronLeft, UserPlus } from "lucide-react"
 import { toast } from "sonner"
 import { useRegister } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
@@ -19,6 +19,7 @@ export default function SignupPage() {
   const [businessName, setBusinessName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [referralCode, setReferralCode] = useState("")
   const [showPassword, setShowPassword] = useState(false)
 
   const validateDetails = (): string | null => {
@@ -53,7 +54,8 @@ export default function SignupPage() {
         businessName, 
         email, 
         password, 
-        accountType
+        accountType,
+        referralCode: referralCode.trim() || undefined
       },
       {
         onSuccess: () => {
@@ -186,6 +188,21 @@ export default function SignupPage() {
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2 font-outfit">Referral Code (Optional)</label>
+                <div className="relative group">
+                  <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-emerald-500 transition-colors" />
+                  <input
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    placeholder="GEM-XXXXXX"
+                    disabled={registerMutation.isPending}
+                    className="w-full bg-gray-900/50 border border-gray-800 focus:border-emerald-500/50 text-white pl-12 pr-4 py-3.5 rounded-xl transition-all outline-none"
+                  />
                 </div>
               </div>
 

@@ -117,9 +117,10 @@ export default function DashboardPage() {
         <SetupGuideWidget
           userRole={user?.role}
           accountType={user?.accountType}
-          phoneVerified={dashboardData?.user?.phoneVerified ?? user?.phoneVerified}
-          bankAdded={dashboardData?.user?.isBankAdded ?? (isEnterprise ? true : !!user?.bankAccount?.accountNumber)}
-          cacVerified={dashboardData?.user?.cacVerified ?? (user as any)?.cacVerified}
+          emailVerified={user?.emailVerified}
+          phoneVerified={dashboardData?.user?.phoneVerified || user?.phoneVerified}
+          bankAdded={dashboardData?.user?.isBankAdded || (isEnterprise ? true : !!user?.bankAccount?.accountNumber)}
+          cacVerified={dashboardData?.user?.cacVerified || (user as any)?.cacVerified}
           tier={dashboardData?.user?.tier ?? (user as any)?.tier}
           settledVolume={dashboardData?.user?.settledVolume}
           tierLimit={dashboardData?.user?.tierLimit}
