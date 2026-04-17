@@ -45,7 +45,8 @@ export default function AdminDashboardPage() {
   const transactions = data?.transactions || { total: 0, totalVolume: 0, settled: 0, settledVolume: 0, pending: 0, pendingVolume: 0 }
   const recentActivity = data?.recentActivity || []
   const referrals = (data as any)?.referrals || { totalUnpaid: 0, totalEarned: 0, totalWithdrawn: 0 }
-  const liquidity = (data as any)?.liquidity || { total: 0, actual: 0 }
+  const liquidity = (data as any)?.liquidity || { bankBalance: 0, referralDebt: 0, remittable: 0, referralCostRatio: 0 }
+  
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -191,9 +192,9 @@ export default function AdminDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             className="p-5 rounded-xl bg-gray-900/50 border border-gray-800"
           >
-            <p className="text-sm font-medium text-gray-500 mb-1">Total Unpaid Referrals</p>
-            <p className="text-2xl font-bold text-amber-500">{formatCurrency(referrals.totalUnpaid)}</p>
-            <p className="text-xs text-gray-600 mt-1">Amount owed to referrers</p>
+            <p className="text-sm font-medium text-gray-500 mb-1">Accrued Referral Debt</p>
+            <p className="text-2xl font-bold text-amber-500">{formatCurrency(liquidity.referralDebt)}</p>
+            <p className="text-xs text-gray-600 mt-1">Pending payout to referrers</p>
           </motion.div>
 
           <motion.div
@@ -202,9 +203,9 @@ export default function AdminDashboardPage() {
             transition={{ delay: 0.1 }}
             className="p-5 rounded-xl bg-gray-900/50 border border-gray-800"
           >
-            <p className="text-sm font-medium text-gray-500 mb-1">Total Liquidity (Settled)</p>
-            <p className="text-2xl font-bold text-white">{formatCurrency(liquidity.total)}</p>
-            <p className="text-xs text-gray-600 mt-1">Gross liquidity in system</p>
+            <p className="text-sm font-medium text-gray-500 mb-1">Nomba Account Balance</p>
+            <p className="text-2xl font-bold text-white">{formatCurrency(liquidity.bankBalance || 0)}</p>
+            <p className="text-xs text-gray-600 mt-1">Referral Cost Index: {(liquidity.referralCostRatio || 0).toFixed(1)}%</p>
           </motion.div>
 
           <motion.div
@@ -214,8 +215,8 @@ export default function AdminDashboardPage() {
             className="p-5 rounded-xl bg-linear-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20"
           >
             <p className="text-sm font-medium text-emerald-400 mb-1">Actual Balance (Remittable)</p>
-            <p className="text-2xl font-bold text-emerald-500">{formatCurrency(liquidity.actual)}</p>
-            <p className="text-xs text-emerald-500/50 mt-1">Available for merchant payouts</p>
+            <p className="text-2xl font-bold text-emerald-500">{formatCurrency(liquidity.remittable)}</p>
+            <p className="text-xs text-emerald-500/50 mt-1">Bank balance after referral debt</p>
           </motion.div>
         </div>
       </div>
