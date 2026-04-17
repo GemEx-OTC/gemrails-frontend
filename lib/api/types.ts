@@ -57,6 +57,7 @@ export interface User {
   referralCode?: string;
   referralBalance?: number;
   referralStatus?: 'active' | 'suspended';
+  referralBankAccount?: BankAccount;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -307,6 +308,7 @@ export interface AdminMerchant {
   referralCode?: string;
   referralBalance?: number;
   referralStatus?: 'active' | 'suspended';
+  referralBankAccount?: BankAccount;
   createdAt: string;
 }
 
