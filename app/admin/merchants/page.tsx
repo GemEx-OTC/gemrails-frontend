@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
+import { BusinessVerificationModal } from "@/components/business-verification-modal"
 import {
   Store, Search, Filter, Eye, UserX, UserCheck, X, Shield, Users,
   Mail, Calendar, TrendingUp, BanknoteIcon, Loader2, ChevronDown,
@@ -36,6 +37,7 @@ export default function MerchantsPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showSuspendModal, setShowSuspendModal] = useState(false)
   const [showVerifyModal, setShowVerifyModal] = useState(false)
+  const [showCacModal, setShowCacModal] = useState(false)
   const [suspendReason, setSuspendReason] = useState("")
 
   const { data, isLoading, refetch } = useAdminMerchants({
@@ -251,6 +253,11 @@ export default function MerchantsPage() {
                           <button onClick={() => handleViewDetails(merchant)} className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium flex items-center gap-1">
                             <Eye className="w-3 h-3" /> View
                           </button>
+                          {!merchant.cacVerified && (
+                            <button onClick={() => { setSelectedMerchant(merchant); setShowCacModal(true) }} className="text-xs px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-all font-medium flex items-center gap-1">
+                              <Building2 className="w-3 h-3" /> Verify CAC
+                            </button>
+                          )}
                           {merchant.status === "pending" && (
                             <button onClick={() => handleVerify(merchant)} className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-all font-medium flex items-center gap-1">
                               <Shield className="w-3 h-3" /> Verify
@@ -318,6 +325,10 @@ export default function MerchantsPage() {
         isOpen={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
         merchantId={selectedMerchant?.id || ""}
+        onVerifyCacClick={() => {
+          setShowDetailsModal(false)
+          setShowCacModal(true)
+        }}
       />
 
       {/* Suspend Modal */}
@@ -412,6 +423,17 @@ export default function MerchantsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* CAC Verification Modal */}
+      <BusinessVerificationModal
+        isOpen={showCacModal}
+        onClose={() => setShowCacModal(false)}
+        onVerified={() => {
+          refetch()
+        }}
+        merchantId={selectedMerchant?.id}
+        isAdmin={true}
+      />
     </motion.div>
   )
 }
@@ -419,11 +441,13 @@ export default function MerchantsPage() {
 function AdminMerchantDetailsModal({ 
   isOpen, 
   onClose, 
-  merchantId 
+  merchantId,
+  onVerifyCacClick
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
-  merchantId: string 
+  merchantId: string;
+  onVerifyCacClick: () => void;
 }) {
   const { data: merchant, isLoading } = useAdminMerchantDetails(merchantId);
   const toggleTerminalStatus = useToggleTerminalStatus();
@@ -542,7 +566,26 @@ function AdminMerchantDetailsModal({
                         <InfoItem label="Address" value={merchant.businessAddress} icon={Building2} />
                       </div>
                       <div className="md:col-span-2 space-y-4">
-                        <SectionHeader title="KYC Documents" icon={Shield} />
+                        <div className="flex justify-between items-center">
+                          <SectionHeader title="KYC Documents" icon={Shield} />
+                          {merchant.cacVerified ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              <CheckCircle className="w-3 h-3 text-emerald-400" /> Verified
+                            </span>
+                          ) : (
+                            <div className="flex gap-2 items-center">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                <Clock className="w-3 h-3 text-amber-400" /> Unverified
+                              </span>
+                              <button 
+                                onClick={onVerifyCacClick}
+                                className="text-xs px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all font-bold"
+                              >
+                                Submit CAC
+                              </button>
+                            </div>
+                          )}
+                        </div>
                         {merchant.cacDocumentUrl ? (
                           <div className="flex items-center justify-between p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl">
                             <div className="flex items-center gap-3">
@@ -792,6 +835,14 @@ function AdminMerchantDetailsModal({
                   Close
                 </button>
                 <div className="h-10 w-px bg-gray-800 mx-2" />
+                {!merchant.cacVerified && (
+                  <button 
+                    onClick={onVerifyCacClick}
+                    className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-all text-sm font-bold flex items-center gap-2"
+                  >
+                    <Building2 className="w-4 h-4" /> Submit CAC Verification
+                  </button>
+                )}
                 {merchant.status === "pending" && (
                   <button className="px-6 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all text-sm font-bold flex items-center gap-2">
                     <Shield className="w-4 h-4" /> Verify Merchant
