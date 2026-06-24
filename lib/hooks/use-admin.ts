@@ -77,6 +77,18 @@ export const useUpdateReferralStatus = () => {
   });
 };
 
+export const useVerifyMerchantCac = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ merchantId, data }: { merchantId: string; data: FormData }) =>
+      adminApi.verifyMerchantCac(merchantId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-merchant', variables.merchantId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-merchants'] });
+    },
+  });
+};
+
 // Transactions
 export const useAdminTransactions = (params?: {
   status?: string;
