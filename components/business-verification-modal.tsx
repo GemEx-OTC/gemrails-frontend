@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Building2, X, Check, Loader2, ChevronRight, Upload, Info, AlertCircle, Clock } from "lucide-react"
 import { useVerifyCac } from "@/lib/hooks/use-kyc"
 import { getKycStatus } from "@/lib/api/kyc"
+import { useVerifyMerchantCac } from "@/lib/hooks/use-admin"
+import { getMerchantKycStatus } from "@/lib/api/admin"
 import { CategorySelector } from "@/components/category-selector"
 import { BUSINESS_CATEGORIES } from "@/lib/constants"
 import { toast } from "sonner"
@@ -12,14 +14,19 @@ interface BusinessVerificationModalProps {
   isOpen: boolean
   onClose: () => void
   onVerified: () => void
+  merchantId?: string
+  isAdmin?: boolean
 }
 
 export function BusinessVerificationModal({
   isOpen,
   onClose,
   onVerified,
+  merchantId,
+  isAdmin = false,
 }: BusinessVerificationModalProps) {
   const verifyCacMutation = useVerifyCac()
+  const verifyMerchantCacMutation = useVerifyMerchantCac()
   const [rcNumber, setRcNumber] = useState("")
   const [businessCategory, setBusinessCategory] = useState("")
   const [businessAddress, setBusinessAddress] = useState("")
@@ -49,7 +56,9 @@ export function BusinessVerificationModal({
       if (pollCount.current > 12) setPollMessage("Still processing. Please stay with us...")
 
       try {
-        const result = await getKycStatus(jobId)
+        const result = isAdmin && merchantId
+          ? await getMerchantKycStatus(merchantId, jobId)
+          : await getKycStatus(jobId)
         
         if (result.status === "success") {
           clearInterval(pollingInterval.current!)
@@ -107,22 +116,33 @@ export function BusinessVerificationModal({
             formData.append("document", cacDocument);
         }
 
-        verifyCacMutation.mutate(formData, {
-            onSuccess: (data) => {
-                if (data.status === "success") {
-                    toast.success("Business verified successfully! ✓");
-                    onVerified();
-                    onClose();
-                } else {
-                    // It's pending, start polling
-                    startPolling(data.jobId);
-                }
-            },
-            onError: (err: ApiError) => {
-                toast.error(err.message || "Failed to submit verification");
-                setIsSubmitting(false);
+        const handleSuccess = (data: any) => {
+            if (data.status === "success") {
+                toast.success("Business verified successfully! ✓");
+                onVerified();
+                onClose();
+            } else {
+                // It's pending, start polling
+                startPolling(data.jobId);
             }
-        });
+        };
+
+        const handleError = (err: ApiError) => {
+            toast.error(err.message || "Failed to submit verification");
+            setIsSubmitting(false);
+        };
+
+        if (isAdmin && merchantId) {
+            verifyMerchantCacMutation.mutate({ merchantId, data: formData }, {
+                onSuccess: handleSuccess,
+                onError: handleError
+            });
+        } else {
+            verifyCacMutation.mutate(formData, {
+                onSuccess: handleSuccess,
+                onError: handleError
+            });
+        }
     };
 
     if (!isOpen) return null;
