@@ -309,6 +309,7 @@ export interface AdminMerchant {
   referralBalance?: number;
   referralStatus?: 'active' | 'suspended';
   referralBankAccount?: BankAccount;
+  cacVerified?: boolean;
   createdAt: string;
 }
 
