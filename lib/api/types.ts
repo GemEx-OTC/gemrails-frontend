@@ -258,7 +258,7 @@ export interface InitiatePaymentInput {
   merchantId: string;
   amount: number;
   cryptoAsset: 'USDT' | 'USDC';
-  network: 'TRC20' | 'BSC';
+  network: 'TRC20' | 'BSC' | 'ETH' | 'BASE' | 'POLYGON' | 'ARBITRUM' | 'OPTIMISM';
   customerRef?: string;
   customerName?: string;
   customerEmail?: string;

@@ -6,9 +6,13 @@ export const CRYPTO_ASSETS = {
 } as const
 
 export const CRYPTO_NETWORKS = {
-  TRC20: { name: "Tron (TRC20)", chain: "TRON" },
   BSC: { name: "BNB Smart Chain", chain: "BSC" },
-  ERC20: { name: "Ethereum (ERC20)", chain: "ETH" },
+  BASE: { name: "Base", chain: "BASE" },
+  ETH: { name: "Ethereum", chain: "ETH" },
+  POLYGON: { name: "Polygon", chain: "POLYGON" },
+  ARBITRUM: { name: "Arbitrum", chain: "ARBITRUM" },
+  OPTIMISM: { name: "Optimism", chain: "OPTIMISM" },
+  TRC20: { name: "Tron (TRC20)", chain: "TRON" },
 } as const
 
 export const MERCHANT_STATUS = {
