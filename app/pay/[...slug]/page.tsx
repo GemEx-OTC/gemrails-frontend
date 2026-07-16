@@ -794,7 +794,11 @@ export default function PaymentPage({
                           {CRYPTO_NETWORKS[selectedNetwork]?.name || selectedNetwork}
                         </span>
                         <span className="text-xs text-gray-400">
-                          {selectedNetwork === 'BSC' || selectedNetwork === 'BASE' ? 'Recommended • Low fees' : 'Standard'}
+                          {selectedNetwork === 'BSC' || selectedNetwork === 'BASE'
+                            ? 'Recommended • Low Fee'
+                            : selectedNetwork === 'ETH' || selectedNetwork === 'TRC20'
+                            ? 'High Fee'
+                            : 'Low Fee'}
                         </span>
                       </div>
                     </div>
@@ -807,132 +811,6 @@ export default function PaymentPage({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
-
-                  <AnimatePresence>
-                    {networkDropdownOpen && (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        {/* Backdrop overlay */}
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          onClick={() => setNetworkDropdownOpen(false)}
-                          className="fixed inset-0 bg-black/75 backdrop-blur-md"
-                        />
-
-                        {/* Modal Container */}
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                          transition={{ type: "spring", duration: 0.4, bounce: 0.1 }}
-                          className="bg-gray-950/95 backdrop-blur-xl border border-gray-800 rounded-3xl w-full max-w-md overflow-hidden relative shadow-2xl shadow-emerald-500/5 flex flex-col max-h-[85vh] z-50"
-                        >
-                          {/* Header */}
-                          <div className="p-6 border-b border-gray-800/80 flex items-center justify-between">
-                            <div>
-                              <h3 className="text-lg font-semibold text-white">Select Network</h3>
-                              <p className="text-xs text-gray-400 mt-1">
-                                Choose the blockchain network for your payment.
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setNetworkDropdownOpen(false)}
-                              className="p-1.5 rounded-lg bg-gray-850 hover:bg-gray-800 text-gray-400 hover:text-white transition-all border border-gray-800"
-                            >
-                              <X className="w-5 h-5" />
-                            </button>
-                          </div>
-
-                          {/* Network List */}
-                          <div className="p-4 overflow-y-auto flex flex-col gap-2 max-h-[50vh]">
-                            {(() => {
-                              // Custom ordered list of networks, Tron (TRC20) at the very bottom
-                              const orderedKeys: Array<keyof typeof CRYPTO_NETWORKS> = [
-                                'BSC', 'BASE', 'POLYGON', 'ARBITRUM', 'OPTIMISM', 'ETH', 'TRC20'
-                              ];
-
-                              return orderedKeys
-                                .filter((network) => !(selectedAsset === 'USDC' && network === 'TRC20'))
-                                .map((network) => {
-                                  const isSelected = selectedNetwork === network;
-                                  
-                                  // Fee/recommendation labels
-                                  let badgeText = '';
-                                  let badgeStyle = '';
-                                  if (network === 'BSC' || network === 'BASE') {
-                                    badgeText = 'Recommended • Low Fee';
-                                    badgeStyle = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-                                  } else if (network === 'ETH') {
-                                    badgeText = 'High Fee';
-                                    badgeStyle = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
-                                  } else if (network === 'TRC20') {
-                                    badgeText = 'Standard Fee';
-                                    badgeStyle = 'bg-gray-800 text-gray-400 border border-gray-700';
-                                  } else {
-                                    badgeText = 'Low Fee';
-                                    badgeStyle = 'bg-teal-500/10 text-teal-400 border border-teal-500/20';
-                                  }
-
-                                  return (
-                                    <button
-                                      key={network}
-                                      type="button"
-                                      onClick={() => {
-                                        setSelectedNetwork(network);
-                                        setNetworkDropdownOpen(false);
-                                      }}
-                                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left ${
-                                        isSelected
-                                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-md shadow-emerald-500/5'
-                                          : 'bg-gray-900/50 hover:bg-gray-800/60 text-gray-300 border-gray-850 hover:border-gray-700/80'
-                                      }`}
-                                    >
-                                      <div className="flex items-center gap-3.5">
-                                        <div className="w-10 h-10 rounded-xl bg-gray-800/80 flex items-center justify-center border border-gray-700/50">
-                                          <img
-                                            src={
-                                              network === "TRC20" ? "/icons/chains/tron.svg" :
-                                              network === "BSC" ? "/icons/chains/bnb.svg" :
-                                              network === "ETH" ? "/icons/chains/eth.svg" :
-                                              network === "BASE" ? "/icons/chains/base.svg" :
-                                              network === "POLYGON" ? "/icons/chains/polygon.svg" :
-                                              network === "ARBITRUM" ? "/icons/chains/arbitrum.svg" :
-                                              network === "OPTIMISM" ? "/icons/chains/optimism.svg" :
-                                              "/icons/chains/bnb.svg"
-                                            }
-                                            alt={network}
-                                            className="w-6 h-6 object-contain"
-                                          />
-                                        </div>
-                                        <div>
-                                          <span className="text-sm font-semibold block text-white">
-                                            {CRYPTO_NETWORKS[network]?.name}
-                                          </span>
-                                          <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1 ${badgeStyle}`}>
-                                            {badgeText}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      {isSelected && <Check className="w-5 h-5 text-emerald-400" />}
-                                    </button>
-                                  );
-                                });
-                            })()}
-                          </div>
-
-                          {/* Warning Footer */}
-                          <div className="p-5 bg-gray-950 border-t border-gray-900 flex items-start gap-2.5">
-                            <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                            <p className="text-[11px] text-gray-400 leading-relaxed">
-                              Sending assets to the incorrect network will result in permanent loss. Always ensure your wallet matches the selected network.
-                            </p>
-                          </div>
-                        </motion.div>
-                      </div>
-                    )}
-                  </AnimatePresence>
                 </div>
               </div>
 
@@ -1506,6 +1384,130 @@ export default function PaymentPage({
           )}
         </AnimatePresence>
       </main>
+
+      {/* Network Selection Modal Overlay - rendered at page root to avoid CSS transform relative constraints */}
+      <AnimatePresence>
+        {networkDropdownOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setNetworkDropdownOpen(false)}
+              className="fixed inset-0 bg-black/75 backdrop-blur-md z-[100]"
+            />
+
+            {/* Modal Container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", duration: 0.4, bounce: 0.1 }}
+              className="bg-gray-950/95 backdrop-blur-xl border border-gray-800 rounded-3xl w-full max-w-md overflow-hidden relative shadow-2xl shadow-emerald-500/5 flex flex-col max-h-[85vh] z-[101]"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-gray-800/80 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Select Network</h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Choose the blockchain network for your payment.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNetworkDropdownOpen(false)}
+                  className="p-1.5 rounded-lg bg-gray-850 hover:bg-gray-800 text-gray-400 hover:text-white transition-all border border-gray-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Network List */}
+              <div className="p-4 overflow-y-auto flex flex-col gap-2 max-h-[50vh]">
+                {(() => {
+                  // Custom ordered list of networks, Tron (TRC20) at the very bottom
+                  const orderedKeys: Array<keyof typeof CRYPTO_NETWORKS> = [
+                    'BSC', 'BASE', 'POLYGON', 'ARBITRUM', 'OPTIMISM', 'ETH', 'TRC20'
+                  ];
+
+                  return orderedKeys
+                    .filter((network) => !(selectedAsset === 'USDC' && network === 'TRC20'))
+                    .map((network) => {
+                      const isSelected = selectedNetwork === network;
+                      
+                      // Fee/recommendation labels
+                      let badgeText = '';
+                      let badgeStyle = '';
+                      if (network === 'BSC' || network === 'BASE') {
+                        badgeText = 'Recommended • Low Fee';
+                        badgeStyle = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                      } else if (network === 'ETH' || network === 'TRC20') {
+                        badgeText = 'High Fee';
+                        badgeStyle = 'bg-red-500/10 text-red-400 border border-red-500/20';
+                      } else {
+                        badgeText = 'Low Fee';
+                        badgeStyle = 'bg-teal-500/10 text-teal-400 border border-teal-500/20';
+                      }
+
+                      return (
+                        <button
+                          key={network}
+                          type="button"
+                          onClick={() => {
+                            setSelectedNetwork(network);
+                            setNetworkDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left ${
+                            isSelected
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-md shadow-emerald-500/5'
+                              : 'bg-gray-900/50 hover:bg-gray-800/60 text-gray-300 border-gray-850 hover:border-gray-700/80'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-xl bg-gray-800/80 flex items-center justify-center border border-gray-700/50">
+                              <img
+                                src={
+                                  network === "TRC20" ? "/icons/chains/tron.svg" :
+                                  network === "BSC" ? "/icons/chains/bnb.svg" :
+                                  network === "ETH" ? "/icons/chains/eth.svg" :
+                                  network === "BASE" ? "/icons/chains/base.svg" :
+                                  network === "POLYGON" ? "/icons/chains/polygon.svg" :
+                                  network === "ARBITRUM" ? "/icons/chains/arbitrum.svg" :
+                                  network === "OPTIMISM" ? "/icons/chains/optimism.svg" :
+                                  "/icons/chains/bnb.svg"
+                                }
+                                alt={network}
+                                className="w-6 h-6 object-contain"
+                              />
+                            </div>
+                            <div>
+                              <span className="text-sm font-semibold block text-white">
+                                {CRYPTO_NETWORKS[network]?.name}
+                              </span>
+                              <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1 ${badgeStyle}`}>
+                                {badgeText}
+                              </span>
+                            </div>
+                          </div>
+                          {isSelected && <Check className="w-5 h-5 text-emerald-400" />}
+                        </button>
+                      );
+                    });
+                })()}
+              </div>
+
+              {/* Warning Footer */}
+              <div className="p-5 bg-gray-950 border-t border-gray-900 flex items-start gap-2.5">
+                <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Sending assets to the incorrect network will result in permanent loss. Always ensure your wallet matches the selected network.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
