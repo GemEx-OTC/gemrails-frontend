@@ -166,7 +166,7 @@ export default function SweepPage() {
                   <h3 className="font-bold text-lg text-white">Pending Assets</h3>
                 </div>
                 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     onClick={handleSync}
                     disabled={isSyncing || !stats}
@@ -176,31 +176,33 @@ export default function SweepPage() {
                     Sync
                   </button>
 
-                  <button
-                    onClick={() => handleTriggerSweep('BSC')}
-                    disabled={!!sweeping || !stats}
-                    className="px-6 py-2.5 rounded-xl bg-amber-500 text-black font-black text-xs shadow-xl shadow-amber-500/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
-                  >
-                    {sweeping === 'BSC' ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <Zap className="w-3 h-3 fill-current" />
-                    )}
-                    Sweep BSC
-                  </button>
-
-                  <button
-                    onClick={() => handleTriggerSweep('TRC20')}
-                    disabled={!!sweeping || !stats}
-                    className="px-6 py-2.5 rounded-xl bg-red-500 text-white font-black text-xs shadow-xl shadow-red-500/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
-                  >
-                    {sweeping === 'TRC20' ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <Zap className="w-3 h-3 fill-current" />
-                    )}
-                    Sweep Tron
-                  </button>
+                  {(['BSC', 'TRC20', 'ETH', 'BASE', 'POLYGON', 'ARBITRUM', 'OPTIMISM'] as const).map((net) => {
+                    const colors: Record<string, string> = {
+                      BSC: 'bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20',
+                      TRC20: 'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20',
+                      ETH: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20',
+                      BASE: 'bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20',
+                      POLYGON: 'bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20',
+                      ARBITRUM: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20',
+                      OPTIMISM: 'bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500/20',
+                    };
+                    
+                    return (
+                      <button
+                        key={net}
+                        onClick={() => handleTriggerSweep(net)}
+                        disabled={!!sweeping || !stats}
+                        className={`px-3 py-2.5 rounded-xl font-bold text-xs transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-1.5 ${colors[net]}`}
+                      >
+                        {sweeping === net ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Zap className="w-3 h-3 fill-current" />
+                        )}
+                        {net}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -278,7 +280,16 @@ export default function SweepPage() {
                             </div>
                             <div className="flex flex-col">
                               <span className="font-black text-white text-xs whitespace-nowrap">{wallet.asset}</span>
-                              <span className={`text-[10px] font-black uppercase ${wallet.network === 'BSC' ? 'text-yellow-500' : 'text-red-500'}`}>{wallet.network}</span>
+                              <span className={`text-[10px] font-black uppercase ${
+                                wallet.network === 'BSC' ? 'text-amber-500' :
+                                wallet.network === 'TRC20' ? 'text-red-500' :
+                                wallet.network === 'ETH' ? 'text-indigo-400' :
+                                wallet.network === 'BASE' ? 'text-blue-400' :
+                                wallet.network === 'POLYGON' ? 'text-purple-400' :
+                                wallet.network === 'ARBITRUM' ? 'text-cyan-400' :
+                                wallet.network === 'OPTIMISM' ? 'text-rose-400' :
+                                'text-gray-400'
+                              }`}>{wallet.network}</span>
                             </div>
                           </div>
                         </td>
@@ -358,7 +369,16 @@ export default function SweepPage() {
                             </div>
                             <div className="flex flex-col">
                               <span className="font-black text-white text-base">{item.asset}</span>
-                              <span className={`text-[10px] font-black uppercase ${item.network === 'BSC' ? 'text-yellow-500' : 'text-red-500'}`}>{item.network}</span>
+                              <span className={`text-[10px] font-black uppercase ${
+                                item.network === 'BSC' ? 'text-amber-500' :
+                                item.network === 'TRC20' ? 'text-red-500' :
+                                item.network === 'ETH' ? 'text-indigo-400' :
+                                item.network === 'BASE' ? 'text-blue-400' :
+                                item.network === 'POLYGON' ? 'text-purple-400' :
+                                item.network === 'ARBITRUM' ? 'text-cyan-400' :
+                                item.network === 'OPTIMISM' ? 'text-rose-400' :
+                                'text-gray-400'
+                              }`}>{item.network}</span>
                             </div>
                           </div>
                         </td>
@@ -377,9 +397,23 @@ export default function SweepPage() {
                             <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/10">
                               <ShieldCheck className="w-4 h-4 text-emerald-500" />
                             </div>
-                            <span className="text-xs font-mono text-gray-400 hover:text-white transition-colors cursor-pointer truncate max-w-[200px]">
+                            <a
+                              href={
+                                item.network === "TRC20" ? `https://tronscan.org/#/transaction/${item.txId}` :
+                                item.network === "BSC" ? `https://bscscan.com/tx/${item.txId}` :
+                                item.network === "ETH" ? `https://etherscan.io/tx/${item.txId}` :
+                                item.network === "BASE" ? `https://basescan.org/tx/${item.txId}` :
+                                item.network === "POLYGON" ? `https://polygonscan.com/tx/${item.txId}` :
+                                item.network === "ARBITRUM" ? `https://arbiscan.io/tx/${item.txId}` :
+                                item.network === "OPTIMISM" ? `https://optimistic.etherscan.io/tx/${item.txId}` :
+                                `https://bscscan.com/tx/${item.txId}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-mono text-gray-400 hover:text-emerald-400 hover:underline transition-colors truncate max-w-[200px]"
+                            >
                               {item.txId}
-                            </span>
+                            </a>
                             <CopyButton text={item.txId} />
                           </div>
                         </td>
