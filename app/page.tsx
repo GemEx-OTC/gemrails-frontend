@@ -265,6 +265,18 @@ export default function HomePage() {
                 />
               </Link>
               <Link
+                href="/platform"
+                className="text-gray-400 hover:text-white transition-colors relative group"
+              >
+                Platform
+                <motion.span 
+                  className="absolute bottom-0 left-0 h-0.5 bg-emerald-400"
+                  initial={{ width: 0 }}
+                  whileHover={{ width: "100%" }}
+                  transition={{ duration: 0.2 }}
+                />
+              </Link>
+              <Link
                 href="/how-it-works"
                 className="text-gray-400 hover:text-white transition-colors relative group"
               >
@@ -364,6 +376,13 @@ export default function HomePage() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   About Us
+                </Link>
+                <Link
+                  href="/platform"
+                  className="block text-gray-400 hover:text-white transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Platform
                 </Link>
                 <Link
                   href="/how-it-works"
