@@ -16,9 +16,10 @@ import {
   Download,
   CheckCircle2,
   Loader2,
+  X,
 } from "lucide-react"
 import { toast } from "sonner"
-import { SUPPORTED_ASSETS } from "@/lib/constants"
+import { SUPPORTED_ASSETS, CRYPTO_NETWORKS } from "@/lib/constants"
 import { copyToClipboard } from "@/lib/clipboard"
 import { useMerchantInfo, useExchangeRate, useInitiatePayment, usePaymentStatus, useConfirmPayment } from "@/lib/hooks/use-payments"
 import { getImageUrl } from "@/lib/utils/image"
@@ -33,6 +34,9 @@ interface Merchant {
   merchantId: string
   verified: boolean
   isDemo?: boolean
+  type?: 'merchant' | 'terminal'
+  branchName?: string
+  terminalName?: string
 }
 
 interface Rates {
@@ -106,10 +110,12 @@ export default function PaymentPage({
   const [step, setStep] = useState<PaymentStep>("amount")
   const [nairaAmount, setNairaAmount] = useState("")
   const [selectedAsset, setSelectedAsset] = useState<"USDT" | "USDC">("USDT")
-  const [selectedNetwork, setSelectedNetwork] = useState<"BSC" | "TRC20">("BSC");
+  const [selectedNetwork, setSelectedNetwork] = useState<keyof typeof CRYPTO_NETWORKS>("BSC");
+  const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false)
+  const [amountCopied, setAmountCopied] = useState(false)
   const [error, setError] = useState("")
-  const [timeLeft, setTimeLeft] = useState(900)
+  const [timeLeft, setTimeLeft] = useState(600)
   const [isConfirming, setIsConfirming] = useState(false)
   const [isCapturing, setIsCapturing] = useState(false)
   const [customerName, setCustomerName] = useState("")
@@ -160,7 +166,7 @@ export default function PaymentPage({
         // If we were in processing, go back to payment to show remainder
         if (step === "processing") {
           setStep("payment")
-          toast.warning(`Underpayment detected. Please send the remaining ${cryptoRemaining} ${selectedAsset}`)
+          toast.warning(`Partial payment received. We're still expecting ${cryptoRemaining} ${selectedAsset} to complete your transaction.`)
         }
       }
     }
@@ -196,11 +202,29 @@ export default function PaymentPage({
   }
 
   useEffect(() => {
-    if (step === "payment" && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
-      return () => clearTimeout(timer)
+    if (step === "payment" && transaction?.expiresAt) {
+      // Calculate initial time immediately
+      const calculateTimeLeft = () => {
+        const expiryTime = new Date(transaction.expiresAt).getTime()
+        const now = Date.now()
+        const diff = Math.floor((expiryTime - now) / 1000)
+        return diff > 0 ? diff : 0
+      }
+
+      setTimeLeft(calculateTimeLeft())
+
+      const timer = setInterval(() => {
+        const remaining = calculateTimeLeft()
+        setTimeLeft(remaining)
+        
+        if (remaining <= 0) {
+          clearInterval(timer)
+        }
+      }, 1000)
+
+      return () => clearInterval(timer)
     }
-  }, [step, timeLeft])
+  }, [step, transaction?.expiresAt])
 
   const formatTime = (seconds: number) =>
     `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`
@@ -285,6 +309,19 @@ export default function PaymentPage({
     }
   }
 
+  const handleCopyAmount = async () => {
+    const displayAmount = (paymentStatusData as any)?.status === 'AwaitingRemainder' 
+      ? (paymentStatusData as any).cryptoRemaining?.toFixed(2) 
+      : (transaction?.cryptoAmount || cryptoAmount).toFixed(2);
+      
+    const success = await copyToClipboard(displayAmount)
+    if (success) {
+      setAmountCopied(true)
+      toast.success("Amount copied!")
+      setTimeout(() => setAmountCopied(false), 2000)
+    }
+  }
+
   const handleConfirmPayment = async () => {
     if (!transaction) return
     setIsConfirming(true)
@@ -306,17 +343,20 @@ export default function PaymentPage({
       {
         onSuccess: (data: any) => {
           if (data.status === 'AwaitingRemainder') {
-            toast.warning(`Underpayment detected. Still need ${data.cryptoRemaining} ${selectedAsset}`)
+            toast.warning(`Partial payment received. An additional ${data.cryptoRemaining} ${selectedAsset} is required to complete your transaction.`)
             setIsConfirming(false)
           } else {
+            toast.success("Payment detected! Finalizing your transaction...")
             setStep("processing")
           }
         },
         onError: (err: any) => {
           if (err.code === 'NO_DEPOSIT_DETECTED') {
-            toast.error("No deposit detected yet. Please check your wallet or wait a few moments.")
+            toast.error("We haven't seen your deposit on the blockchain yet. It usually takes a few minutes to appear. Please try again shortly.")
+          } else if (err.message?.includes('status')) {
+            toast.info("Your payment is already being processed. You should see the success screen in a few moments!")
           } else {
-            toast.error(err.message || "Verification failed")
+            toast.error("We couldn't verify your payment just yet. This might be due to network delays. Please wait a moment and try again.")
           }
           setIsConfirming(false)
         },
@@ -485,11 +525,27 @@ export default function PaymentPage({
               <h1 className="text-white font-bold text-xl tracking-tight">
                 {merchant.businessName}
               </h1>
-              <div className="flex items-center gap-1.5 text-emerald-100 text-sm mt-0.5">
+              <div className="flex items-start gap-2 text-emerald-100 mt-0.5">
                 {merchant.verified && (
-                  <Shield className="w-4 h-4 text-white" />
+                  <Shield className="w-4 h-4 text-white shrink-0 mt-0.5" />
                 )}
-                <span className="font-medium">Verified Merchant</span>
+                <div className="flex flex-col leading-tight">
+                  <span className="font-semibold text-sm">
+                    {merchant.type === "terminal"
+                      ? "Verified Enterprise"
+                      : "Verified Merchant"}
+                  </span>
+                  {merchant.type === "terminal" &&
+                    (merchant.branchName || merchant.terminalName) && (
+                      <span className="text-[10px] text-white/80 font-bold uppercase tracking-wider mt-0.5">
+                        {merchant.branchName}{" "}
+                        {merchant.branchName && merchant.terminalName
+                          ? "•"
+                          : ""}{" "}
+                        {merchant.terminalName}
+                      </span>
+                    )}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-full border border-gray-200 shadow-lg shadow-black/10">
@@ -704,57 +760,74 @@ export default function PaymentPage({
               </div>
 
               {/* Network Selection Card */}
-              <div className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-5 shadow-2xl shadow-black/30">
+              <div className="bg-gray-900/70 backdrop-blur-xl border border-gray-800/80 rounded-3xl p-5 shadow-2xl shadow-black/30 relative z-20">
                 <h3 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
                   <div className="w-5 h-5 rounded-md bg-emerald-500/20 flex items-center justify-center">
                     <span className="text-emerald-400 text-xs font-bold">2</span>
                   </div>
                   Select Network
                 </h3>
-                <div className="flex gap-2">
-                  {(["BSC", "TRC20"] as const)
-                    .filter(network => !(selectedAsset === 'USDC' && network === 'TRC20'))
-                    .map((network) => (
-                    <motion.button
-                      key={network}
-                      onClick={() => setSelectedNetwork(network)}
-                      whileTap={{ scale: 0.97 }}
-                      className={`flex-1 p-3 rounded-xl border transition-all ${selectedNetwork === network
-                        ? "border-emerald-500 bg-emerald-500/10"
-                        : "border-gray-700/80 bg-gray-800/40"
-                        }`}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <img
-                          src={`/icons/chains/${network === "TRC20" ? "tron" : "bnb"}.svg`}
-                          alt={network}
-                          className="w-5 h-5"
-                        />
-                        <span className="text-white font-medium text-sm">{network}</span>
-                        {selectedNetwork === network && (
-                          <Check className="w-4 h-4 text-emerald-400" />
-                        )}
+                
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setNetworkDropdownOpen(true)}
+                    className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-700/80 bg-gray-800/40 hover:bg-gray-800/60 hover:border-gray-600 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={
+                          selectedNetwork === "TRC20" ? "/icons/chains/tron.svg" :
+                          selectedNetwork === "BSC" ? "/icons/chains/bnb.svg" :
+                          selectedNetwork === "ETH" ? "/icons/chains/eth.svg" :
+                          selectedNetwork === "BASE" ? "/icons/chains/base.svg" :
+                          selectedNetwork === "POLYGON" ? "/icons/chains/polygon.svg" :
+                          selectedNetwork === "ARBITRUM" ? "/icons/chains/arbitrum.svg" :
+                          selectedNetwork === "OPTIMISM" ? "/icons/chains/optimism.svg" :
+                          "/icons/chains/bnb.svg"
+                        }
+                        alt={selectedNetwork}
+                        className="w-6 h-6 object-contain"
+                      />
+                      <div>
+                        <span className="text-white font-medium text-sm block">
+                          {CRYPTO_NETWORKS[selectedNetwork]?.name || selectedNetwork}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {selectedNetwork === 'BSC' || selectedNetwork === 'BASE'
+                            ? 'Recommended • Low Fee'
+                            : selectedNetwork === 'ETH' || selectedNetwork === 'TRC20'
+                            ? 'High Fee'
+                            : 'Low Fee'}
+                        </span>
                       </div>
-                      {network === "BSC" && (
-                        <p className="text-xs mt-1 text-emerald-400">
-                          Recommended • Low fees
-                        </p>
-                      )}
-                    </motion.button>
-                  ))}
+                    </div>
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
               {/* Continue Button */}
               <motion.button
                 onClick={handleInitiatePayment}
-                disabled={isLoading}
+                disabled={isLoading || initiatePaymentMutation.isPending}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-4 rounded-2xl font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-2xl font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <Wallet className="w-5 h-5" />
-                Get Payment Address
+                {initiatePaymentMutation.isPending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Wallet className="w-5 h-5" />
+                )}
+                {initiatePaymentMutation.isPending ? "Generating Address..." : "Get Payment Address"}
               </motion.button>
             </motion.div>
           )}
@@ -811,12 +884,26 @@ export default function PaymentPage({
                   <p className="text-gray-300 text-sm mb-2 font-medium">
                     {(paymentStatusData as any)?.status === 'AwaitingRemainder' ? "Remaining amount to send" : "Send exactly"}
                   </p>
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-3">
                     <p className="text-5xl font-bold text-white">
                       {(paymentStatusData as any)?.status === 'AwaitingRemainder' 
                         ? (paymentStatusData as any).cryptoRemaining?.toFixed(2) 
                         : (transaction?.cryptoAmount || cryptoAmount).toFixed(2)}
                     </p>
+                    <motion.button
+                      onClick={handleCopyAmount}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={`p-2 rounded-lg transition-all ${amountCopied 
+                        ? "bg-emerald-500/20 text-emerald-400" 
+                        : "text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10"}`}
+                    >
+                      {amountCopied ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </motion.button>
                   </div>
 
                   {(paymentStatusData as any)?.status === 'AwaitingRemainder' && (
@@ -916,8 +1003,17 @@ export default function PaymentPage({
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-4 rounded-2xl font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-2"
               >
-                <Check className="w-5 h-5" />
-                I've Sent the Payment
+                {isConfirming ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Verifying Payment...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-5 h-5" />
+                    I've Sent the Payment
+                  </>
+                )}
               </motion.button>
             </motion.div>
           )}
@@ -1056,11 +1152,25 @@ export default function PaymentPage({
                       <span className="text-white font-semibold">{selectedNetwork}</span>
                     </div>
                     <div className="flex justify-between text-sm py-2 border-b border-gray-800">
-                      <span className="text-gray-400">Merchant</span>
+                      <span className="text-gray-400">
+                        {merchant.type === 'terminal' ? 'Enterprise' : 'Merchant'}
+                      </span>
                       <span className="text-white font-semibold">
                         {merchant.businessName}
                       </span>
                     </div>
+                    {merchant.branchName && (
+                      <div className="flex justify-between text-sm py-2 border-b border-gray-800">
+                        <span className="text-gray-400">Branch</span>
+                        <span className="text-white font-semibold">{merchant.branchName}</span>
+                      </div>
+                    )}
+                    {merchant.terminalName && (
+                      <div className="flex justify-between text-sm py-2 border-b border-gray-800">
+                        <span className="text-gray-400">Terminal</span>
+                        <span className="text-white font-semibold">{merchant.terminalName}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center pt-2">
                       <span className="text-gray-400">Reference</span>
                       <span className="text-emerald-400 font-mono font-bold bg-emerald-500/10 px-3 py-1 rounded-lg">
@@ -1274,6 +1384,130 @@ export default function PaymentPage({
           )}
         </AnimatePresence>
       </main>
+
+      {/* Network Selection Modal Overlay - rendered at page root to avoid CSS transform relative constraints */}
+      <AnimatePresence>
+        {networkDropdownOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setNetworkDropdownOpen(false)}
+              className="fixed inset-0 bg-black/75 backdrop-blur-md z-[100]"
+            />
+
+            {/* Modal Container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", duration: 0.4, bounce: 0.1 }}
+              className="bg-gray-950/95 backdrop-blur-xl border border-gray-800 rounded-3xl w-full max-w-md overflow-hidden relative shadow-2xl shadow-emerald-500/5 flex flex-col max-h-[85vh] z-[101]"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-gray-800/80 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Select Network</h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Choose the blockchain network for your payment.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNetworkDropdownOpen(false)}
+                  className="p-1.5 rounded-lg bg-gray-850 hover:bg-gray-800 text-gray-400 hover:text-white transition-all border border-gray-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Network List */}
+              <div className="p-4 overflow-y-auto flex flex-col gap-2 max-h-[50vh]">
+                {(() => {
+                  // Custom ordered list of networks, Tron (TRC20) at the very bottom
+                  const orderedKeys: Array<keyof typeof CRYPTO_NETWORKS> = [
+                    'BSC', 'BASE', 'POLYGON', 'ARBITRUM', 'OPTIMISM', 'ETH', 'TRC20'
+                  ];
+
+                  return orderedKeys
+                    .filter((network) => !(selectedAsset === 'USDC' && network === 'TRC20'))
+                    .map((network) => {
+                      const isSelected = selectedNetwork === network;
+                      
+                      // Fee/recommendation labels
+                      let badgeText = '';
+                      let badgeStyle = '';
+                      if (network === 'BSC' || network === 'BASE') {
+                        badgeText = 'Recommended • Low Fee';
+                        badgeStyle = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                      } else if (network === 'ETH' || network === 'TRC20') {
+                        badgeText = 'High Fee';
+                        badgeStyle = 'bg-red-500/10 text-red-400 border border-red-500/20';
+                      } else {
+                        badgeText = 'Low Fee';
+                        badgeStyle = 'bg-teal-500/10 text-teal-400 border border-teal-500/20';
+                      }
+
+                      return (
+                        <button
+                          key={network}
+                          type="button"
+                          onClick={() => {
+                            setSelectedNetwork(network);
+                            setNetworkDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left ${
+                            isSelected
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-md shadow-emerald-500/5'
+                              : 'bg-gray-900/50 hover:bg-gray-800/60 text-gray-300 border-gray-850 hover:border-gray-700/80'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-xl bg-gray-800/80 flex items-center justify-center border border-gray-700/50">
+                              <img
+                                src={
+                                  network === "TRC20" ? "/icons/chains/tron.svg" :
+                                  network === "BSC" ? "/icons/chains/bnb.svg" :
+                                  network === "ETH" ? "/icons/chains/eth.svg" :
+                                  network === "BASE" ? "/icons/chains/base.svg" :
+                                  network === "POLYGON" ? "/icons/chains/polygon.svg" :
+                                  network === "ARBITRUM" ? "/icons/chains/arbitrum.svg" :
+                                  network === "OPTIMISM" ? "/icons/chains/optimism.svg" :
+                                  "/icons/chains/bnb.svg"
+                                }
+                                alt={network}
+                                className="w-6 h-6 object-contain"
+                              />
+                            </div>
+                            <div>
+                              <span className="text-sm font-semibold block text-white">
+                                {CRYPTO_NETWORKS[network]?.name}
+                              </span>
+                              <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1 ${badgeStyle}`}>
+                                {badgeText}
+                              </span>
+                            </div>
+                          </div>
+                          {isSelected && <Check className="w-5 h-5 text-emerald-400" />}
+                        </button>
+                      );
+                    });
+                })()}
+              </div>
+
+              {/* Warning Footer */}
+              <div className="p-5 bg-gray-950 border-t border-gray-900 flex items-start gap-2.5">
+                <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Sending assets to the incorrect network will result in permanent loss. Always ensure your wallet matches the selected network.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

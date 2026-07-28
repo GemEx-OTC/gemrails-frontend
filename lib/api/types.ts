@@ -50,6 +50,14 @@ export interface User {
   enterpriseId?: string;
   bankAccount?: BankAccount;
   settings?: UserSettings;
+  tier?: number;
+  isBankAdded?: boolean;
+  settledVolume?: number;
+  tierLimit?: number;
+  referralCode?: string;
+  referralBalance?: number;
+  referralStatus?: 'active' | 'suspended';
+  referralBankAccount?: BankAccount;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -81,6 +89,7 @@ export interface RegisterInput {
   businessCategory?: string;
   businessAddress?: string;
   rcNumber?: string;
+  referralCode?: string;
 }
 
 export interface RegisterResponse {
@@ -139,11 +148,18 @@ export interface ChangePasswordInput {
 }
 
 // Dashboard Types
-export interface DashboardStats {
-  totalTransactions: number;
-  totalVolume: number;
-  pendingTransactions: number;
-  completedTransactions: number;
+export interface DashboardData {
+  user: User;
+  stats: {
+    totalReceived: number;
+    totalIncentives: number;
+    totalTransactions: number;
+    pendingPayments: number;
+    branchCount?: number;
+    terminalCount?: number;
+  };
+  recentTransactions: Transaction[];
+  unreadNotifications: number;
 }
 
 export interface Transaction {
@@ -160,6 +176,7 @@ export interface Transaction {
   reference?: string;
   walletAddress?: string;
   txHash?: string;
+  payoutAccount?: BankAccount;
   createdAt: string;
   updatedAt: string;
 }
@@ -169,6 +186,8 @@ export interface TransactionsParams {
   limit?: number;
   status?: string;
   search?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface TransactionsResponse {
@@ -230,13 +249,16 @@ export interface MerchantInfo {
   businessName: string;
   businessLogo?: string;
   isActive: boolean;
+  type?: 'merchant' | 'terminal';
+  branchName?: string;
+  terminalName?: string;
 }
 
 export interface InitiatePaymentInput {
   merchantId: string;
   amount: number;
   cryptoAsset: 'USDT' | 'USDC';
-  network: 'TRC20' | 'BSC';
+  network: 'TRC20' | 'BSC' | 'ETH' | 'BASE' | 'POLYGON' | 'ARBITRUM' | 'OPTIMISM';
   customerRef?: string;
   customerName?: string;
   customerEmail?: string;
@@ -283,6 +305,11 @@ export interface AdminMerchant {
   totalTransactions: number;
   totalVolume: number;
   bankAccount?: BankAccount;
+  referralCode?: string;
+  referralBalance?: number;
+  referralStatus?: 'active' | 'suspended';
+  referralBankAccount?: BankAccount;
+  cacVerified?: boolean;
   createdAt: string;
 }
 
@@ -301,6 +328,7 @@ export interface AdminMerchantDetails extends AdminMerchant {
   businessAddress?: string;
   contactName?: string;
   rcNumber?: string;
+  cacDocumentUrl?: string;
   merchantId?: string;
   settings?: UserSettings;
   recentTransactions: AdminTransaction[];
@@ -323,6 +351,9 @@ export interface AdminMerchantDetails extends AdminMerchant {
     merchantId: string;
     isActive: boolean;
     bankAccount?: BankAccount;
+    type?: 'merchant' | 'terminal';
+    branchName?: string;
+    terminalName?: string;
     createdAt: string;
   }[];
   updatedAt: string;
@@ -343,6 +374,8 @@ export interface AdminTransaction {
   payoutAccount?: BankAccount;
   riskScore?: number;
   isBadFunds?: boolean;
+  amlReportUrl?: string;
+  amlStatus?: string;
   timestamp: string;
 }
 
@@ -424,6 +457,9 @@ export interface PlatformSettings {
   badFundsWalletAddressTron?: string;
   overflowWalletAddressBsc?: string;
   overflowWalletAddressTron?: string;
+  usdtNgnRate: number;
+  usdcNgnRate: number;
+  sweepThresholdUsd: number;
 }
 
 // Admin Dashboard Types

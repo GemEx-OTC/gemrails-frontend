@@ -4,10 +4,10 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Building2, User, CreditCard, Bell, Shield, Save, Check, Upload, MapPin, Mail, Phone, X, Lock, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
-import { BUSINESS_CATEGORIES } from "@/lib/constants"
 import { OTPInput } from "@/components/otp-input"
 import { InlineAlert } from "@/components/alert"
 import { useAuth } from "@/context/auth-context"
+import { useQueryClient } from "@tanstack/react-query"
 import { 
   useUpdateProfile, 
   useUpdateSettings, 
@@ -22,7 +22,7 @@ import {
   useVerifyPhoneOtp
 } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
-import { useVerifyCac } from "@/lib/hooks/use-kyc"
+
 import { getImageUrl } from "@/lib/utils/image"
 import { BankSelector } from "@/components/bank-selector"
 import { PhoneVerificationModal } from "@/components/phone-verification-modal"
@@ -30,7 +30,8 @@ import { Loader2 } from "lucide-react"
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth()
-  const [activeTab, setActiveTab] = useState<"business" | "bank" | "notifications" | "security" | "verification">("security")
+  const queryClient = useQueryClient()
+  const [activeTab, setActiveTab] = useState<"business" | "bank" | "notifications" | "security">("security")
 
   useEffect(() => {
     if (user && user.role !== 'branch_mod') {
@@ -48,9 +49,7 @@ export default function SettingsPage() {
   const changePasswordMutation = useChangePassword()
   const sendPhoneOtpMutation = useSendPhoneOtp()
   const verifyPhoneOtpMutation = useVerifyPhoneOtp()
-  const verifyCacMutation = useVerifyCac()
-  const [cacValue, setCacValue] = useState("")
-  const [cacDocument, setCacDocument] = useState<File | null>(null)
+
 
   // Business form state
   const [businessName, setBusinessName] = useState("")
@@ -121,6 +120,7 @@ export default function SettingsPage() {
           onSuccess: () => {
             toast.success("Business profile updated!")
             refreshUser()
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] })
           },
           onError: (err: ApiError) => {
             toast.error(err.message || "Failed to update profile")
@@ -172,10 +172,32 @@ export default function SettingsPage() {
   }
 
   const handleBankChange = () => {
-    if (!user?.phoneVerified) {
+    const hasBank = !!user?.bankAccount?.accountNumber
+    
+    // If it's the first time, save directly
+    if (!hasBank) {
+      const bank = banksData?.find((b) => b.code === bankCode)
+      updateBankMutation.mutate(
+        { bankCode, bankName: bank?.name || "", accountNumber, accountName },
+        {
+          onSuccess: () => {
+            toast.success("Bank account set successfully!")
+            refreshUser()
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] })
+          },
+          onError: (err: ApiError) => {
+               toast.error(err.message || "Failed to set bank account")
+          }
+        }
+      )
+      return
+    }
+
+    if (hasBank && !user?.phoneVerified) {
       setShowPhoneVerificationModal(true)
       return
     }
+
     setShowBankChangeModal(true)
     setOtpValue("")
     setOtpError(false)
@@ -214,10 +236,10 @@ export default function SettingsPage() {
   const handleSendOtp = () => {
     setOtpSending(true)
     sendOtpMutation.mutate(undefined, {
-      onSuccess: () => {
+      onSuccess: (data: any) => {
         setOtpSending(false)
         setOtpSent(true)
-        toast.success("OTP sent to your email!")
+        toast.success(data.message || "OTP sent successfully!")
       },
       onError: (err: ApiError) => {
         setOtpSending(false)
@@ -243,6 +265,7 @@ export default function SettingsPage() {
           toast.success("Bank account updated successfully!")
           setShowBankChangeModal(false)
           refreshUser()
+          queryClient.invalidateQueries({ queryKey: ["dashboard"] })
           setVerifying(false)
         },
         onError: (err: ApiError) => {
@@ -296,42 +319,12 @@ export default function SettingsPage() {
   const saving = updateProfileMutation.isPending || updateSettingsMutation.isPending
   const uploadingLogo = uploadLogoMutation.isPending || deleteLogoMutation.isPending
 
-  const handleVerifyCac = () => {
-    if (!cacValue.startsWith("RC")) {
-      toast.error("Invalid RC Number. Must start with 'RC'")
-      return
-    }
-    
-    // We can also validate businessAddress and Category here
-    if (!businessAddress || !businessCategory) {
-      toast.error("Please provide Business Address and Category for Tier 2 verification")
-      return
-    }
 
-    const formData = new FormData()
-    formData.append('rcNumber', cacValue)
-    formData.append('businessAddress', businessAddress)
-    formData.append('businessCategory', businessCategory)
-    if (cacDocument) {
-      formData.append('document', cacDocument)
-    }
-
-    verifyCacMutation.mutate(formData, {
-      onSuccess: () => {
-        toast.success("CAC Verified! You are now Tier 2.")
-        refreshUser()
-      },
-      onError: (err: ApiError) => {
-        toast.error(err.message || "Failed to verify CAC")
-      }
-    })
-  }
 
   const tabs = [
     ...(user?.role !== 'branch_mod' ? [
       { id: "business", label: "Business Profile", icon: Building2 },
-      { id: "bank", label: "Bank Account", icon: CreditCard },
-      { id: "verification", label: "Verification/KYC", icon: ShieldCheck }
+      ...(user?.accountType !== 'enterprise' ? [{ id: "bank", label: "Bank Account", icon: CreditCard }] : [])
     ] : []),
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "security", label: "Security", icon: Shield },
@@ -426,11 +419,13 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Merchant ID</label>
-                <div className="font-mono text-white">{user?.merchantId || "N/A"}</div>
-              </div>
+            <div className={`grid ${user?.accountType === 'enterprise' ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700`}>
+              {user?.accountType !== 'enterprise' && (
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Merchant ID</label>
+                  <div className="font-mono text-white">{user?.merchantId || "N/A"}</div>
+                </div>
+              )}
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Status</label>
                 <div className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 capitalize">
@@ -503,7 +498,7 @@ export default function SettingsPage() {
           </motion.div>
         )}
 
-        {activeTab === "bank" && (
+        {activeTab === "bank" && user?.accountType !== 'enterprise' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 w-[550px]">
             <InlineAlert
               type="warning"
@@ -566,7 +561,7 @@ export default function SettingsPage() {
               className="gemrails-button-outline w-full flex items-center justify-center gap-2"
             >
               <Lock className="w-4 h-4" />
-              Change Bank Account
+              {user?.bankAccount?.accountNumber ? "Change Bank Account" : "Set Bank Account"}
             </motion.button>
           </motion.div>
         )}
@@ -673,113 +668,9 @@ export default function SettingsPage() {
           </motion.div>
         )}
 
-        {activeTab === "verification" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 w-[550px]">
-            <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-              <ShieldCheck className="w-5 h-5 text-emerald-400" />
-              <div>
-                <p className="font-semibold text-emerald-100">Tier 2 Verification</p>
-                <p className="text-sm text-emerald-200/70">Complete CAC verification to unlock higher transaction limits.</p>
-              </div>
-            </div>
 
-            <div className="p-6 bg-gray-800/50 border border-gray-700 rounded-xl space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-white">CAC Verification</h3>
-                {user?.cacVerified ? (
-                  <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full flex items-center gap-1">
-                    <Check className="w-3 h-3" />
-                    Verified
-                  </span>
-                ) : (
-                  <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full flex items-center gap-1">
-                    Pending
-                  </span>
-                )}
-              </div>
 
-               {!user?.cacVerified ? (
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="col-span-full">
-                    <label className="block text-sm font-medium text-white mb-2">RC Number</label>
-                    <div className="relative">
-                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                      <input
-                        type="text"
-                        value={cacValue}
-                        onChange={(e) => setCacValue(e.target.value)}
-                        placeholder="RC1234567"
-                        className="gemrails-input-icon uppercase"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-span-full">
-                    <label className="block text-sm font-medium text-white mb-2">CAC Document (Optional PDF/IMG Upload)</label>
-                    <div className="relative">
-                      <input 
-                        type="file" 
-                        accept=".pdf,image/*"
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            setCacDocument(e.target.files[0])
-                          }
-                        }}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20 transition-colors"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-2">Business Category</label>
-                    <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="gemrails-select">
-                      {BUSINESS_CATEGORIES.map((cat) => (
-                        <option key={cat.value} value={cat.value}>
-                          {cat.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-2">Business Address</label>
-                    <textarea
-                      value={businessAddress}
-                      onChange={(e) => setBusinessAddress(e.target.value)}
-                      rows={2}
-                      placeholder="Physical address"
-                      className="gemrails-input resize-none h-auto py-3"
-                    />
-                  </div>
-
-                  <div className="col-span-full pt-4 border-t border-gray-800">
-                    <motion.button
-                      onClick={handleVerifyCac}
-                      disabled={verifyCacMutation.isPending || !cacValue}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="gemrails-button w-full flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {verifyCacMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Submitting...
-                        </>
-                      ) : (
-                        "Complete Tier 2 Verification"
-                      )}
-                    </motion.button>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
-                  <p className="text-sm text-gray-300">
-                    Your business is fully verified. You have access to all enterprise features.
-                  </p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab !== "bank" && activeTab !== "verification" && (
+        {activeTab !== "bank" && (
           <div className="mt-6 pt-6 border-t border-gray-800 flex justify-end">
             <motion.button
               onClick={handleSave}
@@ -832,7 +723,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold text-white">Verify Bank Change</h2>
-                      <p className="text-sm text-gray-400">Enter the OTP sent to your email</p>
+                      <p className="text-sm text-gray-400">Enter the OTP sent to your {user?.phoneVerified ? 'phone' : 'email'}</p>
                     </div>
                   </div>
                   <button onClick={() => setShowBankChangeModal(false)} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
@@ -846,10 +737,11 @@ export default function SettingsPage() {
                   <>
                     <div className="text-center">
                       <p className="text-gray-400 mb-4">
-                        We'll send a 6-digit verification code to your registered email address{" "}
-                        <span className="text-white font-medium">
-                          {user?.email ? `${user.email.charAt(0)}***${user.email.split('@')[0].slice(-1)}@${user.email.split('@')[1]}` : "your email"}
-                        </span>
+                        {user?.phoneVerified ? (
+                          <>We'll send a 6-digit verification code to your registered phone number <span className="text-white font-medium">{user.phone}</span></>
+                        ) : (
+                          <>We'll send a 6-digit verification code to your registered email address <span className="text-white font-medium">{user?.email ? `${user.email.charAt(0)}***${user.email.split('@')[0].slice(-1)}@${user.email.split('@')[1]}` : "your email"}</span></>
+                        )}
                       </p>
                     </div>
                     <motion.button
@@ -870,7 +762,7 @@ export default function SettingsPage() {
                         </>
                       ) : (
                         <>
-                          <Mail className="w-5 h-5" />
+                          {user?.phoneVerified ? <Phone className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
                           Send OTP
                         </>
                       )}
@@ -880,9 +772,7 @@ export default function SettingsPage() {
                   <>
                     <div className="text-center mb-6">
                       <p className="text-gray-400">
-                        Enter the 6-digit code sent to <span className="text-white font-medium">
-                          {user?.email ? `${user.email.charAt(0)}***${user.email.split('@')[0].slice(-1)}@${user.email.split('@')[1]}` : "your email"}
-                        </span>
+                        Enter the 6-digit code sent to <span className="text-white font-medium">{user?.phoneVerified ? user.phone : user?.email}</span>
                       </p>
                     </div>
 

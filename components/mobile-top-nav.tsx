@@ -52,7 +52,7 @@ export function MobileTopNav() {
       <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a0d10]/95 backdrop-blur-xl border-b border-gray-800 safe-area-top"
+        className="md:hidden fixed top-0 left-0 right-0 z-[100] bg-[#0a0d10]/95 backdrop-blur-xl border-b border-gray-800 safe-area-top"
       >
         <div className="flex items-center justify-between px-4 py-3">
           {/* Logo */}
@@ -103,7 +103,7 @@ export function MobileTopNav() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setMenuOpen(false)}
-              className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+              className="md:hidden fixed inset-0 z-[140] bg-black/60 backdrop-blur-sm"
             />
 
             {/* Slide-out Panel */}
@@ -112,7 +112,7 @@ export function MobileTopNav() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="md:hidden fixed top-0 right-0 bottom-0 w-[280px] max-w-[85vw] z-50 bg-[#0a0d10] border-l border-gray-800 flex flex-col safe-area-inset"
+              className="md:hidden fixed top-0 right-0 bottom-0 w-[280px] max-w-[85vw] z-[150] bg-[#0a0d10] border-l border-gray-800 flex flex-col safe-area-inset"
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-800">

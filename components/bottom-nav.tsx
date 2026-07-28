@@ -22,7 +22,7 @@ export function BottomNav({ currentPath }: BottomNavProps) {
   const { unreadCount } = useNotification()
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0a0d10]/95 backdrop-blur-xl border-t border-gray-800 z-50 safe-area-bottom">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0a0d10]/95 backdrop-blur-xl border-t border-gray-800 z-[100] safe-area-bottom">
       <div className="flex items-center justify-around px-1 py-1">
         {navItems.map((item) => {
           const isActive = item.href === "/dashboard"

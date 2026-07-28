@@ -65,12 +65,38 @@ export const useReactivateMerchant = () => {
   });
 };
 
+export const useUpdateReferralStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ merchantId, status }: { merchantId: string; status: 'active' | 'suspended' }) =>
+      adminApi.updateReferralStatus(merchantId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-merchant'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-merchants'] });
+    },
+  });
+};
+
+export const useVerifyMerchantCac = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ merchantId, data }: { merchantId: string; data: FormData }) =>
+      adminApi.verifyMerchantCac(merchantId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-merchant', variables.merchantId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-merchants'] });
+    },
+  });
+};
+
 // Transactions
 export const useAdminTransactions = (params?: {
   status?: string;
   search?: string;
   page?: number;
   limit?: number;
+  startDate?: string;
+  endDate?: string;
 }) => {
   return useQuery({
     queryKey: ['admin-transactions', params],

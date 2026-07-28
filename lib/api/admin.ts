@@ -63,6 +63,31 @@ export const reactivateMerchant = async (merchantId: string): Promise<{ message:
   return response.data.data;
 };
 
+export const updateReferralStatus = async (merchantId: string, status: 'active' | 'suspended'): Promise<{ message: string }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string }>>(`/admin/merchants/${merchantId}/referral-status`, { status });
+  return response.data.data;
+};
+
+export const verifyMerchantCac = async (merchantId: string, data: FormData): Promise<{ message: string; tier?: number; status: string; jobId: string }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string; tier?: number; status: string; jobId: string }>>(
+    `/admin/merchants/${merchantId}/verify-cac`,
+    data,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+  return response.data.data;
+};
+
+export const getMerchantKycStatus = async (merchantId: string, jobId: string): Promise<{ status: string; message: string; tier?: number }> => {
+  const response = await apiClient.get<ApiResponse<{ status: string; message: string; tier?: number }>>(
+    `/admin/merchants/${merchantId}/kyc-status/${jobId}`
+  );
+  return response.data.data;
+};
+
 // Transactions
 export const getTransactions = async (params?: {
   status?: string;
@@ -163,8 +188,13 @@ export const getSweepStats = async (): Promise<any> => {
   return response.data.data;
 };
 
-export const triggerSweep = async (): Promise<any> => {
-  const response = await apiClient.post<ApiResponse<any>>('/admin/sweep/trigger', {});
+export const triggerSweep = async (network?: string): Promise<any> => {
+  const response = await apiClient.post<ApiResponse<any>>('/admin/sweep/trigger', { network });
+  return response.data.data;
+};
+
+export const syncSweepStats = async (): Promise<any> => {
+  const response = await apiClient.post<ApiResponse<any>>('/admin/sweep/sync');
   return response.data.data;
 };
 

@@ -3,10 +3,11 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
+import { BusinessVerificationModal } from "@/components/business-verification-modal"
 import {
-  Store, Search, Filter, Eye, UserX, UserCheck, X, Shield,
+  Store, Search, Filter, Eye, UserX, UserCheck, X, Shield, Users,
   Mail, Calendar, TrendingUp, BanknoteIcon, Loader2, ChevronDown,
-  CheckCircle, Clock, AlertCircle, Building2, Landmark,
+  CheckCircle, Clock, AlertCircle, Building2, Landmark, FileText, ExternalLink,
 } from "lucide-react"
 import {
   useAdminMerchants,
@@ -15,6 +16,7 @@ import {
   useSuspendMerchant,
   useReactivateMerchant,
   useToggleTerminalStatus,
+  useUpdateReferralStatus,
 } from "@/lib/hooks/use-admin"
 import type { AdminMerchant, AdminMerchantDetails } from "@/lib/api/types"
 
@@ -35,6 +37,7 @@ export default function MerchantsPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showSuspendModal, setShowSuspendModal] = useState(false)
   const [showVerifyModal, setShowVerifyModal] = useState(false)
+  const [showCacModal, setShowCacModal] = useState(false)
   const [suspendReason, setSuspendReason] = useState("")
 
   const { data, isLoading, refetch } = useAdminMerchants({
@@ -250,6 +253,11 @@ export default function MerchantsPage() {
                           <button onClick={() => handleViewDetails(merchant)} className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium flex items-center gap-1">
                             <Eye className="w-3 h-3" /> View
                           </button>
+                          {!merchant.cacVerified && (
+                            <button onClick={() => { setSelectedMerchant(merchant); setShowCacModal(true) }} className="text-xs px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-all font-medium flex items-center gap-1">
+                              <Building2 className="w-3 h-3" /> Verify CAC
+                            </button>
+                          )}
                           {merchant.status === "pending" && (
                             <button onClick={() => handleVerify(merchant)} className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-all font-medium flex items-center gap-1">
                               <Shield className="w-3 h-3" /> Verify
@@ -317,6 +325,10 @@ export default function MerchantsPage() {
         isOpen={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
         merchantId={selectedMerchant?.id || ""}
+        onVerifyCacClick={() => {
+          setShowDetailsModal(false)
+          setShowCacModal(true)
+        }}
       />
 
       {/* Suspend Modal */}
@@ -411,6 +423,17 @@ export default function MerchantsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* CAC Verification Modal */}
+      <BusinessVerificationModal
+        isOpen={showCacModal}
+        onClose={() => setShowCacModal(false)}
+        onVerified={() => {
+          refetch()
+        }}
+        merchantId={selectedMerchant?.id}
+        isAdmin={true}
+      />
     </motion.div>
   )
 }
@@ -418,15 +441,18 @@ export default function MerchantsPage() {
 function AdminMerchantDetailsModal({ 
   isOpen, 
   onClose, 
-  merchantId 
+  merchantId,
+  onVerifyCacClick
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
-  merchantId: string 
+  merchantId: string;
+  onVerifyCacClick: () => void;
 }) {
   const { data: merchant, isLoading } = useAdminMerchantDetails(merchantId);
   const toggleTerminalStatus = useToggleTerminalStatus();
-  const [activeTab, setActiveTab] = useState<"info" | "branches" | "terminals" | "transactions">("info");
+  const updateReferralStatus = useUpdateReferralStatus();
+  const [activeTab, setActiveTab] = useState<"info" | "branches" | "terminals" | "transactions" | "referrals">("info");
 
   return (
     <AnimatePresence>
@@ -486,6 +512,7 @@ function AdminMerchantDetailsModal({
                 { id: "info", label: "Business Info", icon: Landmark },
                 { id: "branches", label: "Branches", icon: Building2, count: merchant?.branches?.length },
                 { id: "terminals", label: "Terminals", icon: Landmark, count: merchant?.terminals?.length },
+                { id: "referrals", label: "Referrals", icon: Users },
                 { id: "transactions", label: "Recent Activity", icon: TrendingUp },
               ].map((tab) => (
                 <button
@@ -538,6 +565,53 @@ function AdminMerchantDetailsModal({
                         <InfoItem label="RC Number" value={merchant.rcNumber} icon={CheckCircle} />
                         <InfoItem label="Address" value={merchant.businessAddress} icon={Building2} />
                       </div>
+                      <div className="md:col-span-2 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <SectionHeader title="KYC Documents" icon={Shield} />
+                          {merchant.cacVerified ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              <CheckCircle className="w-3 h-3 text-emerald-400" /> Verified
+                            </span>
+                          ) : (
+                            <div className="flex gap-2 items-center">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                <Clock className="w-3 h-3 text-amber-400" /> Unverified
+                              </span>
+                              <button 
+                                onClick={onVerifyCacClick}
+                                className="text-xs px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all font-bold"
+                              >
+                                Submit CAC
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        {merchant.cacDocumentUrl ? (
+                          <div className="flex items-center justify-between p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+                                <FileText className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <div className="text-white font-bold text-sm">CAC Registration Document</div>
+                                <div className="text-gray-500 text-[10px] mt-0.5">Uploaded via Merchant Dashboard</div>
+                              </div>
+                            </div>
+                            <a 
+                              href={`${process.env.NEXT_PUBLIC_GEMRAILS_API_BASE_URL}${merchant.cacDocumentUrl}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded-lg text-xs font-bold transition-all"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" /> View Document
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="p-4 bg-gray-800/20 border border-dashed border-gray-700 rounded-xl text-center text-gray-500 text-sm">
+                            No CAC document uploaded yet
+                          </div>
+                        )}
+                      </div>
                       {merchant.accountType !== 'enterprise' && (
                         <div className="md:col-span-2 space-y-4">
                           <SectionHeader title="Settlement Account" icon={Landmark} />
@@ -566,6 +640,33 @@ function AdminMerchantDetailsModal({
                           )}
                         </div>
                       )}
+                      
+                      <div className="md:col-span-2 space-y-4">
+                        <SectionHeader title="Referrals Status" icon={Users} />
+                        <div className="p-4 bg-gray-800/20 border border-gray-700 rounded-xl flex items-center justify-between">
+                          <div>
+                            <div className="text-white font-bold">Referral Status</div>
+                            <div className="text-gray-500 text-sm mt-1">
+                              {merchant.referralStatus === 'suspended' ? 'Suspended by Admin' : 'Active and earning'}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => updateReferralStatus.mutate({ 
+                              merchantId: merchant.id, 
+                              status: merchant.referralStatus === 'suspended' ? 'active' : 'suspended' 
+                            })}
+                            disabled={updateReferralStatus.isPending}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
+                              merchant.referralStatus === 'suspended'
+                                ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                                : "bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                            }`}
+                          >
+                            {updateReferralStatus.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 
+                             merchant.referralStatus === 'suspended' ? "Activate Referrals" : "Suspend Referrals"}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -668,6 +769,28 @@ function AdminMerchantDetailsModal({
                     </div>
                   )}
 
+                  {activeTab === "referrals" && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="p-4 bg-gray-800/40 border border-gray-800 rounded-xl">
+                          <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Referral Code</p>
+                          <p className="text-xl font-mono font-bold text-white">{merchant.referralCode || "N/A"}</p>
+                        </div>
+                        <div className="p-4 bg-gray-800/40 border border-gray-800 rounded-xl">
+                          <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Referral Balance</p>
+                          <p className="text-xl font-bold text-emerald-400">{formatCurrency(merchant.referralBalance || 0)}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <SectionHeader title="Referred Merchants" icon={Users} />
+                        <div className="p-4 bg-gray-800/20 border border-dashed border-gray-700 rounded-xl text-center text-gray-500 text-sm italic">
+                          Referral tracking list coming soon in v2 update (individual referee data)
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {activeTab === "transactions" && (
                     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                       {merchant.recentTransactions?.length > 0 ? (
@@ -712,6 +835,14 @@ function AdminMerchantDetailsModal({
                   Close
                 </button>
                 <div className="h-10 w-px bg-gray-800 mx-2" />
+                {!merchant.cacVerified && (
+                  <button 
+                    onClick={onVerifyCacClick}
+                    className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-all text-sm font-bold flex items-center gap-2"
+                  >
+                    <Building2 className="w-4 h-4" /> Submit CAC Verification
+                  </button>
+                )}
                 {merchant.status === "pending" && (
                   <button className="px-6 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all text-sm font-bold flex items-center gap-2">
                     <Shield className="w-4 h-4" /> Verify Merchant

@@ -14,6 +14,7 @@ import {
   RefreshCw,
   FileText,
   Loader2,
+  Banknote,
 } from "lucide-react"
 import { useAdminDashboard } from "@/lib/hooks/use-admin"
 
@@ -43,6 +44,9 @@ export default function AdminDashboardPage() {
   const merchants = data?.merchants || { total: 0, verified: 0, pending: 0, suspended: 0, newThisWeek: 0 }
   const transactions = data?.transactions || { total: 0, totalVolume: 0, settled: 0, settledVolume: 0, pending: 0, pendingVolume: 0 }
   const recentActivity = data?.recentActivity || []
+  const referrals = (data as any)?.referrals || { totalUnpaid: 0, totalEarned: 0, totalWithdrawn: 0 }
+  const liquidity = (data as any)?.liquidity || { bankBalance: 0, referralDebt: 0, remittable: 0, referralCostRatio: 0 }
+  
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -172,6 +176,47 @@ export default function AdminDashboardPage() {
             </div>
             <p className="text-2xl font-bold text-white">{formatCurrency(transactions.pendingVolume)}</p>
             <p className="text-sm text-amber-400 mt-1">{transactions.pending} transactions</p>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Referral & Liquidity Metrics */}
+      <div>
+        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Banknote className="w-5 h-5 text-emerald-400" />
+          Referrals & Liquidity
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-5 rounded-xl bg-gray-900/50 border border-gray-800"
+          >
+            <p className="text-sm font-medium text-gray-500 mb-1">Accrued Referral Debt</p>
+            <p className="text-2xl font-bold text-amber-500">{formatCurrency(liquidity.referralDebt)}</p>
+            <p className="text-xs text-gray-600 mt-1">Pending payout to referrers</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="p-5 rounded-xl bg-gray-900/50 border border-gray-800"
+          >
+            <p className="text-sm font-medium text-gray-500 mb-1">Nomba Account Balance</p>
+            <p className="text-2xl font-bold text-white">{formatCurrency(liquidity.bankBalance || 0)}</p>
+            <p className="text-xs text-gray-600 mt-1">Referral Cost Index: {(liquidity.referralCostRatio || 0).toFixed(1)}%</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="p-5 rounded-xl bg-linear-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20"
+          >
+            <p className="text-sm font-medium text-emerald-400 mb-1">Actual Balance (Remittable)</p>
+            <p className="text-2xl font-bold text-emerald-500">{formatCurrency(liquidity.remittable)}</p>
+            <p className="text-xs text-emerald-500/50 mt-1">Bank balance after referral debt</p>
           </motion.div>
         </div>
       </div>

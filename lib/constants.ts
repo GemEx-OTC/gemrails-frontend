@@ -6,9 +6,13 @@ export const CRYPTO_ASSETS = {
 } as const
 
 export const CRYPTO_NETWORKS = {
-  TRC20: { name: "Tron (TRC20)", chain: "TRON" },
   BSC: { name: "BNB Smart Chain", chain: "BSC" },
-  ERC20: { name: "Ethereum (ERC20)", chain: "ETH" },
+  BASE: { name: "Base", chain: "BASE" },
+  ETH: { name: "Ethereum", chain: "ETH" },
+  POLYGON: { name: "Polygon", chain: "POLYGON" },
+  ARBITRUM: { name: "Arbitrum", chain: "ARBITRUM" },
+  OPTIMISM: { name: "Optimism", chain: "OPTIMISM" },
+  TRC20: { name: "Tron (TRC20)", chain: "TRON" },
 } as const
 
 export const MERCHANT_STATUS = {
@@ -80,17 +84,74 @@ export const FEE_CONFIG = {
   minimumPayment: 5000, // ₦5,000 minimum payment amount (deprecated - use API)
 } as const
 
+export const TIER_LIMITS = {
+  0: 200000,
+  1: 500000,
+  2: Infinity,
+} as const
+
+export const TIER_DESCRIPTIONS = {
+  0: "₦200k Limit (Email Verified)",
+  1: "₦500k Limit (Phone Verified)",
+  2: "Unlimited (CAC Verified)",
+} as const
+
 export const SUPPORTED_ASSETS = ["USDT", "USDC"] as const
 
 export const BUSINESS_CATEGORIES = [
-  { value: "restaurant", label: "Restaurant & Food Service" },
-  { value: "retail", label: "Retail & Shopping" },
-  { value: "hospitality", label: "Hotels & Hospitality" },
-  { value: "entertainment", label: "Entertainment & Events" },
-  { value: "healthcare", label: "Healthcare & Pharmacy" },
-  { value: "education", label: "Education & Training" },
-  { value: "professional", label: "Professional Services" },
-  { value: "other", label: "Other" },
+  {
+    group: "Professional & Technical Services",
+    items: [
+      { value: "it_technology", label: "IT & Technology" },
+      { value: "engineering", label: "Engineering" },
+      { value: "consultancy", label: "Consultancy" },
+      { value: "legal_accounting", label: "Legal & Accounting" },
+    ],
+  },
+  {
+    group: "General Commerce & Trade",
+    items: [
+      { value: "general_merchandise", label: "General Merchandise" },
+      { value: "general_contracts", label: "General Contracts" },
+      { value: "retail_wholesale", label: "Retail/Wholesale Trade" },
+      { value: "marketing_advertising", label: "Marketing & Advertising" },
+    ],
+  },
+  {
+    group: "Agriculture, Forestry & Fishing",
+    items: [
+      { value: "crop_production", label: "Crop Production" },
+      { value: "animal_husbandry", label: "Animal Husbandry" },
+      { value: "agro_allied", label: "Agro-Allied Services" },
+    ],
+  },
+  {
+    group: "Hospitality & Lifestyle",
+    items: [
+      { value: "food_beverages", label: "Food & Beverages" },
+      { value: "tourism", label: "Tourism" },
+      { value: "personal_services", label: "Personal Services" },
+    ],
+  },
+  {
+    group: "Construction & Real Estate",
+    items: [
+      { value: "building_civil", label: "Building & Civil Works" },
+      { value: "specialized_construction", label: "Specialized Construction" },
+      { value: "real_estate", label: "Real Estate" },
+    ],
+  },
+  {
+    group: "Manufacturing & Production",
+    items: [
+      { value: "food_production", label: "Food Production" },
+      { value: "industrial_goods", label: "Industrial Goods" },
+    ],
+  },
+  {
+    group: "Other",
+    items: [{ value: "other", label: "Other" }],
+  },
 ] as const
 
 // Nigerian Banks

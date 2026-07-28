@@ -19,7 +19,8 @@ import {
   Building2,
   Landmark,
   MonitorDot,
-  Users
+  Users,
+  ShieldCheck
 } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { useNotification } from "@/context/notification-context"
@@ -50,11 +51,13 @@ const menuGroups: MenuGroup[] = [
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { name: "QR Code", href: "/dashboard/qr-code", icon: QrCode },
       { name: "Transactions", href: "/dashboard/transactions", icon: History },
+      { name: "Referrals", href: "/dashboard/referrals", icon: Users },
     ]
   },
 ]
 
 const generalItems: MenuItem[] = [
+  { name: "Verifications", href: "/dashboard/verification", icon: ShieldCheck },
   { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
   { name: "Help", href: "/dashboard/help", icon: HelpCircle },
@@ -245,7 +248,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
         <div className="p-3 lg:p-4 border-t border-gray-800 space-y-3">
           {/* User Info */}
           <div className="flex items-center gap-3 px-3 py-2 bg-gray-800/50 rounded-xl">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-full bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
