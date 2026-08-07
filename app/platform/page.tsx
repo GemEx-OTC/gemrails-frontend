@@ -102,12 +102,24 @@ const DEMO_MERCHANT = { name: "GreenLeaf Supermarket", emoji: "🏪", verified: 
 const DEMO_WALLET = "TXq8rP9mN3kLwB2xYvZ7cEd6..."
 const DEMO_TX_ID = "TXN-GR-2024-98123"
 const EXCHANGE_RATE = 1634.25 // NGN per USD
+type DemoNetworkKey = "BSC" | "BASE" | "POLYGON" | "ARBITRUM" | "OPTIMISM" | "ETH" | "TRC20"
+
+const DEMO_NETWORKS: Record<DemoNetworkKey, { name: string; label: string; badge: string; badgeType: "recommended" | "low" | "high"; icon: string }> = {
+  BSC: { name: "BNB Smart Chain (BSC)", label: "BSC", badge: "Recommended • Low Fee", badgeType: "recommended", icon: "/icons/chains/bnb.svg" },
+  BASE: { name: "Base", label: "Base", badge: "Recommended • Low Fee", badgeType: "recommended", icon: "/icons/chains/base.svg" },
+  POLYGON: { name: "Polygon", label: "Polygon", badge: "Low Fee", badgeType: "low", icon: "/icons/chains/polygon.svg" },
+  ARBITRUM: { name: "Arbitrum", label: "Arbitrum", badge: "Low Fee", badgeType: "low", icon: "/icons/chains/arbitrum.svg" },
+  OPTIMISM: { name: "Optimism", label: "Optimism", badge: "Low Fee", badgeType: "low", icon: "/icons/chains/optimism.svg" },
+  ETH: { name: "Ethereum (ERC-20)", label: "Ethereum", badge: "High Fee", badgeType: "high", icon: "/icons/chains/eth.svg" },
+  TRC20: { name: "TRON (TRC-20)", label: "TRC-20", badge: "High Fee", badgeType: "high", icon: "/icons/chains/tron.svg" },
+}
 
 function CheckoutDemo() {
   const [step, setStep] = useState<DemoStep>("amount")
   const [typedAmount, setTypedAmount] = useState("")
   const [selectedAsset, setSelectedAsset] = useState<"USDT" | "USDC">("USDT")
-  const [selectedNetwork, setSelectedNetwork] = useState<"TRC-20" | "BSC">("TRC-20")
+  const [selectedNetwork, setSelectedNetwork] = useState<DemoNetworkKey>("BSC")
+  const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const [timeLeft, setTimeLeft] = useState(899)
   const [autoPlaying, setAutoPlaying] = useState(true)
@@ -382,19 +394,24 @@ function CheckoutDemo() {
               </div>
 
               {/* Coin option */}
-              <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-3.5">
+              <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-3.5 shrink-0">
                 <h4 className="text-white font-semibold text-[10px] uppercase tracking-wider mb-2.5 text-gray-500">1. Select Asset</h4>
                 <div className="flex gap-2">
                   {(["USDT", "USDC"] as const).map(asset => (
                     <button 
                       key={asset}
-                      onClick={() => setSelectedAsset(asset)}
+                      onClick={() => {
+                        setSelectedAsset(asset)
+                        if (asset === "USDC" && selectedNetwork === "TRC20") {
+                          setSelectedNetwork("BSC")
+                        }
+                      }}
                       className={cn(
                         "flex-1 p-2.5 rounded-xl border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all active:scale-95",
                         selectedAsset === asset ? "border-emerald-500 bg-emerald-500/10 text-white" : "border-gray-800 bg-gray-800/30 text-gray-400"
                       )}
                     >
-                      <span className="text-emerald-400 text-xs">$</span>
+                      <span className="text-emerald-400 text-xs font-bold">$</span>
                       {asset}
                       {selectedAsset === asset && <Check className="w-3.5 h-3.5 text-emerald-400 ml-auto" />}
                     </button>
@@ -402,28 +419,113 @@ function CheckoutDemo() {
                 </div>
               </div>
 
-              {/* Network option */}
-              <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-3.5">
-                <h4 className="text-white font-semibold text-[10px] uppercase tracking-wider mb-2.5 text-gray-500">2. Select Network</h4>
-                <div className="flex gap-2">
-                  {(["TRC-20", "BSC"] as const).map(network => (
-                    <button 
-                      key={network}
-                      onClick={() => setSelectedNetwork(network)}
-                      className={cn(
-                        "flex-1 p-2.5 rounded-xl border flex flex-col items-center justify-center text-xs font-semibold transition-all active:scale-95",
-                        selectedNetwork === network ? "border-emerald-500 bg-emerald-500/10 text-white" : "border-gray-800 bg-gray-800/30 text-gray-400"
-                      )}
-                    >
-                      <div className="flex items-center gap-1">
-                        <span className="text-amber-500 font-bold">●</span>
-                        {network}
-                        {selectedNetwork === network && <Check className="w-3.5 h-3.5 text-emerald-400" />}
-                      </div>
-                      {network === "BSC" && <span className="text-[8px] text-emerald-400 font-medium mt-0.5">Low fees</span>}
-                    </button>
-                  ))}
+              {/* Network option - Dropdown Selector matching live pay UI */}
+              <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-3.5 shrink-0 relative">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-white font-semibold text-[10px] uppercase tracking-wider text-gray-500">2. Select Network</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAutoPlaying(false)
+                      setIsInteractive(true)
+                      setNetworkDropdownOpen(!networkDropdownOpen)
+                    }}
+                    className="text-[9px] text-emerald-400 font-semibold flex items-center gap-0.5 hover:underline"
+                  >
+                    <span>{networkDropdownOpen ? "Close list" : "Change network"}</span>
+                    <ChevronDown className={cn("w-3 h-3 transition-transform", networkDropdownOpen && "rotate-180")} />
+                  </button>
                 </div>
+
+                {/* Active Selected Network Selector Card */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAutoPlaying(false)
+                    setIsInteractive(true)
+                    setNetworkDropdownOpen(!networkDropdownOpen)
+                  }}
+                  className="w-full p-2.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-white flex items-center justify-between text-left transition-all active:scale-[0.99]"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <img src={DEMO_NETWORKS[selectedNetwork].icon} alt="" className="w-4 h-4 object-contain shrink-0" />
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold block text-white truncate">{DEMO_NETWORKS[selectedNetwork].name}</span>
+                      <span className={cn(
+                        "text-[9px] font-semibold block",
+                        DEMO_NETWORKS[selectedNetwork].badgeType === "recommended" ? "text-emerald-400" :
+                        DEMO_NETWORKS[selectedNetwork].badgeType === "low" ? "text-teal-400" : "text-amber-400"
+                      )}>
+                        {DEMO_NETWORKS[selectedNetwork].badge}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                  </div>
+                </button>
+
+                {/* Network Selection Grid/Dropdown */}
+                {networkDropdownOpen ? (
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="mt-2 space-y-1 max-h-[140px] overflow-y-auto pr-0.5">
+                    {(Object.keys(DEMO_NETWORKS) as DemoNetworkKey[])
+                      .filter(netKey => !(selectedAsset === "USDC" && netKey === "TRC20"))
+                      .map(netKey => {
+                        const net = DEMO_NETWORKS[netKey]
+                        const isSel = selectedNetwork === netKey
+                        return (
+                          <button
+                            key={netKey}
+                            type="button"
+                            onClick={() => {
+                              setSelectedNetwork(netKey)
+                              setNetworkDropdownOpen(false)
+                            }}
+                            className={cn(
+                              "w-full p-2 rounded-lg border flex items-center justify-between text-left text-xs font-semibold transition-all",
+                              isSel ? "border-emerald-500 bg-emerald-500/15 text-white" : "border-gray-800/80 bg-gray-900/80 hover:bg-gray-800 text-gray-300"
+                            )}
+                          >
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <img src={net.icon} alt="" className="w-3.5 h-3.5 object-contain shrink-0" />
+                              <span className="truncate text-[10px]">{net.name}</span>
+                            </div>
+                            <span className={cn(
+                              "text-[8px] font-medium px-1.5 py-0.5 rounded border shrink-0",
+                              net.badgeType === "recommended" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
+                              net.badgeType === "low" ? "bg-teal-500/10 border-teal-500/20 text-teal-400" :
+                              "bg-red-500/10 border-red-500/20 text-red-400"
+                            )}>
+                              {net.badge.split("•")[0].trim()}
+                            </span>
+                          </button>
+                        )
+                      })}
+                  </motion.div>
+                ) : (
+                  /* Quick Pill Bar for Top Networks */
+                  <div className="grid grid-cols-3 gap-1.5 mt-2">
+                    {(["BSC", "BASE", "POLYGON"] as const).map(netKey => (
+                      <button
+                        key={netKey}
+                        type="button"
+                        onClick={() => {
+                          setAutoPlaying(false)
+                          setIsInteractive(true)
+                          setSelectedNetwork(netKey)
+                        }}
+                        className={cn(
+                          "p-1.5 rounded-lg border flex items-center justify-center gap-1 text-[10px] font-semibold transition-all active:scale-95",
+                          selectedNetwork === netKey ? "border-emerald-500 bg-emerald-500/15 text-emerald-300 font-bold" : "border-gray-800 bg-gray-800/20 text-gray-400"
+                        )}
+                      >
+                        <img src={DEMO_NETWORKS[netKey].icon} alt="" className="w-3 h-3 object-contain shrink-0" />
+                        <span>{netKey}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex-1" />
@@ -454,8 +556,9 @@ function CheckoutDemo() {
               <div className="bg-gradient-to-br from-emerald-500/20 via-emerald-500/5 to-teal-500/10 border border-emerald-500/20 rounded-2xl p-4 text-center shrink-0">
                 <p className="text-gray-400 text-[10px] mb-1 font-medium">Transfer exactly</p>
                 <p className="text-3xl font-bold text-white">{currentCryptoAmount.toFixed(2)}</p>
-                <span className="inline-flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 rounded-full px-2.5 py-0.5 mt-2">
-                  <strong>{selectedAsset}</strong> · {selectedNetwork}
+                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 rounded-full px-3 py-1 mt-2">
+                  <img src={DEMO_NETWORKS[selectedNetwork].icon} alt="" className="w-3.5 h-3.5 object-contain" />
+                  <strong>{selectedAsset}</strong> · {DEMO_NETWORKS[selectedNetwork].name}
                 </span>
               </div>
 
@@ -483,7 +586,7 @@ function CheckoutDemo() {
                 <div className="flex gap-2">
                   <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                   <p className="text-[10px] text-gray-300 leading-snug">
-                    Transfer only <strong className="text-white">{selectedAsset}</strong> over the <strong className="text-white">{selectedNetwork}</strong> network. Wrong network selection causes permanent loss.
+                    Transfer only <strong className="text-white">{selectedAsset}</strong> over the <strong className="text-white">{DEMO_NETWORKS[selectedNetwork].name}</strong> network. Wrong network selection causes permanent loss.
                   </p>
                 </div>
               </div>
@@ -509,7 +612,7 @@ function CheckoutDemo() {
                   </div>
                 </div>
                 <h3 className="text-base font-bold text-white mb-1.5">Verifying Deposit</h3>
-                <p className="text-gray-400 text-[10px] leading-relaxed max-w-[200px] mx-auto">Confirming block hashes on the {selectedNetwork} blockchain...</p>
+                <p className="text-gray-400 text-[10px] leading-relaxed max-w-[200px] mx-auto">Confirming block hashes on the {DEMO_NETWORKS[selectedNetwork].name} blockchain...</p>
                 <div className="mt-4 space-y-1.5">
                   <div className="flex items-center justify-center gap-1.5 text-emerald-400 text-xs">
                     <Check className="w-3 h-3" />
@@ -542,7 +645,7 @@ function CheckoutDemo() {
                   {[
                     { label: "Amount Settled", value: `₦${currentNgnAmount.toLocaleString()}` },
                     { label: "Crypto Received", value: `${currentCryptoAmount.toFixed(2)} ${selectedAsset}` },
-                    { label: "Chain Network", value: selectedNetwork },
+                    { label: "Chain Network", value: DEMO_NETWORKS[selectedNetwork].name },
                     { label: "Merchant Account", value: DEMO_MERCHANT.name },
                   ].map(row => (
                     <div key={row.label} className="flex justify-between text-[11px] py-1 border-b border-gray-800 last:border-0">
