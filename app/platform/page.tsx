@@ -1961,7 +1961,7 @@ const industriesData = [
     detailHeader: "Guest Booking Retainer & Invoice Settlement",
     detailDesc: "For hotels hosting international executives or tourists who face local card decline limits. Send guests a dynamic checkout invoice link via email or WhatsApp during booking. Guests settle reservations instantly from their own digital wallets. Avoid card settlement delays and chargeback disputes entirely.",
     benefits: ["Bypass daily card spending limits", "Instant booking locks", "Direct global payments", "Clean checkout invoices"],
-    mockupColor: "from-emerald-500/20 to-indigo-500/10",
+    mockupColor: "border-indigo-500/30 bg-[#090b14]",
     backgroundImage: "/images/hotel_hospitality_bg.jpg"
   },
   {
@@ -1972,7 +1972,7 @@ const industriesData = [
     detailHeader: "Self-Checkout Diners Receipt",
     detailDesc: "Diners scan the table QR code with their phones, select USDT or USDC on their preferred network, and pay. The checkout confirmation pops up instantly on the kitchen monitor and cashier's POS console, allowing servers to clear tables faster and keep customers satisfied.",
     benefits: ["Table-specific QR billing", "Split-bill friendly", "Instant server dashboard alerts", "Tips settled directly"],
-    mockupColor: "from-amber-500/20 to-red-500/10",
+    mockupColor: "border-amber-500/30 bg-[#0d0c07]",
     backgroundImage: "/images/restaurant_dining_bg.jpg"
   },
   {
@@ -1983,7 +1983,7 @@ const industriesData = [
     detailHeader: "High-Value Ticket Clearance",
     detailDesc: "Avoid card payment declines on high-ticket items like international flights, destination tours, and vacation packages. Travelers pay for travel vouchers directly with TRC-20 or BSC stablecoins. GemRails completes transaction clearance and settles to local agencies immediately.",
     benefits: ["Accept high-value payments", "Direct ticketing release", "Zero compliance blockages", "Global traveler reach"],
-    mockupColor: "from-purple-500/20 to-pink-500/10",
+    mockupColor: "border-cyan-500/30 bg-[#070d14]",
     backgroundImage: "/images/travel_tourism_bg.jpg"
   },
   {
@@ -1994,7 +1994,7 @@ const industriesData = [
     detailHeader: "Patient Clinic Billings",
     detailDesc: "Make clinic payments stress-free for patients and their families. Allow walk-in pharmacy clients or hospital visitors to check out immediately, bypassing manual bank transfer confirmations or card terminal failure delays during medical emergencies.",
     benefits: ["Emergency billing speed", "Direct copay clearances", "Cashier dashboard auditing", "Secure medical invoices"],
-    mockupColor: "from-rose-500/20 to-cyan-500/10",
+    mockupColor: "border-teal-500/30 bg-[#061112]",
     backgroundImage: "/images/healthcare_clinic_bg.jpg"
   },
   {
@@ -2005,7 +2005,7 @@ const industriesData = [
     detailHeader: "Tuition and Registration Settle",
     detailDesc: "Enable local and international students to pay tuition fees, student housing, and exam registrations smoothly with digital dollars. Tuition payments are cleared immediately, reducing student clearance delays and registrar department manual tracking loads.",
     benefits: ["Global tuition collection", "Automatic student ID tagging", "Direct registrar dashboard checks", "No banking limit holds"],
-    mockupColor: "from-indigo-500/20 to-purple-500/10",
+    mockupColor: "border-blue-500/30 bg-[#070a14]",
     backgroundImage: "/images/education_school_bg.jpg"
   },
   {
@@ -2016,7 +2016,7 @@ const industriesData = [
     detailHeader: "Bulk B2B Freight Settlements",
     detailDesc: "Bypass SWIFT wire costs, intermediary bank delays, and manual documentation checks. Pay overseas manufacturing partners or clear shipping freight bills directly in stablecoins, with automated conversion and instant transaction tracking ledgers.",
     benefits: ["Bypass international bank delays", "Direct supplier stablecoin payouts", "Complete trade ledger compliance", "Cleared invoices in minutes"],
-    mockupColor: "from-orange-500/20 to-yellow-500/10",
+    mockupColor: "border-orange-500/30 bg-[#120b06]",
     backgroundImage: "/images/import_export_bg.jpg"
   },
   {
@@ -2027,7 +2027,7 @@ const industriesData = [
     detailHeader: "Agency Retainers and Retainer Contracts",
     detailDesc: "For remote software development teams, digital design agencies, and consulting firms. Generate professional, branded payment links and let international client corporations pay retainers instantly with stablecoins. Enjoy low fees and immediate conversions.",
     benefits: ["Generate professional payment links", "Stablecoin client retainers", "Immediate conversion to NGN", "Automatic monthly reports"],
-    mockupColor: "from-blue-500/20 to-indigo-500/10",
+    mockupColor: "border-sky-500/30 bg-[#070f14]",
     backgroundImage: "/images/professional_services_bg.jpg"
   }
 ]
@@ -2090,64 +2090,74 @@ function MockupSelector({ type, title }: { type: string; title: string }) {
   }
   if (type === "TRAVEL") {
     return (
-      <div className="w-full text-left bg-gradient-to-r from-purple-950/20 to-pink-950/10 border border-white/10 rounded-2xl p-4 font-sans text-xs relative overflow-hidden">
-        <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-purple-500/10 rounded-full blur-xl" />
-        <div className="flex justify-between items-center mb-2.5">
-          <span className="text-white font-bold flex items-center gap-1.5"><Plane className="w-3.5 h-3.5 text-purple-400" /> AIRLINE BOARDING VOUCHER</span>
-          <span className="bg-emerald-500 text-black font-extrabold text-[8px] px-2 py-0.5 rounded">CLEARED</span>
+      <div className="w-full text-left bg-[#080d16] border border-cyan-500/30 rounded-2xl p-4 font-sans text-xs relative overflow-hidden shadow-lg">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-white font-extrabold text-xs tracking-wider flex items-center gap-2">
+            <span className="w-6 h-6 rounded-md bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">✈</span>
+            AIRLINE BOARDING VOUCHER
+          </span>
+          <span className="bg-emerald-400 text-black font-black text-[9px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">CLEARED</span>
         </div>
-        <div className="flex justify-between items-center py-2 border-y border-white/10 font-mono">
-          <div><p className="text-[9px] text-gray-500">DEPARTURE</p><p className="text-sm font-black text-white">LOS (Lagos)</p></div>
-          <span className="text-purple-400 text-base animate-pulse">✈</span>
-          <div className="text-right"><p className="text-[9px] text-gray-500">ARRIVAL</p><p className="text-sm font-black text-white">LHR (London)</p></div>
+        <div className="flex justify-between items-center py-3 border-y border-dashed border-cyan-500/20 font-mono">
+          <div>
+            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">DEPARTURE</p>
+            <p className="text-base font-black text-white mt-0.5">LOS <span className="text-xs font-semibold text-gray-400">(Lagos)</span></p>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-cyan-400 text-sm font-bold tracking-widest">➔</span>
+            <span className="text-[8px] text-cyan-400/80 uppercase font-mono">DIRECT</span>
+          </div>
+          <div className="text-right">
+            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">ARRIVAL</p>
+            <p className="text-base font-black text-white mt-0.5">LHR <span className="text-xs font-semibold text-gray-400">(London)</span></p>
+          </div>
         </div>
-        <div className="flex justify-between text-[9px] text-gray-500 mt-2 font-mono">
-          <span>TICKET CHARGE: 142.50 USDT</span>
-          <span className="text-emerald-400 font-bold">₦232,800.00 Settled</span>
+        <div className="flex justify-between items-center text-[10px] mt-2.5 font-mono">
+          <span className="text-gray-400">TICKET CHARGE: <strong className="text-white">142.50 USDT</strong></span>
+          <span className="text-emerald-400 font-black bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">₦232,800.00 Settled</span>
         </div>
       </div>
     )
   }
   if (type === "MEDICAL") {
     return (
-      <div className="w-full text-left bg-rose-950/10 border border-white/10 rounded-2xl p-4 text-xs font-sans relative overflow-hidden">
-        <div className="absolute top-2 right-2"><Heart className="w-4 h-4 text-rose-500 opacity-40 animate-pulse" /></div>
-        <div className="pb-2 border-b border-white/10 mb-2">
-          <p className="text-white font-bold text-xs">CAREPLUS SPECIALIST CLINIC</p>
-          <p className="text-[9px] text-gray-500 mt-0.5">Medical Receipt Clearance</p>
+      <div className="w-full text-left bg-[#071214] border border-teal-500/30 rounded-2xl p-4 text-xs font-sans relative overflow-hidden shadow-lg">
+        <div className="pb-2.5 border-b border-teal-500/20 mb-2.5 flex justify-between items-center">
+          <div>
+            <p className="text-white font-bold text-xs">CAREPLUS SPECIALIST CLINIC</p>
+            <p className="text-[9px] text-gray-400 mt-0.5 font-mono">Medical Receipt Clearance</p>
+          </div>
+          <div className="w-7 h-7 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
+            <Heart className="w-4 h-4" />
+          </div>
         </div>
-        <div className="space-y-1 text-[10px] font-mono text-gray-400">
-          <div className="flex justify-between"><span>General Consult / Lab Panel</span><span>₦45,000.00</span></div>
-          <div className="flex justify-between"><span>Pharmacy Dispensation</span><span>₦15,000.00</span></div>
-          <div className="flex justify-between border-t border-white/10 pt-1 font-bold text-emerald-400"><span>Naira Amount Settled</span><span>₦60,000.00</span></div>
+        <div className="space-y-1.5 text-[10px] font-mono text-gray-400">
+          <div className="flex justify-between"><span>General Consult / Lab Panel</span><span className="text-white">₦45,000.00</span></div>
+          <div className="flex justify-between"><span>Pharmacy Dispensation</span><span className="text-white">₦15,000.00</span></div>
+          <div className="flex justify-between border-t border-teal-500/20 pt-1.5 font-bold text-emerald-400 text-xs"><span>Naira Amount Settled</span><span>₦60,000.00</span></div>
         </div>
-        <p className="text-[9px] text-gray-500 mt-2 text-center">Paid via <strong>36.71 USDC (TRC-20)</strong></p>
+        <p className="text-[9px] text-gray-400 mt-2.5 text-center font-mono">Paid via <strong className="text-teal-300">36.71 USDC (TRC-20)</strong></p>
       </div>
     )
   }
   if (type === "EDUCATION") {
     return (
-      <div className="w-full text-left bg-[#1a1f38]/30 border border-white/10 rounded-2xl p-4 text-xs font-sans relative overflow-hidden">
-        {/* Large faint background graduation cap watermark */}
-        <div className="absolute bottom-2 right-4 text-white/[0.03] pointer-events-none">
-          <GraduationCap className="w-24 h-24" />
-        </div>
-        <div className="pb-2.5 border-b border-white/10 mb-2.5 flex justify-between items-center">
+      <div className="w-full text-left bg-[#070b16] border border-blue-500/30 rounded-2xl p-4 text-xs font-sans relative overflow-hidden shadow-lg">
+        <div className="pb-2.5 border-b border-blue-500/20 mb-2.5 flex justify-between items-center">
           <div>
             <p className="text-white font-bold text-xs tracking-wide">LASU TUITION PORTAL</p>
-            <p className="text-[9px] text-gray-500 mt-0.5">Academic clearance voucher</p>
+            <p className="text-[9px] text-gray-400 mt-0.5 font-mono">Academic clearance voucher</p>
           </div>
-          <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center border border-white/10">
-            <GraduationCap className="w-4 h-4 text-emerald-400" />
+          <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <GraduationCap className="w-4 h-4" />
           </div>
         </div>
         <div className="space-y-1.5 text-[10px] text-gray-300 font-mono">
           <div className="flex justify-between"><span className="text-gray-500">Student:</span><span className="text-white">Olumide Alabi (ID: 9082)</span></div>
           <div className="flex justify-between"><span className="text-gray-500">Course:</span><span className="text-white">B.Sc Computer Science</span></div>
-          <div className="flex justify-between"><span className="text-gray-500">Bill description:</span><span className="text-white">1st Sem Tuition + Lab Fee</span></div>
-          <div className="flex justify-between border-t border-white/10 pt-1.5 text-xs text-emerald-400 font-bold"><span className="text-gray-500 font-sans">Clearance amount:</span><span>₦350,000.00</span></div>
+          <div className="flex justify-between border-t border-blue-500/20 pt-1.5 text-xs text-emerald-400 font-bold"><span className="text-gray-400 font-sans">Clearance amount:</span><span>₦350,000.00</span></div>
         </div>
-        <div className="mt-3.5 py-1 text-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/35 rounded-lg text-[9px] font-black tracking-widest font-mono">
+        <div className="mt-3 py-1 text-center bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-lg text-[9px] font-black tracking-widest font-mono">
           REGISTRAR CLEARED (USDC)
         </div>
       </div>
@@ -2155,18 +2165,22 @@ function MockupSelector({ type, title }: { type: string; title: string }) {
   }
   if (type === "TRADE") {
     return (
-      <div className="w-full text-left bg-orange-950/10 border border-white/10 rounded-2xl p-4 text-xs font-sans relative overflow-hidden">
-        <div className="absolute top-2 right-2"><Truck className="w-4 h-4 text-orange-400 opacity-40" /></div>
-        <div className="pb-2 border-b border-white/10 mb-2.5">
-          <p className="text-white font-bold text-xs">OCEANIC CARGO LOGISTICS</p>
-          <p className="text-[9px] text-gray-500">Bill of Lading Freight Invoice</p>
+      <div className="w-full text-left bg-[#120b06] border border-orange-500/30 rounded-2xl p-4 text-xs font-sans relative overflow-hidden shadow-lg">
+        <div className="pb-2 border-b border-orange-500/20 mb-2.5 flex justify-between items-center">
+          <div>
+            <p className="text-white font-bold text-xs">OCEANIC CARGO LOGISTICS</p>
+            <p className="text-[9px] text-gray-400 font-mono">Bill of Lading Freight Invoice</p>
+          </div>
+          <div className="w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
+            <Truck className="w-4 h-4" />
+          </div>
         </div>
         <div className="space-y-1.5 text-[10px] font-mono text-gray-400">
           <div className="flex justify-between"><span>Cargo:</span><span className="text-white">2x container industrial electronics</span></div>
           <div className="flex justify-between"><span>Route:</span><span className="text-white">Shanghai ➔ Apapa Lagos</span></div>
-          <div className="flex justify-between border-t border-white/10 pt-1.5 text-emerald-400 font-bold"><span>Total Paid Invoice:</span><span>₦4,950,000.00</span></div>
+          <div className="flex justify-between border-t border-orange-500/20 pt-1.5 text-emerald-400 font-bold text-xs"><span>Total Paid Invoice:</span><span>₦4,950,000.00</span></div>
         </div>
-        <div className="mt-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg p-2 text-center text-[9px] font-bold">
+        <div className="mt-3 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-lg p-1.5 text-center text-[9px] font-black tracking-wider font-mono">
           FREIGHT STATUS: DEPARTURE READY ✓
         </div>
       </div>
@@ -2174,24 +2188,28 @@ function MockupSelector({ type, title }: { type: string; title: string }) {
   }
   if (type === "B2B SERVICES") {
     return (
-      <div className="w-full text-left bg-indigo-950/10 border border-white/10 rounded-2xl p-4 text-xs font-sans relative overflow-hidden">
-        <div className="absolute top-2 right-2"><Briefcase className="w-4 h-4 text-indigo-400 opacity-40" /></div>
-        <div className="pb-2 border-b border-white/10 mb-2">
-          <p className="text-white font-bold text-xs">PIXELFORGE TECH AGENCY</p>
-          <p className="text-[9px] text-gray-500">B2B retainer billing ledger</p>
+      <div className="w-full text-left bg-[#070f14] border border-sky-500/30 rounded-2xl p-4 text-xs font-sans relative overflow-hidden shadow-lg">
+        <div className="pb-2 border-b border-sky-500/20 mb-2 flex justify-between items-center">
+          <div>
+            <p className="text-white font-bold text-xs">PIXELFORGE TECH AGENCY</p>
+            <p className="text-[9px] text-gray-400 font-mono">B2B retainer billing ledger</p>
+          </div>
+          <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+            <Briefcase className="w-4 h-4" />
+          </div>
         </div>
         <div className="space-y-1.5 text-[10px] font-mono text-gray-400">
           <div className="flex justify-between"><span>Description:</span><span className="text-white">Software Retainer — July</span></div>
           <div className="flex justify-between"><span>Billed To:</span><span className="text-white">ScaleUp Inc (New York)</span></div>
-          <div className="flex justify-between border-t border-white/10 pt-1.5 text-emerald-400 font-bold"><span>Settled Bank Naira:</span><span>₦2,450,000.00</span></div>
+          <div className="flex justify-between border-t border-sky-500/20 pt-1.5 text-emerald-400 font-bold text-xs"><span>Settled Bank Naira:</span><span>₦2,450,000.00</span></div>
         </div>
-        <p className="text-[9px] text-gray-500 mt-2.5 text-center">Received: <strong>$1,500.00 USDC (TRON)</strong></p>
+        <p className="text-[9px] text-gray-400 mt-2.5 text-center font-mono">Received: <strong className="text-sky-300">$1,500.00 USDC (TRON)</strong></p>
       </div>
     )
   }
   return (
     <div className="w-full flex flex-col gap-2.5 py-1 text-left font-mono">
-      <div className="bg-[#0a0d10] border border-white/5 rounded-xl p-3.5">
+      <div className="bg-[#0a0d10] border border-white/10 rounded-xl p-3.5">
         <div className="flex items-center justify-between text-xs">
           <span className="text-gray-400">{title}</span>
           <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded text-[9px]">PAID</span>
@@ -2222,7 +2240,7 @@ function IndustryModal({ index, onClose }: { index: number; onClose: () => void 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
       onClick={onClose}
     >
       <motion.div 
@@ -2230,7 +2248,7 @@ function IndustryModal({ index, onClose }: { index: number; onClose: () => void 
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 30 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-xl bg-gradient-to-b from-[#0d1117] via-[#080b0f] to-black border border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden cursor-default my-8"
+        className="relative w-full max-w-xl bg-[#090c10] border border-gray-800 rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden cursor-default my-8"
         onClick={e => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -2249,10 +2267,10 @@ function IndustryModal({ index, onClose }: { index: number; onClose: () => void 
             <h3 className="text-2xl sm:text-3xl font-black text-white mt-3.5 leading-tight">{data.headline}</h3>
           </div>
 
-          <div className="h-px bg-white/10" />
+          <div className="h-px bg-gray-800/80" />
 
-          {/* Interactive CSS mockup illustration */}
-          <div className={cn("bg-gradient-to-br border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center overflow-hidden min-h-[140px]", data.mockupColor)}>
+          {/* Interactive CSS mockup illustration - Clean Matte Container without generic glassmorphism gradients */}
+          <div className={cn("border rounded-2xl p-5 flex flex-col items-center justify-center overflow-hidden min-h-[140px] shadow-inner", data.mockupColor)}>
             <MockupSelector type={data.category} title={data.title} />
           </div>
 
