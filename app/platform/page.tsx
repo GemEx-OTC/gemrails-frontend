@@ -1095,7 +1095,7 @@ print(payment.wallet_address)
                 </div>
 
                 <div className="flex flex-wrap gap-5 text-sm text-gray-500">
-                  {["No setup fee", "KYC in minutes", "NGN bank settlement", "TRC-20 & BSC"].map(t => (
+                  {["No setup fee", "KYC in minutes", "NGN bank settlement", "7+ Multi-Chain Networks"].map(t => (
                     <span key={t} className="flex items-center gap-1.5">
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />{t}
                     </span>
@@ -1139,7 +1139,7 @@ print(payment.wallet_address)
             { icon: Users, value: "10,000+", label: "Verified Merchants" },
             { icon: Zap, value: "< 5 sec", label: "Avg. Settlement" },
             { icon: Shield, value: "99.9%", label: "Platform Uptime" },
-            { icon: Globe, value: "TRC-20 & BSC", label: "Supported Networks" },
+            { icon: Globe, value: "7+ Networks", label: "Supported Networks" },
             { icon: Banknote, value: "₦0", label: "Onboarding Cost" },
             { icon: ShieldCheck, value: "AES-256", label: "Encryption Standard" },
             { icon: Activity, value: "Real-time", label: "Blockchain Monitoring" },
@@ -1398,9 +1398,9 @@ print(payment.wallet_address)
               <div className="space-y-3">
                 {[
                   { label: "Stablecoins Accepted", items: ["USDT (Tether)", "USDC (USD Coin)"], icon: CircuitBoard },
-                  { label: "Supported Networks", items: ["TRON (TRC-20)", "BNB Smart Chain (BSC)"], icon: Globe },
+                  { label: "Supported Networks", items: ["BNB Smart Chain (BSC)", "Base", "Polygon", "Arbitrum", "Optimism", "Ethereum (ERC-20)", "TRON (TRC-20)"], icon: Globe },
                   { label: "Settlement Currency", items: ["Nigerian Naira (NGN)", "Direct bank transfer", "Same-day"], icon: Landmark },
-                  { label: "Coming Soon", items: ["Ethereum (ERC-20)", "Mobile money", "GHS, KES, ZAR"], icon: Star },
+                  { label: "Coming Soon", items: ["Solana (SOL)", "TON Network", "Mobile money", "GHS, KES, ZAR"], icon: Star },
                 ].map((m, i) => (
                   <motion.div key={i} className="flex items-start gap-4 p-5 rounded-xl border border-white/[0.07] bg-[#0d1117] hover:border-emerald-500/20 transition-colors"
                     initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
@@ -1807,7 +1807,7 @@ const faqData = [
   { category: "general", question: "What is GemRails?", answer: "GemRails is a stablecoin payment infrastructure platform built for African businesses. It enables merchants to accept USDT and USDC payments from customers anywhere in the world and receive the equivalent in Nigerian Naira directly into their bank account — automatically, within seconds." },
   { category: "general", question: "How does GemRails work?", answer: "When a customer is ready to pay, they receive a QR code or payment link with a unique wallet address. They send USDT or USDC from their crypto wallet. GemRails detects the payment on-chain, converts it to Naira at the live exchange rate, and deposits it directly into your Nigerian bank account — the whole process takes seconds." },
   { category: "general", question: "What is a stablecoin and why does GemRails use them?", answer: "A stablecoin is a cryptocurrency permanently pegged 1:1 to the US Dollar. USDT and USDC always equal exactly $1 — no price volatility. GemRails uses stablecoins because they combine the speed and global reach of crypto with the predictability of the dollar, making them ideal for business payments." },
-  { category: "payments", question: "Which networks does GemRails support?", answer: "GemRails currently supports TRON (TRC-20) and BNB Smart Chain (BSC). Both are fast networks with low transaction fees, ideal for merchant payments. Support for Ethereum (ERC-20) and additional networks is planned." },
+  { category: "payments", question: "Which networks does GemRails support?", answer: "GemRails currently supports 7 major blockchain networks: BNB Smart Chain (BSC), Base, Polygon, Arbitrum, Optimism, Ethereum (ERC-20), and TRON (TRC-20). We offer ultra-low fees, fast confirmation times, and automatic network routing." },
   { category: "payments", question: "How fast is the Naira settlement?", answer: "Settlement typically completes within 2–5 seconds of blockchain confirmation. TRON confirmations are especially fast. In practice, most payments are settled before the customer puts their phone away." },
   { category: "general", question: "Do I need crypto knowledge to use GemRails?", answer: "No. GemRails is designed specifically so business owners need zero technical crypto knowledge. You manage everything through a standard dashboard — you see payments in Naira, request bank withdrawals in Naira, and receive statements in Naira. The crypto layer is completely invisible." },
   { category: "payments", question: "What are the fees?", answer: "GemRails charges a flat platform fee per transaction. There are no card interchange fees, no SWIFT charges, and no FX markups beyond the published exchange rate buffer. Merchant onboarding is completely free. Visit our Pricing page for full details." },
