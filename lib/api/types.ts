@@ -376,6 +376,8 @@ export interface AdminTransaction {
   isBadFunds?: boolean;
   amlReportUrl?: string;
   amlStatus?: string;
+  retryCount?: number;
+  lastRetryAt?: string;
   timestamp: string;
 }
 

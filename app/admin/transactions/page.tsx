@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   Receipt, Search, Filter, Eye, X, ChevronDown,
   CheckCircle, Clock, AlertCircle, XCircle, Loader2,
-  FileText,
+  FileText, RefreshCw,
 } from "lucide-react"
-import { useAdminTransactions } from "@/lib/hooks/use-admin"
+import { useAdminTransactions, useRetryDisbursement } from "@/lib/hooks/use-admin"
 import { DateFilter } from "@/components/date-filter"
 import { downloadCSV, formatTransactionsForExport } from "@/lib/utils/export"
 import { toast } from "sonner"
@@ -42,6 +42,18 @@ export default function TransactionsPage() {
     limit: 20,
   })
 
+  const retryMutation = useRetryDisbursement()
+
+  const handleRetryDisbursement = async (txId: string) => {
+    try {
+      await retryMutation.mutateAsync(txId)
+      toast.success("Disbursement retry initiated successfully")
+      setSelectedTx(null)
+    } catch (error: any) {
+      toast.error(error.message || "Failed to retry disbursement")
+    }
+  }
+
   const handleExportCSV = () => {
     if (transactions.length === 0) {
       toast.error("No transactions to export")
@@ -56,6 +68,7 @@ export default function TransactionsPage() {
     switch (status) {
       case "Settled": return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
       case "Processing": return "bg-purple-500/20 text-purple-300 border-purple-500/30"
+      case "CryptoReceived": return "bg-amber-500/20 text-amber-300 border-amber-500/30"
       case "AwaitingCrypto": return "bg-amber-500/20 text-amber-300 border-amber-500/30"
       case "Failed": return "bg-red-500/20 text-red-300 border-red-500/30"
       default: return "bg-gray-500/20 text-gray-300"
@@ -66,6 +79,7 @@ export default function TransactionsPage() {
     switch (status) {
       case "Settled": return <CheckCircle className="w-3 h-3" />
       case "Processing": return <Clock className="w-3 h-3 animate-spin" />
+      case "CryptoReceived": return <AlertCircle className="w-3 h-3" />
       case "AwaitingCrypto": return <AlertCircle className="w-3 h-3" />
       case "Failed": return <XCircle className="w-3 h-3" />
       default: return null
@@ -233,19 +247,38 @@ export default function TransactionsPage() {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadge(tx.status)}`}>
-                          {getStatusIcon(tx.status)}
-                          {tx.status}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border w-fit ${getStatusBadge(tx.status)}`}>
+                            {getStatusIcon(tx.status)}
+                            {tx.status}
+                          </span>
+                          {(tx.retryCount || 0) > 0 && tx.status !== "Settled" && (
+                            <span className="text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 w-fit">
+                              Retries: {tx.retryCount}/5
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-gray-400 text-sm">{formatDate(tx.timestamp)}</td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => setSelectedTx(tx)}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium flex items-center gap-1"
-                        >
-                          <Eye className="w-3 h-3" /> Details
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setSelectedTx(tx)}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium flex items-center gap-1"
+                          >
+                            <Eye className="w-3 h-3" /> Details
+                          </button>
+                          {(tx.status === "CryptoReceived" || tx.status === "Failed" || (tx.retryCount || 0) >= 5) && tx.status !== "Settled" && (
+                            <button
+                              onClick={() => handleRetryDisbursement(tx.transactionId)}
+                              disabled={retryMutation.isPending}
+                              className="text-xs px-2.5 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all font-medium flex items-center gap-1 disabled:opacity-50"
+                              title="Manually retry fiat disbursement"
+                            >
+                              <RefreshCw className={`w-3 h-3 ${retryMutation.isPending ? "animate-spin" : ""}`} /> Retry
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </motion.tr>
                   ))}
@@ -329,6 +362,26 @@ export default function TransactionsPage() {
                     </span>
                   </div>
                 </div>
+
+                {selectedTx.status !== "Settled" && (selectedTx.status === "CryptoReceived" || selectedTx.status === "Failed" || (selectedTx.retryCount || 0) > 0) && (
+                  <div className="md:col-span-2 p-5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-bold text-amber-400">Unpaid / Pending Disbursement</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Automated Retries Attempted: <span className="text-white font-bold">{selectedTx.retryCount || 0} / 5</span>
+                        {(selectedTx.retryCount || 0) >= 5 && <span className="text-amber-400 ml-1 font-semibold">(Max retries reached)</span>}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleRetryDisbursement(selectedTx.transactionId)}
+                      disabled={retryMutation.isPending}
+                      className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shrink-0"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${retryMutation.isPending ? "animate-spin" : ""}`} />
+                      Retry Disbursement
+                    </button>
+                  </div>
+                )}
 
                 <div className="p-4 bg-gray-800/40 border border-gray-800/50 rounded-2xl">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">Merchant Name</p>

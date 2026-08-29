@@ -104,6 +104,17 @@ export const useAdminTransactions = (params?: {
   });
 };
 
+export const useRetryDisbursement = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminApi.retryTransactionDisbursement(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] });
+    },
+  });
+};
+
 // Audit Logs
 export const useAuditLogs = (params?: {
   severity?: string;

@@ -108,6 +108,11 @@ export const getTransactions = async (params?: {
   return response.data.data;
 };
 
+export const retryTransactionDisbursement = async (id: string): Promise<{ message: string }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string }>>(`/admin/transactions/${id}/retry`);
+  return response.data.data;
+};
+
 // Audit Logs
 export const getAuditLogs = async (params?: {
   severity?: string;

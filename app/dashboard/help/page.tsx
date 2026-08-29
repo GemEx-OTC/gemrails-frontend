@@ -21,7 +21,7 @@ export default function HelpPage() {
   { category: "Payments & Settlement", icon: CreditCard, questions: [
     { q: "How fast do I receive my money?", a: "Settlements are instant! Once the customer's crypto payment is confirmed on the blockchain (usually 1-3 minutes), the Naira equivalent is sent to your bank account immediately." },
     { q: "What is the ₦100 merchant incentive?", a: "For every successful payment, you receive a ₦100 bonus on top of the original payment amount. This is our way of rewarding merchants for accepting crypto payments." },
-    { q: "What cryptocurrencies do you support?", a: "We currently support USDT (Tether) and USDC (USD Coin) on TRC20 and BSC networks. These are stable coins pegged to the US Dollar." }
+    { q: "What cryptocurrencies do you support?", a: "We currently support USDT (Tether) and USDC (USD Coin) across multiple networks including BNB Smart Chain (BSC), Base, Polygon, Arbitrum, Optimism, and Ethereum. Tron (TRC20) is temporarily under maintenance." }
   ]},
   { category: "Security & Verification", icon: Shield, questions: [
     { q: "Is GemRails safe to use?", a: "Yes! GemRails is powered by GemOTC, an OTC trading platform. We use bank-grade security, and all merchants are verified for compliance." },

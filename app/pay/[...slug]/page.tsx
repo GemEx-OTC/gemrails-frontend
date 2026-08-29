@@ -137,12 +137,12 @@ export default function PaymentPage({
     if (savedName || savedEmail) setSaveDetails(true)
   }, [])
 
-  // Auto-switch network if USDC is selected while TRC20 is active
+  // Auto-switch network if TRC20 is active
   useEffect(() => {
-    if (selectedAsset === 'USDC' && selectedNetwork === 'TRC20') {
+    if ((selectedNetwork as string) === 'TRC20') {
       setSelectedNetwork('BSC')
     }
-  }, [selectedAsset, selectedNetwork])
+  }, [selectedNetwork])
 
   // Poll for Payment Status
   const { data: paymentStatusData } = usePaymentStatus(transaction?.transactionId || "", {
@@ -271,6 +271,10 @@ export default function PaymentPage({
 
   const handleInitiatePayment = async () => {
     setError("")
+    if (selectedNetwork === 'TRC20') {
+      toast.error("Tron (TRC20) network is currently under maintenance. Please select another network.")
+      return
+    }
     initiatePaymentMutation.mutate(
       {
         merchantId: merchantId,
@@ -794,9 +798,11 @@ export default function PaymentPage({
                           {CRYPTO_NETWORKS[selectedNetwork]?.name || selectedNetwork}
                         </span>
                         <span className="text-xs text-gray-400">
-                          {selectedNetwork === 'BSC' || selectedNetwork === 'BASE'
+                          {selectedNetwork === 'TRC20'
+                            ? 'Temporarily Unavailable • Maintenance'
+                            : selectedNetwork === 'BSC' || selectedNetwork === 'BASE'
                             ? 'Recommended • Low Fee'
-                            : selectedNetwork === 'ETH' || selectedNetwork === 'TRC20'
+                            : selectedNetwork === 'ETH'
                             ? 'High Fee'
                             : 'Low Fee'}
                         </span>
@@ -1436,13 +1442,18 @@ export default function PaymentPage({
                     .map((network) => {
                       const isSelected = selectedNetwork === network;
                       
+                      const isTronMaintenance = network === 'TRC20';
+                      
                       // Fee/recommendation labels
                       let badgeText = '';
                       let badgeStyle = '';
-                      if (network === 'BSC' || network === 'BASE') {
+                      if (isTronMaintenance) {
+                        badgeText = 'Maintenance • Paused';
+                        badgeStyle = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+                      } else if (network === 'BSC' || network === 'BASE') {
                         badgeText = 'Recommended • Low Fee';
                         badgeStyle = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-                      } else if (network === 'ETH' || network === 'TRC20') {
+                      } else if (network === 'ETH') {
                         badgeText = 'High Fee';
                         badgeStyle = 'bg-red-500/10 text-red-400 border border-red-500/20';
                       } else {
@@ -1454,12 +1465,19 @@ export default function PaymentPage({
                         <button
                           key={network}
                           type="button"
+                          disabled={isTronMaintenance}
                           onClick={() => {
+                            if (isTronMaintenance) {
+                              toast.error("Tron (TRC20) network is currently under maintenance. Please select another network like BSC or Base.");
+                              return;
+                            }
                             setSelectedNetwork(network);
                             setNetworkDropdownOpen(false);
                           }}
                           className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left ${
-                            isSelected
+                            isTronMaintenance
+                              ? 'bg-gray-900/30 text-gray-500 border-gray-850/60 opacity-60 cursor-not-allowed'
+                              : isSelected
                               ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-md shadow-emerald-500/5'
                               : 'bg-gray-900/50 hover:bg-gray-800/60 text-gray-300 border-gray-850 hover:border-gray-700/80'
                           }`}
