@@ -43,6 +43,9 @@ export interface User {
   cacVerified?: boolean;
   cacDocumentUrl?: string;
   kycStatus?: string;
+  kycSubmittedAt?: string;
+  kycVerifiedAt?: string;
+  kycRejectionReason?: string;
   merchantStatus?: 'pending' | 'active' | 'suspended';
   accountType?: 'merchant' | 'enterprise';
   merchantId?: string;
@@ -60,6 +63,57 @@ export interface User {
   referralBankAccount?: BankAccount;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// SmileID Web SDK types
+export interface SmileIdentityPartnerDetails {
+  partner_id: string;
+  name: string;
+  logo_url: string;
+  policy_url: string;
+  theme_color: string;
+}
+
+export interface SmileIdentityUserDetails {
+  given_names: string;
+  last_name: string;
+  email?: string;
+  phone_number?: string;
+}
+
+export interface SmileIdentityConfig {
+  token: string;
+  product: 'biometric_kyc' | 'doc_verification' | 'enhanced_document_verification' | 'smartselfie' | 'authentication';
+  callback_url: string;
+  environment: 'sandbox' | 'production';
+  partner_details: SmileIdentityPartnerDetails;
+  user_details?: SmileIdentityUserDetails;
+  consent_information?: {
+    granted: boolean;
+    granted_at: string;
+    notice_language?: string;
+    notice_privacy_policy_url?: string;
+  };
+  consent_region?: 'eu' | 'non-eu';
+  id_selection?: Record<string, string[]>;
+  id_info?: Record<string, any>;
+  partner_params?: Record<string, any>;
+  hide_attribution?: boolean;
+  use_strict_mode?: boolean;
+  onResult?: (result: {
+    status: 'success' | 'failure' | 'cancelled';
+    error?: any;
+    [key: string]: any;
+  }) => void;
+  onSuccess?: () => void;
+  onClose?: () => void;
+  onError?: (error: any) => void;
+}
+
+declare global {
+  interface Window {
+    SmileIdentity?: (config: SmileIdentityConfig) => void;
+  }
 }
 
 // Auth Types

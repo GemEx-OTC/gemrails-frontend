@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { ShieldCheck, CheckCircle2, ChevronRight, Phone, CreditCard, Building2, Lock, ArrowRight, Loader2, Check } from "lucide-react"
+import { ShieldCheck, CheckCircle2, ChevronRight, Phone, CreditCard, Building2, Lock, ArrowRight, Loader2, Check, AlertCircle } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { PhoneVerificationModal } from "@/components/phone-verification-modal"
 import { useVerifyCac } from "@/lib/hooks/use-kyc"
@@ -283,17 +283,64 @@ export default function VerificationHubPage() {
           </ul>
 
           <div className="space-y-3 border-t border-gray-800 pt-4">
-             <button 
+            <button 
               onClick={() => setShowBusinessModal(true)} 
               disabled={cacVerified || tier < 1}
-              className={`w-full flex items-center justify-between p-3 rounded-xl border transition-colors ${cacVerified ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'}`}
+              className={`w-full flex items-center justify-between p-3 rounded-xl border transition-colors ${
+                cacVerified 
+                  ? 'bg-emerald-500/5 border-emerald-500/20' 
+                  : user?.kycStatus === 'rejected'
+                    ? 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20'
+                    : user?.kycSubmittedAt
+                      ? 'bg-purple-500/10 border-purple-500/30 hover:bg-purple-500/20'
+                      : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'
+              }`}
             >
               <div className="flex items-center gap-3">
-                <Building2 className={`w-4 h-4 ${cacVerified ? 'text-emerald-400' : 'text-gray-400'}`} />
-                <span className={`text-sm font-medium ${cacVerified ? 'text-emerald-400' : (tier < 1 ? 'text-gray-600' : 'text-gray-300')}`}>CAC Document</span>
+                <Building2 className={`w-4 h-4 ${
+                  cacVerified 
+                    ? 'text-emerald-400' 
+                    : user?.kycStatus === 'rejected'
+                      ? 'text-red-400'
+                      : user?.kycSubmittedAt
+                        ? 'text-purple-400'
+                        : 'text-gray-400'
+                }`} />
+                <span className={`text-sm font-medium ${
+                  cacVerified 
+                    ? 'text-emerald-400' 
+                    : user?.kycStatus === 'rejected'
+                      ? 'text-red-300'
+                      : user?.kycSubmittedAt
+                        ? 'text-purple-300'
+                        : tier < 1 
+                          ? 'text-gray-600' 
+                          : 'text-gray-300'
+                }`}>
+                  {cacVerified 
+                    ? 'CAC Verified' 
+                    : user?.kycStatus === 'rejected'
+                      ? 'Verification Failed (Retry)'
+                      : user?.kycSubmittedAt
+                        ? 'Verification in Progress...'
+                        : 'CAC Document & ID'}
+                </span>
               </div>
-              {cacVerified ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <ChevronRight className={`w-4 h-4 ${tier < 1 ? 'text-gray-700' : 'text-gray-500'}`} />}
+              {cacVerified ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              ) : user?.kycStatus === 'rejected' ? (
+                <AlertCircle className="w-4 h-4 text-red-400" />
+              ) : user?.kycSubmittedAt ? (
+                <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
+              ) : (
+                <ChevronRight className={`w-4 h-4 ${tier < 1 ? 'text-gray-700' : 'text-gray-500'}`} />
+              )}
             </button>
+            {user?.kycStatus === 'rejected' && user?.kycRejectionReason && (
+              <p className="text-xs text-red-400/90 px-1">
+                Reason: {user.kycRejectionReason}
+              </p>
+            )}
           </div>
         </div>
 
