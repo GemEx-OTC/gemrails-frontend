@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import * as authApi from '@/lib/api/auth';
-import { clearTokens, getTokens } from '@/lib/api/client';
+import { clearTokens, getTokens, hasSession } from '@/lib/api/client';
 import type {
   LoginInput,
   RegisterInput,
@@ -107,7 +107,7 @@ export const useProfile = () => {
   return useQuery({
     queryKey: ['profile'],
     queryFn: authApi.getProfile,
-    enabled: !!accessToken,
+    enabled: hasSession() || !!accessToken,
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -187,7 +187,7 @@ export const useBanks = () => {
   return useQuery({
     queryKey: ['banks'],
     queryFn: authApi.getBanks,
-    enabled: !!accessToken,
+    enabled: hasSession() || !!accessToken,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
   });
 };
