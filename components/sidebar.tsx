@@ -160,13 +160,11 @@ function CollapsibleGroup({
 
 export function Sidebar({ currentPath }: SidebarProps) {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const { unreadCount } = useNotification()
 
   const handleLogout = () => {
-    sessionStorage.clear()
-    localStorage.clear()
-    router.push("/auth/login")
+    logout()
   }
 
   return (

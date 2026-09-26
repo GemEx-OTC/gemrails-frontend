@@ -21,7 +21,7 @@ export function MobileTopNav() {
   const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const { unreadCount } = useNotification()
 
   // Close menu on route change
@@ -42,9 +42,7 @@ export function MobileTopNav() {
   }, [menuOpen])
 
   const handleLogout = () => {
-    sessionStorage.clear()
-    localStorage.clear()
-    router.push("/auth/login")
+    logout()
   }
 
   return (

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, Suspense } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -12,7 +12,7 @@ import type { ApiError } from "@/lib/api/types"
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams()
-  const token = searchParams.get("token")
+  const [token, setToken] = useState<string | null>(null)
 
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -21,6 +21,16 @@ function ResetPasswordContent() {
   const [success, setSuccess] = useState(false)
 
   const resetPasswordMutation = useResetPassword()
+
+  useEffect(() => {
+    const rawToken = searchParams.get("token")
+    if (rawToken) {
+      setToken(rawToken)
+      if (typeof window !== "undefined") {
+        window.history.replaceState({}, "", window.location.pathname)
+      }
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

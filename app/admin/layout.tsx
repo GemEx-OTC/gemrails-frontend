@@ -155,7 +155,7 @@ function CollapsibleGroup({
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, logout } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -169,9 +169,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [user, isLoading, router])
 
   const handleLogout = () => {
-    sessionStorage.clear()
-    localStorage.clear()
-    router.push("/auth/admin/login")
+    logout("/auth/admin/login")
   }
 
   if (isLoading || !user || user.role !== "admin") {

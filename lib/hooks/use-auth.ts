@@ -230,17 +230,17 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => authApi.logout(),
-    onSuccess: () => {
+    mutationFn: (redirectPath?: string) => authApi.logout(),
+    onSuccess: (_, redirectPath) => {
       clearTokens();
       queryClient.clear();
-      router.push('/auth/login');
+      router.push(redirectPath || '/auth/login');
     },
-    onError: () => {
+    onError: (_, redirectPath) => {
       // Even if logout fails, clear local state
       clearTokens();
       queryClient.clear();
-      router.push('/auth/login');
+      router.push(redirectPath || '/auth/login');
     },
   });
 };

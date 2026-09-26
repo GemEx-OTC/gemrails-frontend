@@ -11,7 +11,7 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   login: (token: string, refreshToken: string, user: User, redirectPath?: string) => void
-  logout: () => void
+  logout: (redirectPath?: string) => void
   refreshUser: () => void
 }
 
@@ -36,8 +36,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const logout = () => {
-    logoutMutation.mutate()
+  const logout = (redirectPath?: string) => {
+    logoutMutation.mutate(redirectPath)
   }
 
   const refreshUser = () => {

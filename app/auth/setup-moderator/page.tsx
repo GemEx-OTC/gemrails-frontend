@@ -10,7 +10,7 @@ import { enterpriseApi } from "@/lib/api/enterprise"
 function SetupModeratorContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const token = searchParams.get("token")
+  const [token, setToken] = useState<string | null>(null)
 
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -18,11 +18,17 @@ function SetupModeratorContent() {
   const [isSuccess, setIsSuccess] = useState(false)
 
   useEffect(() => {
-    if (!token) {
+    const rawToken = searchParams.get("token")
+    if (rawToken) {
+      setToken(rawToken)
+      if (typeof window !== "undefined") {
+        window.history.replaceState({}, "", window.location.pathname)
+      }
+    } else if (!token) {
       toast.error("Invalid or missing invitation token")
       router.push("/auth/login")
     }
-  }, [token, router])
+  }, [searchParams, router, token])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
