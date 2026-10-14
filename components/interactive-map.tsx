@@ -44,7 +44,7 @@ const InteractiveMap = () => {
       name: "Ibadan, Nigeria", 
       position: [7.3775, 3.9470] as [number, number], 
       active: true,
-      description: "Our headquarters and primary operations center"
+      description: "Flat 1b, Higher Life Building, Opposite First Bank, Onile Aro Junction, Ojoo, Ibadan — Our headquarters and primary operations center"
     },
     { 
       name: "Accra, Ghana", 

@@ -841,7 +841,7 @@ export default function MerchantAgreementPage() {
                 {[
                   { label: "Legal Enquiries", email: "legal@gemrails.com", value: undefined, icon: Scale, color: "text-violet-400" },
                   { label: "Compliance", email: "compliance@gemrails.com", value: undefined, icon: Shield, color: "text-purple-400" },
-                  { label: "Registered Address", email: undefined, value: "Flat 2b, Higher-life Building, Onile-Aro, Ojoo, Ibadan", icon: Building2, color: "text-pink-400" },
+                  { label: "Registered Address", email: undefined, value: "Flat 1b, Higher Life Building, Opposite First Bank, Onile Aro Junction, Ojoo, Ibadan", icon: Building2, color: "text-pink-400" },
                 ].map((c, i: number) => (
                   <motion.div
                     key={i}
@@ -868,8 +868,11 @@ export default function MerchantAgreementPage() {
       {/* Footer */}
       <footer className="border-t border-gray-800 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-gray-500 text-sm">© {new Date().getFullYear()} GemRails. All rights reserved.</p>
-          <div className="flex items-center gap-6 text-sm text-gray-500">
+          <div className="text-center md:text-left space-y-1">
+            <p className="text-gray-500 text-sm">© {new Date().getFullYear()} GemRails. All rights reserved.</p>
+            <p className="text-gray-600 text-xs">Flat 1b, Higher Life Building, Opposite First Bank, Onile Aro Junction, Ojoo, Ibadan</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
             <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
             <Link href="/anti-money" className="hover:text-emerald-400 transition-colors">AML Policy</Link>
             <Link href="/merchant-agreement" className="text-emerald-400 font-medium">Merchant Agreement</Link>

@@ -230,7 +230,7 @@ For questions, compliance matters, or legal inquiries relating to these Terms, m
 may contact:
 Gemrails Ltd.
 Email: [compliance@Gemrails.com]
-Address: [Flat 2b, Higher-life Building, opposite first-bank Onile-Aro, ojoo, ibadan]
+Address: [Flat 1b, Higher Life Building, Opposite First Bank, Onile Aro Junction, Ojoo, Ibadan]
 Appendix A: Service Jurisdiction
 Geographic Scope of Services
 Gemrails provides digital asset payment infrastructure services to businesses operating

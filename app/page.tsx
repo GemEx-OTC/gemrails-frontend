@@ -30,6 +30,7 @@ import {
   Menu,
   X,
   User,
+  MapPin,
 } from "lucide-react"
 
 // Floating Particle Component
@@ -1387,9 +1388,13 @@ export default function HomePage() {
                   <span className="text-xl font-bold text-white">GemRails</span>
                 </div>
               </div>
-              <p className="text-gray-400 max-w-sm mb-6">
+              <p className="text-gray-400 max-w-sm mb-4">
                 The easiest way for Nigerian businesses to accept cryptocurrency payments with instant Naira settlement.
               </p>
+              <div className="flex items-start gap-2.5 text-gray-400 text-sm max-w-sm mb-6">
+                <MapPin className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-1" />
+                <span>Flat 1b, Higher Life Building, Opposite First Bank, Onile Aro Junction, Ojoo, Ibadan</span>
+              </div>
               
               {/* Social Links */}
               <div className="flex gap-4">
@@ -1456,9 +1461,14 @@ export default function HomePage() {
 
           {/* Bottom */}
           <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} GemRails. All rights reserved.
-            </p>
+            <div className="text-center md:text-left">
+              <p className="text-gray-500 text-sm">
+                © {new Date().getFullYear()} GemRails. All rights reserved.
+              </p>
+              <p className="text-gray-600 text-xs mt-1">
+                Flat 1b, Higher Life Building, Opposite First Bank, Onile Aro Junction, Ojoo, Ibadan
+              </p>
+            </div>
             <div className="flex items-center gap-6 text-sm text-gray-500">
               <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
               <Link href="/anti-money" className="hover:text-emerald-400 transition-colors">AML Policy</Link>

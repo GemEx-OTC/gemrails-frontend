@@ -523,8 +523,11 @@ export default function HowItWorksPage() {
       <footer className="border-t border-gray-800 py-8 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-gray-500 text-sm text-center md:text-left"> {new Date().getFullYear()} GemRails. All rights reserved.</p>
-            <div className="flex items-center gap-6 text-sm text-gray-500">
+            <div className="text-center md:text-left space-y-1">
+              <p className="text-gray-500 text-sm">© {new Date().getFullYear()} GemRails. All rights reserved.</p>
+              <p className="text-gray-600 text-xs">Flat 1b, Higher Life Building, Opposite First Bank, Onile Aro Junction, Ojoo, Ibadan</p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
               <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
               <Link href="/anti-money" className="hover:text-emerald-400 transition-colors">AML Policy</Link>
               <Link href="/merchant-agreement" className="hover:text-emerald-400 transition-colors">Merchant Agreement</Link>
