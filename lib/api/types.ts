@@ -352,10 +352,13 @@ export interface ConfirmPaymentInput {
 export interface AdminMerchant {
   id: string;
   businessName: string;
+  businessLogo?: string;
+  merchantId?: string;
   email: string;
   phone?: string;
   status: 'pending' | 'verified' | 'suspended';
   accountType?: 'merchant' | 'enterprise';
+  tier?: number;
   totalTransactions: number;
   totalVolume: number;
   bankAccount?: BankAccount;
@@ -364,6 +367,7 @@ export interface AdminMerchant {
   referralStatus?: 'active' | 'suspended';
   referralBankAccount?: BankAccount;
   cacVerified?: boolean;
+  phoneVerified?: boolean;
   createdAt: string;
 }
 
@@ -403,6 +407,7 @@ export interface AdminMerchantDetails extends AdminMerchant {
     id: string;
     name: string;
     merchantId: string;
+    branchId?: string | { _id: string; name: string };
     isActive: boolean;
     bankAccount?: BankAccount;
     type?: 'merchant' | 'terminal';

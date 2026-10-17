@@ -4,10 +4,11 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { BusinessVerificationModal } from "@/components/business-verification-modal"
+import { MerchantQRCodeModal } from "@/components/merchant-qr-modal"
 import {
   Store, Search, Filter, Eye, UserX, UserCheck, X, Shield, Users,
   Mail, Calendar, TrendingUp, BanknoteIcon, Loader2, ChevronDown,
-  CheckCircle, Clock, AlertCircle, Building2, Landmark, FileText, ExternalLink,
+  CheckCircle, Clock, AlertCircle, Building2, Landmark, FileText, ExternalLink, QrCode,
 } from "lucide-react"
 import {
   useAdminMerchants,
@@ -38,6 +39,9 @@ export default function MerchantsPage() {
   const [showSuspendModal, setShowSuspendModal] = useState(false)
   const [showVerifyModal, setShowVerifyModal] = useState(false)
   const [showCacModal, setShowCacModal] = useState(false)
+  const [showQrModal, setShowQrModal] = useState(false)
+  const [qrMerchant, setQrMerchant] = useState<AdminMerchant | null>(null)
+  const [qrTerminalId, setQrTerminalId] = useState<string | undefined>(undefined)
   const [suspendReason, setSuspendReason] = useState("")
 
   const { data, isLoading, refetch } = useAdminMerchants({
@@ -54,6 +58,12 @@ export default function MerchantsPage() {
   const handleViewDetails = (merchant: AdminMerchant) => {
     setSelectedMerchant(merchant)
     setShowDetailsModal(true)
+  }
+
+  const handleViewQrCode = (merchant: AdminMerchant, terminalId?: string) => {
+    setQrMerchant(merchant)
+    setQrTerminalId(terminalId)
+    setShowQrModal(true)
   }
 
   const handleSuspend = (merchant: AdminMerchant) => {
@@ -132,7 +142,13 @@ export default function MerchantsPage() {
   const pagination = data?.pagination
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+    <>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-6 print:hidden"
+      inert={showQrModal || undefined}
+    >
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white">Merchant Management</h1>
@@ -153,6 +169,7 @@ export default function MerchantsPage() {
         </div>
         <div className="relative">
           <button
+            type="button"
             onClick={() => setFilterOpen(!filterOpen)}
             className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
               statusFilter !== "all"
@@ -173,6 +190,7 @@ export default function MerchantsPage() {
               {(["all", "verified", "pending", "suspended"] as MerchantStatus[]).map((status) => (
                 <button
                   key={status}
+                  type="button"
                   onClick={() => { setStatusFilter(status); setFilterOpen(false); setPage(1) }}
                   className={`w-full px-4 py-3 text-left text-sm transition-all ${
                     statusFilter === status ? "bg-emerald-500/20 text-emerald-400" : "text-gray-400 hover:bg-gray-800 hover:text-white"
@@ -200,13 +218,13 @@ export default function MerchantsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-800 bg-gray-800/50">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Merchant</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Type</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Status</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Transactions</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Volume</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Joined</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Actions</th>
+                    <th scope="col" className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Merchant</th>
+                    <th scope="col" className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Type</th>
+                    <th scope="col" className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Status</th>
+                    <th scope="col" className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Transactions</th>
+                    <th scope="col" className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Volume</th>
+                    <th scope="col" className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Joined</th>
+                    <th scope="col" className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -229,14 +247,25 @@ export default function MerchantsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${
-                          merchant.accountType === 'enterprise' ? 'text-blue-400' : 'text-gray-400'
-                        }`}>
-                          {merchant.accountType === 'enterprise' ? (
-                            <><Building2 className="w-3.5 h-3.5" /> Enterprise</>
-                          ) : (
-                            <><Store className="w-3.5 h-3.5" /> Merchant</>
-                          )}
+                        <div className="space-y-1">
+                          <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${
+                            merchant.accountType === 'enterprise' ? 'text-blue-400' : 'text-gray-400'
+                          }`}>
+                            {merchant.accountType === 'enterprise' ? (
+                              <><Building2 className="w-3.5 h-3.5" /> Enterprise</>
+                            ) : (
+                              <><Store className="w-3.5 h-3.5" /> Merchant</>
+                            )}
+                          </div>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            merchant.tier === 2
+                              ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
+                              : merchant.tier === 1
+                              ? "bg-blue-500/15 text-blue-400 border border-blue-500/25"
+                              : "bg-gray-800 text-gray-400 border border-gray-700"
+                          }`}>
+                            Tier {merchant.tier ?? 0}{merchant.tier === 2 ? " • Max" : ""}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -249,27 +278,52 @@ export default function MerchantsPage() {
                       <td className="px-6 py-4 text-emerald-400 font-medium">{formatCurrency(merchant.totalVolume)}</td>
                       <td className="px-6 py-4 text-gray-400 text-sm">{formatDate(merchant.createdAt)}</td>
                       <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          <button onClick={() => handleViewDetails(merchant)} className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium flex items-center gap-1">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleViewDetails(merchant)}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium flex items-center gap-1"
+                          >
                             <Eye className="w-3 h-3" /> View
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => handleViewQrCode(merchant)}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/30 hover:bg-teal-500/30 transition-all font-medium flex items-center gap-1"
+                            title="View and print merchant QR code"
+                          >
+                            <QrCode className="w-3 h-3" /> QR Code
+                          </button>
                           {!merchant.cacVerified && (
-                            <button onClick={() => { setSelectedMerchant(merchant); setShowCacModal(true) }} className="text-xs px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-all font-medium flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => { setSelectedMerchant(merchant); setShowCacModal(true) }}
+                              className="text-xs px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-all font-medium flex items-center gap-1"
+                            >
                               <Building2 className="w-3 h-3" /> Verify CAC
                             </button>
                           )}
                           {merchant.status === "pending" && (
-                            <button onClick={() => handleVerify(merchant)} className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-all font-medium flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleVerify(merchant)}
+                              className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-all font-medium flex items-center gap-1"
+                            >
                               <Shield className="w-3 h-3" /> Verify
                             </button>
                           )}
                           {merchant.status === "verified" && (
-                            <button onClick={() => handleSuspend(merchant)} className="text-xs px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all font-medium flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSuspend(merchant)}
+                              className="text-xs px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all font-medium flex items-center gap-1"
+                            >
                               <UserX className="w-3 h-3" /> Suspend
                             </button>
                           )}
                           {merchant.status === "suspended" && (
                             <button 
+                              type="button"
                               onClick={() => handleReactivate(merchant)}
                               disabled={reactivateMutation.isPending}
                               className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium flex items-center gap-1 disabled:opacity-50"
@@ -301,6 +355,7 @@ export default function MerchantsPage() {
               </p>
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
                   className="px-4 py-2 rounded-lg bg-gray-800 text-white disabled:opacity-50"
@@ -308,6 +363,7 @@ export default function MerchantsPage() {
                   Previous
                 </button>
                 <button
+                  type="button"
                   onClick={() => setPage(p => p + 1)}
                   disabled={page >= pagination.totalPages}
                   className="px-4 py-2 rounded-lg bg-gray-800 text-white disabled:opacity-50"
@@ -328,6 +384,17 @@ export default function MerchantsPage() {
         onVerifyCacClick={() => {
           setShowDetailsModal(false)
           setShowCacModal(true)
+        }}
+        onViewQrCode={(merchant, terminalId) => {
+          handleViewQrCode(merchant, terminalId)
+        }}
+        onVerifyClick={(merchant) => {
+          setShowDetailsModal(false)
+          handleVerify(merchant)
+        }}
+        onSuspendClick={(merchant) => {
+          setShowDetailsModal(false)
+          handleSuspend(merchant)
         }}
       />
 
@@ -435,6 +502,18 @@ export default function MerchantsPage() {
         isAdmin={true}
       />
     </motion.div>
+
+    {/* Merchant QR Code Modal (rendered outside print:hidden and Framer Motion transform wrapper so print layout fills full A4 page) */}
+    <MerchantQRCodeModal
+      isOpen={showQrModal}
+      onClose={() => {
+        setShowQrModal(false)
+        setQrTerminalId(undefined)
+      }}
+      merchant={qrMerchant}
+      initialTerminalId={qrTerminalId}
+    />
+    </>
   )
 }
 
@@ -442,12 +521,18 @@ function AdminMerchantDetailsModal({
   isOpen, 
   onClose, 
   merchantId,
-  onVerifyCacClick
+  onVerifyCacClick,
+  onViewQrCode,
+  onVerifyClick,
+  onSuspendClick,
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
   merchantId: string;
   onVerifyCacClick: () => void;
+  onViewQrCode: (merchant: AdminMerchant, terminalId?: string) => void;
+  onVerifyClick: (merchant: AdminMerchant) => void;
+  onSuspendClick: (merchant: AdminMerchant) => void;
 }) {
   const { data: merchant, isLoading } = useAdminMerchantDetails(merchantId);
   const toggleTerminalStatus = useToggleTerminalStatus();
@@ -482,7 +567,7 @@ function AdminMerchantDetailsModal({
                     {isLoading ? "Loading..." : merchant?.businessName}
                   </h3>
                   {!isLoading && merchant && (
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                         merchant.status === "verified" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
                         merchant.status === "pending" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
@@ -497,11 +582,20 @@ function AdminMerchantDetailsModal({
                           <><Store className="w-3 h-3 text-emerald-500" /> Standard</>
                         )}
                       </span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        merchant.tier === 2
+                          ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
+                          : merchant.tier === 1
+                          ? "bg-blue-500/15 text-blue-400 border border-blue-500/25"
+                          : "bg-gray-800 text-gray-400 border border-gray-700"
+                      }`}>
+                        Tier {merchant.tier ?? 0}{merchant.tier === 2 ? " • Max" : ""}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
-              <button onClick={onClose} className="p-2 text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-gray-800">
+              <button type="button" onClick={onClose} className="p-2 text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-gray-800">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -517,6 +611,7 @@ function AdminMerchantDetailsModal({
               ].map((tab) => (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all border-b-2 relative ${
                     activeTab === tab.id 
@@ -578,6 +673,7 @@ function AdminMerchantDetailsModal({
                                 <Clock className="w-3 h-3 text-amber-400" /> Unverified
                               </span>
                               <button 
+                                type="button"
                                 onClick={onVerifyCacClick}
                                 className="text-xs px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all font-bold"
                               >
@@ -651,6 +747,7 @@ function AdminMerchantDetailsModal({
                             </div>
                           </div>
                           <button
+                            type="button"
                             onClick={() => updateReferralStatus.mutate({ 
                               merchantId: merchant.id, 
                               status: merchant.referralStatus === 'suspended' ? 'active' : 'suspended' 
@@ -732,23 +829,39 @@ function AdminMerchantDetailsModal({
                                   <div className="p-1.5 bg-emerald-500/10 rounded text-emerald-400">
                                     <Landmark className="w-3 h-3" />
                                   </div>
-                                  <h4 className="text-white text-sm font-bold">{terminal.name}</h4>
+                                  <div>
+                                    <h4 className="text-white text-sm font-bold">{terminal.name}</h4>
+                                    {terminal.branchName && (
+                                      <p className="text-[10px] text-gray-400">{terminal.branchName}</p>
+                                    )}
+                                  </div>
                                 </div>
-                                <button
-                                  onClick={() => toggleTerminalStatus.mutate({ terminalId: terminal.id, isActive: !terminal.isActive })}
-                                  disabled={toggleTerminalStatus.isPending}
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all hover:scale-105 active:scale-95 ${
-                                    terminal.isActive 
-                                      ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20" 
-                                      : "bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                                  }`}
-                                >
-                                  {toggleTerminalStatus.isPending && toggleTerminalStatus.variables?.terminalId === terminal.id ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                  ) : (
-                                    terminal.isActive ? "Active" : "Inactive"
-                                  )}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => onViewQrCode(merchant, terminal.id)}
+                                    className="px-2.5 py-1 rounded text-[10px] font-bold uppercase bg-teal-500/15 text-teal-300 border border-teal-500/30 hover:bg-teal-500/25 transition-all flex items-center gap-1"
+                                    title="View and print terminal QR code"
+                                  >
+                                    <QrCode className="w-3 h-3" /> QR Code
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleTerminalStatus.mutate({ terminalId: terminal.id, isActive: !terminal.isActive })}
+                                    disabled={toggleTerminalStatus.isPending}
+                                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all hover:scale-105 active:scale-95 ${
+                                      terminal.isActive 
+                                        ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20" 
+                                        : "bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                                    }`}
+                                  >
+                                    {toggleTerminalStatus.isPending && toggleTerminalStatus.variables?.terminalId === terminal.id ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      terminal.isActive ? "Active" : "Inactive"
+                                    )}
+                                  </button>
+                                </div>
                               </div>
                               <div className="text-[10px] text-gray-500 mb-2 font-mono">ID: {terminal.merchantId}</div>
                               {terminal.bankAccount && (
@@ -830,13 +943,21 @@ function AdminMerchantDetailsModal({
 
             {/* Modal Footer */}
             {!isLoading && merchant && (
-              <div className="p-6 border-t border-gray-800 bg-gray-900/50 flex justify-end gap-3">
-                <button onClick={onClose} className="px-6 py-2.5 rounded-xl text-gray-400 hover:text-white transition-colors text-sm font-medium">
+              <div className="p-6 border-t border-gray-800 bg-gray-900/50 flex flex-wrap justify-end gap-3">
+                <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl text-gray-400 hover:text-white transition-colors text-sm font-medium">
                   Close
                 </button>
-                <div className="h-10 w-px bg-gray-800 mx-2" />
+                <div className="h-10 w-px bg-gray-800 mx-1" />
+                <button
+                  type="button"
+                  onClick={() => onViewQrCode(merchant)}
+                  className="px-5 py-2.5 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/30 hover:bg-teal-500/30 transition-all text-sm font-bold flex items-center gap-2"
+                >
+                  <QrCode className="w-4 h-4" /> View / Print QR Code
+                </button>
                 {!merchant.cacVerified && (
                   <button 
+                    type="button"
                     onClick={onVerifyCacClick}
                     className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-all text-sm font-bold flex items-center gap-2"
                   >
@@ -844,12 +965,20 @@ function AdminMerchantDetailsModal({
                   </button>
                 )}
                 {merchant.status === "pending" && (
-                  <button className="px-6 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all text-sm font-bold flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onVerifyClick(merchant)}
+                    className="px-6 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all text-sm font-bold flex items-center gap-2"
+                  >
                     <Shield className="w-4 h-4" /> Verify Merchant
                   </button>
                 )}
                 {merchant.status === "verified" && (
-                  <button className="px-6 py-2.5 rounded-xl bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600/20 transition-all text-sm font-bold flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onSuspendClick(merchant)}
+                    className="px-6 py-2.5 rounded-xl bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600/20 transition-all text-sm font-bold flex items-center gap-2"
+                  >
                     <UserX className="w-4 h-4" /> Suspend Merchant
                   </button>
                 )}

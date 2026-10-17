@@ -181,16 +181,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0d10]">
+    <div className="min-h-screen bg-[#0a0d10] print:block print:min-h-0 print:h-auto print:bg-transparent">
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-800">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-800 print:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <Link href="/admin/dashboard" className="flex items-center gap-2">
             <img src="/logo/logo_icon.png" alt="GemRails" className="w-8 h-8 rounded-lg" />
             <span className="font-bold text-white">GemRails Admin</span>
           </Link>
           <button
+            type="button"
             onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label={sidebarOpen ? "Close navigation menu" : "Open navigation menu"}
             className="p-2 text-gray-400 hover:text-white"
           >
             {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -205,7 +207,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 z-30 bg-black/60"
+            className="lg:hidden fixed inset-0 z-30 bg-black/60 print:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -213,7 +215,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 bg-[#0a0d10] border-r border-gray-800 transform transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-40 h-full w-64 bg-[#0a0d10] border-r border-gray-800 transform transition-transform duration-300 lg:translate-x-0 print:hidden ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -261,6 +263,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Footer */}
           <div className="p-4 border-t border-gray-800 space-y-3">
             <motion.button
+              type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleLogout}
@@ -275,8 +278,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
-        <div className="p-4 lg:p-8">{children}</div>
+      <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen print:ml-0 print:pt-0 print:min-h-0 print:overflow-visible">
+        <div className="p-4 lg:p-8 print:p-0">{children}</div>
       </main>
     </div>
   )
