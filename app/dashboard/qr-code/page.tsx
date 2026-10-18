@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
-import { QRCode } from "react-qrcode-logo"
+import { BusinessQRCode } from "@/components/business-qr-code"
 import { Download, Share2, Copy, Check, Smartphone, Printer, ExternalLink, Loader2 } from "lucide-react"
 import { copyToClipboard } from "@/lib/clipboard"
 import { useAuth } from "@/context/auth-context"
@@ -132,7 +132,7 @@ export default function QRCodePage() {
         
         {/* Top Logo Badge */}
         <div className="mt-8 mb-6 w-20 h-20 bg-white rounded-2xl shadow-2xl flex items-center justify-center p-2">
-          <img src="/logo/logo_icon.png" alt="GemRails" className="w-full h-full object-contain" />
+          <img src="/logo/logo_icon.png" alt="GemRails" className="w-full h-full object-contain rounded-xl" />
         </div>
 
         {/* Main Title */}
@@ -168,19 +168,16 @@ export default function QRCodePage() {
 
         {/* QR Code */}
         <div className="bg-white p-6 rounded-2xl shadow-2xl mb-4">
-          <QRCode
+          <BusinessQRCode
             value={paymentUrl}
             size={450}
             qrStyle="dots"
             eyeRadius={15}
             logoImage={effectiveLogo}
-            logoWidth={150}
-            logoHeight={150}
-            logoPadding={0}
-            logoPaddingStyle="circle"
-            removeQrCodeBehindLogo={true}
+            logoWidth={135}
+            logoHeight={135}
             ecLevel="H"
-          />  
+          />
         </div>
 
         {/* Tagline */}
@@ -224,18 +221,15 @@ export default function QRCodePage() {
         <div className="grid lg:grid-cols-2 gap-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-gray-900/50 border border-gray-800 rounded-xl">
             <div className="text-center">
-              <div ref={qrRef} className="inline-block p-1 bg-white rounded-2xl shadow-xl mb-6">
-                <QRCode
+              <div ref={qrRef} className="inline-block p-2 bg-white rounded-2xl shadow-xl mb-6">
+                <BusinessQRCode
                   value={paymentUrl}
                   size={300}
                   qrStyle="dots"
                   eyeRadius={10}
                   logoImage={effectiveLogo}
-                  logoWidth={100}
-                  logoHeight={100}
-                  logoPadding={0}
-                  logoPaddingStyle="circle"
-                  removeQrCodeBehindLogo={true}
+                  logoWidth={90}
+                  logoHeight={90}
                   ecLevel="H"
                 />
               </div>

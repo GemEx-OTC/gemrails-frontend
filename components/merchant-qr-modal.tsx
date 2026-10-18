@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { QRCode } from "react-qrcode-logo"
+import { BusinessQRCode } from "@/components/business-qr-code"
 import {
   X,
   Copy,
@@ -180,7 +180,7 @@ export function MerchantQRCodeModal({
         <div className="hidden print:flex print:fixed print:inset-0 print:z-[9999] print:flex-col print:items-center print:justify-start print:min-h-screen print:w-full print:bg-gradient-to-b print:from-emerald-500 print:via-teal-600 print:to-teal-700">
           {/* Top Logo Badge */}
           <div className="mt-8 mb-6 w-20 h-20 bg-white rounded-2xl shadow-2xl flex items-center justify-center p-2">
-            <img src="/logo/logo_icon.png" alt="GemRails" className="w-full h-full object-contain" />
+            <img src="/logo/logo_icon.png" alt="GemRails" className="w-full h-full object-contain rounded-xl" />
           </div>
 
           {/* Main Title */}
@@ -233,17 +233,14 @@ export function MerchantQRCodeModal({
 
           {/* QR Code */}
           <div className="bg-white p-6 rounded-2xl shadow-2xl mb-4">
-            <QRCode
+            <BusinessQRCode
               value={paymentUrl}
               size={450}
               qrStyle="dots"
               eyeRadius={15}
               logoImage={effectiveLogo}
-              logoWidth={150}
-              logoHeight={150}
-              logoPadding={0}
-              logoPaddingStyle="circle"
-              removeQrCodeBehindLogo={true}
+              logoWidth={135}
+              logoHeight={135}
               ecLevel="H"
             />
           </div>
@@ -384,17 +381,14 @@ export function MerchantQRCodeModal({
                     ref={qrRef}
                     className="mb-5 inline-block p-2 bg-white rounded-2xl shadow-xl shadow-emerald-500/10"
                   >
-                    <QRCode
+                    <BusinessQRCode
                       value={paymentUrl}
                       size={240}
                       qrStyle="dots"
                       eyeRadius={10}
                       logoImage={effectiveLogo}
-                      logoWidth={75}
-                      logoHeight={75}
-                      logoPadding={0}
-                      logoPaddingStyle="circle"
-                      removeQrCodeBehindLogo={true}
+                      logoWidth={72}
+                      logoHeight={72}
                       ecLevel="H"
                     />
                   </div>

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { QRCode } from "react-qrcode-logo"
+import { BusinessQRCode } from "@/components/business-qr-code"
 import { X, Copy, Check, Printer, ExternalLink } from "lucide-react"
 import { copyToClipboard } from "@/lib/clipboard"
 import { Terminal } from "@/lib/api/enterprise"
@@ -58,7 +58,7 @@ export function TerminalQRCodeModal({ terminal, onClose }: TerminalQRCodeModalPr
       {/* ========== PRINT VIEW ========== */}
       <div className="hidden print:flex print:fixed print:inset-0 print:z-[9999] print:flex-col print:items-center print:justify-start print:min-h-screen print:w-full print:bg-gradient-to-b print:from-emerald-500 print:via-teal-600 print:to-teal-700">
         <div className="mt-8 mb-6 w-20 h-20 bg-white rounded-2xl shadow-2xl flex items-center justify-center p-2">
-          <img src="/logo/logo_icon.png" alt="GemRails" className="w-full h-full object-contain" />
+          <img src="/logo/logo_icon.png" alt="GemRails" className="w-full h-full object-contain rounded-xl" />
         </div>
         <h1 className="text-6xl font-black text-white tracking-tight mb-2 text-center px-4 drop-shadow-md">
           PAY WITH CRYPTO
@@ -95,17 +95,14 @@ export function TerminalQRCodeModal({ terminal, onClose }: TerminalQRCodeModalPr
           Scan to Pay with USDT or USDC
         </p>
         <div className="bg-white p-6 rounded-2xl shadow-2xl mb-4">
-          <QRCode
+          <BusinessQRCode
             value={paymentUrl}
             size={450}
             qrStyle="dots"
             eyeRadius={15}
             logoImage={effectiveLogo}
-            logoWidth={150}
-            logoHeight={150}
-            logoPadding={0}
-            logoPaddingStyle="circle"
-            removeQrCodeBehindLogo={true}
+            logoWidth={135}
+            logoHeight={135}
             ecLevel="H"
           />
         </div>
@@ -138,18 +135,15 @@ export function TerminalQRCodeModal({ terminal, onClose }: TerminalQRCodeModalPr
             </button>
 
             <div className="p-8 text-center pt-12">
-              <div className="mb-6 inline-block p-1 bg-white rounded-2xl shadow-xl shadow-emerald-500/10" ref={qrRef}>
-                <QRCode
+              <div className="mb-6 inline-block p-2 bg-white rounded-2xl shadow-xl shadow-emerald-500/10" ref={qrRef}>
+                <BusinessQRCode
                   value={paymentUrl}
                   size={240}
                   qrStyle="dots"
-                  eyeRadius={8}
+                  eyeRadius={10}
                   logoImage={effectiveLogo}
-                  logoWidth={70}
-                  logoHeight={70}
-                  logoPadding={0}
-                  logoPaddingStyle="circle"
-                  removeQrCodeBehindLogo={true}
+                  logoWidth={72}
+                  logoHeight={72}
                   ecLevel="H"
                 />
               </div>
