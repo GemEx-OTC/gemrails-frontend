@@ -521,6 +521,11 @@ export default function SettingsPage() {
                 <div className="relative">
                   <input
                     type="text"
+                    inputMode="numeric"
+                    pattern="\d{10}"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
                     value={accountNumber}
                     onChange={(e) => handleAccountNumberChange(e.target.value)}
                     className="gemrails-input"

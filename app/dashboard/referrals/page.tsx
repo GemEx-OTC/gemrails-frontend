@@ -683,9 +683,13 @@ export default function ReferralsPage() {
                   <div className="space-y-4">
                     <input 
                       type="text"
-                      maxLength={10}
+                      inputMode="numeric"
+                      pattern="\d{10}"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
                       value={payoutAccountNumber}
-                      onChange={(e) => setPayoutAccountNumber(e.target.value.replace(/\D/g, ''))}
+                      onChange={(e) => setPayoutAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                       placeholder="e.g. 0123456789"
                       className="w-full bg-gray-900 border border-gray-800 focus:border-emerald-500/50 text-white px-6 py-5 rounded-3xl outline-none transition-all text-2xl font-mono font-bold text-center tracking-widest"
                       autoFocus

@@ -43,22 +43,12 @@ export default function TerminalsPage() {
   })
   const [statusConfirm, setStatusConfirm] = useState<{ id: string, name: string, isActive: boolean } | null>(null)
 
-  const handleVerifyAccount = () => {
-    if (!bankAccount.accountNumber || !bankAccount.bankCode) {
-      toast.error("Please provide account number and select a bank")
-      return
-    }
-
-    if (bankAccount.accountNumber.length !== 10) {
-      toast.error("Account number must be 10 digits")
-      return
-    }
-
+  const triggerAccountVerification = (accountNumber: string, bankCode: string) => {
     verifyAccountMutation.mutate(
-      { accountNumber: bankAccount.accountNumber, bankCode: bankAccount.bankCode },
+      { accountNumber, bankCode },
       {
         onSuccess: (data: any) => {
-          setBankAccount(prev => ({ ...prev, accountName: data.accountName }))
+          setBankAccount(prev => ({ ...prev, accountNumber, accountName: data.accountName }))
           toast.success("Account verified successfully")
         },
         onError: (err: any) => {
@@ -68,6 +58,53 @@ export default function TerminalsPage() {
     )
   }
 
+  const handleAccountNumberChange = (rawValue: string) => {
+    const cleaned = rawValue.replace(/\D/g, "").slice(0, 10)
+    setBankAccount(prev => ({
+      ...prev,
+      accountNumber: cleaned,
+      accountName: cleaned === prev.accountNumber ? prev.accountName : ""
+    }))
+
+    if (cleaned.length === 10 && bankAccount.bankCode && cleaned !== bankAccount.accountNumber) {
+      triggerAccountVerification(cleaned, bankAccount.bankCode)
+    }
+  }
+
+  const handleBankChange = (code: string, bankName: string) => {
+    const cleaned = bankAccount.accountNumber.replace(/\D/g, "").slice(0, 10)
+    setBankAccount(prev => ({
+      ...prev,
+      bankCode: code,
+      bankName,
+      accountNumber: cleaned,
+      accountName: code === prev.bankCode ? prev.accountName : ""
+    }))
+
+    if (cleaned.length === 10 && code && code !== bankAccount.bankCode) {
+      triggerAccountVerification(cleaned, code)
+    }
+  }
+
+  const handleVerifyAccount = () => {
+    const cleaned = bankAccount.accountNumber.replace(/\D/g, "").slice(0, 10)
+    if (cleaned !== bankAccount.accountNumber) {
+      setBankAccount(prev => ({ ...prev, accountNumber: cleaned }))
+    }
+
+    if (!cleaned || !bankAccount.bankCode) {
+      toast.error("Please provide account number and select a bank")
+      return
+    }
+
+    if (cleaned.length !== 10) {
+      toast.error("Account number must be 10 digits")
+      return
+    }
+
+    triggerAccountVerification(cleaned, bankAccount.bankCode)
+  }
+
   const handleAddTerminal = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !selectedBranch) {
@@ -75,11 +112,17 @@ export default function TerminalsPage() {
       return
     }
 
+    const cleanedAccountNumber = bankAccount.accountNumber.replace(/\D/g, "").slice(0, 10)
+    if (cleanedAccountNumber && (!bankAccount.bankCode || cleanedAccountNumber.length !== 10 || !bankAccount.accountName)) {
+      toast.error("Please verify the 10-digit bank account before adding the terminal")
+      return
+    }
+
     createTerminalMutation.mutate(
       { 
         branchId: selectedBranch, 
         name, 
-        bankAccount: bankAccount.accountNumber ? bankAccount : undefined,
+        bankAccount: cleanedAccountNumber ? { ...bankAccount, accountNumber: cleanedAccountNumber } : undefined,
       },
       {
         onSuccess: () => {
@@ -97,15 +140,21 @@ export default function TerminalsPage() {
 
   const handleUpdateTerminal = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!editingTerminal || !name || !bankAccount.accountNumber) {
+    const cleanedAccountNumber = bankAccount.accountNumber.replace(/\D/g, "").slice(0, 10)
+    if (!editingTerminal || !name || !cleanedAccountNumber) {
       toast.error("Please fill in required fields")
+      return
+    }
+
+    if (!bankAccount.bankCode || cleanedAccountNumber.length !== 10 || !bankAccount.accountName) {
+      toast.error("Please verify the 10-digit bank account before updating the terminal")
       return
     }
 
     updateTerminalMutation.mutate(
       { 
         id: editingTerminal._id,
-        data: { name, bankAccount }
+        data: { name, bankAccount: { ...bankAccount, accountNumber: cleanedAccountNumber } }
       },
       {
         onSuccess: () => {
@@ -259,7 +308,7 @@ export default function TerminalsPage() {
                     <label className="text-[10px] font-bold text-gray-500 uppercase">Select Bank</label>
                     <BankSelector
                       value={bankAccount.bankCode}
-                      onChange={(code, name) => setBankAccount({ ...bankAccount, bankCode: code, bankName: name })}
+                      onChange={handleBankChange}
                       banks={banks || []}
                       placeholder="Search bank..."
                     />
@@ -272,9 +321,13 @@ export default function TerminalsPage() {
                       </div>
                       <input
                         type="text"
-                        maxLength={10}
+                        inputMode="numeric"
+                        pattern="\d{10}"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck={false}
                         value={bankAccount.accountNumber}
-                        onChange={(e) => setBankAccount({...bankAccount, accountNumber: e.target.value})}
+                        onChange={(e) => handleAccountNumberChange(e.target.value)}
                         placeholder="10 digits"
                         className="flex-1 min-w-0 bg-transparent text-white px-2 py-2.5 outline-none text-sm"
                       />
@@ -378,7 +431,7 @@ export default function TerminalsPage() {
                     <label className="text-[10px] font-bold text-gray-500 uppercase">Select Bank</label>
                     <BankSelector
                       value={bankAccount.bankCode}
-                      onChange={(code, name) => setBankAccount({ ...bankAccount, bankCode: code, bankName: name })}
+                      onChange={handleBankChange}
                       banks={banks || []}
                       placeholder="Search bank..."
                     />
@@ -391,9 +444,13 @@ export default function TerminalsPage() {
                       </div>
                       <input
                         type="text"
-                        maxLength={10}
+                        inputMode="numeric"
+                        pattern="\d{10}"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck={false}
                         value={bankAccount.accountNumber}
-                        onChange={(e) => setBankAccount({...bankAccount, accountNumber: e.target.value})}
+                        onChange={(e) => handleAccountNumberChange(e.target.value)}
                         placeholder="10 digits"
                         className="flex-1 min-w-0 bg-transparent text-white px-2 py-2.5 outline-none text-sm"
                       />

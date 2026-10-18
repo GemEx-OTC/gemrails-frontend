@@ -232,10 +232,14 @@ export default function VerificationHubPage() {
                   <label className="block text-xs font-medium text-gray-400 mb-1">Account Number</label>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    pattern="\d{10}"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
                     value={accountNumber}
                     onChange={(e) => handleAccountNumberChange(e.target.value)}
                     placeholder="0123456789"
-                    maxLength={10}
                     className="gemrails-input py-2"
                   />
                 </div>

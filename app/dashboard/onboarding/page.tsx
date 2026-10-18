@@ -300,6 +300,11 @@ export default function OnboardingPage() {
                     <label className="block text-sm font-medium text-gray-300 mb-2">Account Number</label>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="\d{10}"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
                       value={accountNumber}
                       onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
                       placeholder="10-digit account number"
