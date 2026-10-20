@@ -8,7 +8,7 @@ import { MerchantQRCodeModal } from "@/components/merchant-qr-modal"
 import {
   Store, Search, Filter, Eye, UserX, UserCheck, X, Shield, Users,
   Mail, Calendar, TrendingUp, BanknoteIcon, Loader2, ChevronDown,
-  CheckCircle, Clock, AlertCircle, Building2, Landmark, FileText, ExternalLink, QrCode,
+  CheckCircle, Clock, AlertCircle, Building2, Landmark, FileText, ExternalLink, QrCode, ArrowUpCircle,
 } from "lucide-react"
 import {
   useAdminMerchants,
@@ -18,6 +18,7 @@ import {
   useReactivateMerchant,
   useToggleTerminalStatus,
   useUpdateReferralStatus,
+  useUpdateMerchantTier,
 } from "@/lib/hooks/use-admin"
 import type { AdminMerchant, AdminMerchantDetails } from "@/lib/api/types"
 
@@ -38,6 +39,8 @@ export default function MerchantsPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showSuspendModal, setShowSuspendModal] = useState(false)
   const [showVerifyModal, setShowVerifyModal] = useState(false)
+  const [showPromoteModal, setShowPromoteModal] = useState(false)
+  const [targetTier, setTargetTier] = useState<number>(2)
   const [showCacModal, setShowCacModal] = useState(false)
   const [showQrModal, setShowQrModal] = useState(false)
   const [qrMerchant, setQrMerchant] = useState<AdminMerchant | null>(null)
@@ -54,6 +57,7 @@ export default function MerchantsPage() {
   const verifyMutation = useVerifyMerchant()
   const suspendMutation = useSuspendMerchant()
   const reactivateMutation = useReactivateMerchant()
+  const promoteTierMutation = useUpdateMerchantTier()
 
   const handleViewDetails = (merchant: AdminMerchant) => {
     setSelectedMerchant(merchant)
@@ -64,6 +68,31 @@ export default function MerchantsPage() {
     setQrMerchant(merchant)
     setQrTerminalId(terminalId)
     setShowQrModal(true)
+  }
+
+  const handleOpenPromote = (merchant: AdminMerchant) => {
+    const currentTier = merchant.tier ?? 0
+    setSelectedMerchant(merchant)
+    setTargetTier(currentTier === 0 ? 1 : 2)
+    setShowPromoteModal(true)
+  }
+
+  const confirmPromoteTier = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedMerchant) return
+    promoteTierMutation.mutate(
+      { merchantId: selectedMerchant.id, tier: targetTier },
+      {
+        onSuccess: (res) => {
+          toast.success(res.message || `Merchant promoted to Tier ${targetTier}`)
+          setShowPromoteModal(false)
+          refetch()
+        },
+        onError: (err: any) => {
+          toast.error(err.message || "Failed to promote merchant tier")
+        },
+      }
+    )
   }
 
   const handleSuspend = (merchant: AdminMerchant) => {
@@ -294,6 +323,16 @@ export default function MerchantsPage() {
                           >
                             <QrCode className="w-3 h-3" /> QR Code
                           </button>
+                          {(merchant.tier ?? 0) < 2 && (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenPromote(merchant)}
+                              className="text-xs px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-all font-medium flex items-center gap-1"
+                              title="Promote business to a higher tier"
+                            >
+                              <ArrowUpCircle className="w-3 h-3" /> Promote Tier
+                            </button>
+                          )}
                           {!merchant.cacVerified && (
                             <button
                               type="button"
@@ -388,6 +427,9 @@ export default function MerchantsPage() {
         onViewQrCode={(merchant, terminalId) => {
           handleViewQrCode(merchant, terminalId)
         }}
+        onPromoteTierClick={(merchant) => {
+          handleOpenPromote(merchant)
+        }}
         onVerifyClick={(merchant) => {
           setShowDetailsModal(false)
           handleVerify(merchant)
@@ -397,6 +439,122 @@ export default function MerchantsPage() {
           handleSuspend(merchant)
         }}
       />
+
+      {/* Promote Tier Modal */}
+      <AnimatePresence>
+        {showPromoteModal && selectedMerchant && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowPromoteModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-gray-900 border-2 border-amber-500/40 rounded-2xl p-8 max-w-md w-full shadow-2xl"
+            >
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/20 mb-4">
+                  <ArrowUpCircle className="w-8 h-8 text-amber-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Promote Business Tier</h3>
+                <p className="text-gray-400 text-sm">
+                  Upgrade <span className="text-white font-semibold">{selectedMerchant.businessName}</span> from{" "}
+                  <span className="text-amber-400 font-semibold">Tier {selectedMerchant.tier ?? 0}</span> to unlock higher settlement limits and features.
+                </p>
+              </div>
+
+              <form onSubmit={confirmPromoteTier} className="space-y-6">
+                <fieldset className="space-y-3">
+                  <legend className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+                    Select Target Tier
+                  </legend>
+
+                  {(selectedMerchant.tier ?? 0) < 1 && (
+                    <label
+                      className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                        targetTier === 1
+                          ? "bg-blue-500/15 border-blue-500/50 text-white"
+                          : "bg-gray-800/50 border-gray-700 text-gray-300 hover:border-gray-600"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="targetTier"
+                        value={1}
+                        checked={targetTier === 1}
+                        onChange={() => setTargetTier(1)}
+                        className="mt-1 accent-blue-500"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-sm text-white">Tier 1</span>
+                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                            ₦500k Limit
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Increases daily settlement limit to ₦500,000, marks phone as verified, and unlocks Enterprise Terminals.
+                        </p>
+                      </div>
+                    </label>
+                  )}
+
+                  <label
+                    className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                      targetTier === 2
+                        ? "bg-emerald-500/15 border-emerald-500/50 text-white"
+                        : "bg-gray-800/50 border-gray-700 text-gray-300 hover:border-gray-600"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="targetTier"
+                      value={2}
+                      checked={targetTier === 2}
+                      onChange={() => setTargetTier(2)}
+                      className="mt-1 accent-emerald-500"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-sm text-white">Tier 2 • Max Tier</span>
+                        <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          Unlimited
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Unlocks unlimited settlements, marks KYC &amp; CAC as verified, and enables referral code generation.
+                      </p>
+                    </div>
+                  </label>
+                </fieldset>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowPromoteModal(false)}
+                    className="flex-1 py-3 rounded-xl font-semibold text-white border border-gray-700 hover:border-gray-600 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={promoteTierMutation.isPending}
+                    className="flex-1 py-3 rounded-xl font-semibold bg-amber-500 text-gray-950 hover:bg-amber-400 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {promoteTierMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Promote to Tier {targetTier}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Suspend Modal */}
       <AnimatePresence>
@@ -523,6 +681,7 @@ function AdminMerchantDetailsModal({
   merchantId,
   onVerifyCacClick,
   onViewQrCode,
+  onPromoteTierClick,
   onVerifyClick,
   onSuspendClick,
 }: { 
@@ -531,6 +690,7 @@ function AdminMerchantDetailsModal({
   merchantId: string;
   onVerifyCacClick: () => void;
   onViewQrCode: (merchant: AdminMerchant, terminalId?: string) => void;
+  onPromoteTierClick: (merchant: AdminMerchant) => void;
   onVerifyClick: (merchant: AdminMerchant) => void;
   onSuspendClick: (merchant: AdminMerchant) => void;
 }) {
@@ -659,6 +819,47 @@ function AdminMerchantDetailsModal({
                         <InfoItem label="Merchant ID" value={merchant.merchantId} icon={Shield} />
                         <InfoItem label="RC Number" value={merchant.rcNumber} icon={CheckCircle} />
                         <InfoItem label="Address" value={merchant.businessAddress} icon={Building2} />
+                      </div>
+                      <div className="md:col-span-2 space-y-4">
+                        <SectionHeader title="Account Tier & Settlement Limit" icon={ArrowUpCircle} />
+                        <div className="p-4 bg-gray-800/20 border border-gray-700 rounded-xl flex flex-wrap items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${
+                              merchant.tier === 2
+                                ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
+                                : merchant.tier === 1
+                                ? "bg-blue-500/15 text-blue-400 border border-blue-500/25"
+                                : "bg-gray-800 text-gray-400 border border-gray-700"
+                            }`}>
+                              Tier {merchant.tier ?? 0}{merchant.tier === 2 ? " • Max" : ""}
+                            </span>
+                            <div>
+                              <div className="text-white font-bold text-sm">
+                                {merchant.tier === 2
+                                  ? "Unlimited Daily Settlement Limit"
+                                  : merchant.tier === 1
+                                  ? "₦500,000 Daily Settlement Limit"
+                                  : "₦200,000 Daily Settlement Limit"}
+                              </div>
+                              <div className="text-gray-500 text-xs mt-0.5">
+                                {merchant.tier === 2
+                                  ? "Full KYC & CAC verified • Maximum tier unlocked"
+                                  : merchant.tier === 1
+                                  ? "Business setup & phone verified • Promote to Tier 2 for unlimited settlements"
+                                  : "Email verified • Promote to Tier 1 or Tier 2 to raise limits"}
+                              </div>
+                            </div>
+                          </div>
+                          {(merchant.tier ?? 0) < 2 && (
+                            <button
+                              type="button"
+                              onClick={() => onPromoteTierClick(merchant)}
+                              className="px-4 py-2 rounded-lg text-xs font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-all flex items-center gap-1.5"
+                            >
+                              <ArrowUpCircle className="w-3.5 h-3.5" /> Promote Tier
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="md:col-span-2 space-y-4">
                         <div className="flex justify-between items-center">
@@ -955,6 +1156,15 @@ function AdminMerchantDetailsModal({
                 >
                   <QrCode className="w-4 h-4" /> View / Print QR Code
                 </button>
+                {(merchant.tier ?? 0) < 2 && (
+                  <button
+                    type="button"
+                    onClick={() => onPromoteTierClick(merchant)}
+                    className="px-5 py-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-all text-sm font-bold flex items-center gap-2"
+                  >
+                    <ArrowUpCircle className="w-4 h-4" /> Promote Tier
+                  </button>
+                )}
                 {!merchant.cacVerified && (
                   <button 
                     type="button"

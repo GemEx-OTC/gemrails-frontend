@@ -77,6 +77,20 @@ export const useUpdateReferralStatus = () => {
   });
 };
 
+export const useUpdateMerchantTier = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ merchantId, tier }: { merchantId: string; tier: number }) =>
+      adminApi.updateMerchantTier(merchantId, tier),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-merchant', variables.merchantId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-merchant'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-merchants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] });
+    },
+  });
+};
+
 export const useVerifyMerchantCac = () => {
   const queryClient = useQueryClient();
   return useMutation({

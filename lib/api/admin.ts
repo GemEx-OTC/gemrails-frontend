@@ -68,6 +68,14 @@ export const updateReferralStatus = async (merchantId: string, status: 'active' 
   return response.data.data;
 };
 
+export const updateMerchantTier = async (merchantId: string, tier: number): Promise<{ message: string; tier: number; status: string }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string; tier: number; status: string }>>(
+    `/admin/merchants/${merchantId}/tier`,
+    { tier }
+  );
+  return response.data.data;
+};
+
 export const verifyMerchantCac = async (merchantId: string, data: FormData): Promise<{ message: string; tier?: number; status: string; jobId: string }> => {
   const response = await apiClient.post<ApiResponse<{ message: string; tier?: number; status: string; jobId: string }>>(
     `/admin/merchants/${merchantId}/verify-cac`,
